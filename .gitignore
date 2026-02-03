@@ -1,0 +1,39 @@
+# =========================
+# Environment & secrets
+# =========================
+.env
+.env.*
+*.env
+
+# API keys / secrets
+secrets.*
+secret.*
+*.key
+*.pem
+*.crt
+
+
+# =========================
+# Node / JS (if applicable)
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Build / OS files
+# =========================
+dist/
+build/
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Firebase service account
+firebase/serviceAccountKey.json 
+firebase/seed.js 
+
+# Env files
+.env
+.env.*
