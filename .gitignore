@@ -33,7 +33,8 @@ Thumbs.db
 # Firebase service account
 firebase/serviceAccountKey.json 
 firebase/seed.js 
-
+config/serviceAccountKey.json
 # Env files
 .env
 .env.*
+*.env
