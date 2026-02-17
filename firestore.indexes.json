@@ -1,0 +1,28 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "Users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "IsActive", "order": "ASCENDING" },
+        { "fieldPath": "CreatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "UserSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "UserID", "order": "ASCENDING" },
+        { "fieldPath": "IsActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "Wristbands",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "QRCode", "order": "ASCENDING" },
+        { "fieldPath": "IsActive", "order": "ASCENDING" }
+      ]
+    }
+  ]
+}

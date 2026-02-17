@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "lifecode-app",
+    "development": "lifecode-dev",
+    "staging": "lifecode-staging",
+    "production": "lifecode-prod"
+  }
+}

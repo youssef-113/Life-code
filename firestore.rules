@@ -1,0 +1,90 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================
+    // Helper functions
+    // =========================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isCreating() {
+      return resource == null;
+    }
+
+    function immutable(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == resource.data[field];
+    }
+
+    // =========================
+    // USERS (PRIVATE)
+    // =========================
+    match /Users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Immutable fields
+      allow update: if immutable("Email")
+                    && immutable("GoogleID")
+                    && immutable("UserID");
+    }
+
+    // =========================
+    // WRISTBANDS (PUBLIC READ)
+    // =========================
+    match /Wristbands/{id} {
+      allow read: if true;
+
+      allow create, update, delete: if
+        isOwner(request.resource.data.UserID) &&
+        immutable("QRCode") &&
+        immutable("NFCTag");
+    }
+
+    // =========================
+    // MEDICAL INFO (PUBLIC READ)
+    // =========================
+    match /MedicalInfo/{id} {
+      allow read: if true;
+      allow write: if isOwner(request.resource.data.UserID);
+    }
+
+    // =========================
+    // EMERGENCY CONTACTS (PUBLIC READ)
+    // =========================
+    match /EmergencyContacts/{id} {
+      allow read: if true;
+      allow write: if isOwner(request.resource.data.UserID);
+    }
+
+    // =========================
+    // SECURITY LOGS (SERVER ONLY)
+    // =========================
+    match /SecurityLogs/{id} {
+      allow read: if false;
+      allow write: if request.auth.token.admin == true;
+    }
+
+    // =========================
+    // USER SESSIONS (SERVER ONLY)
+    // =========================
+    match /UserSessions/{id} {
+      allow read, write: if request.auth.token.admin == true;
+    }
+
+    // =========================
+    // SCAN LOGS (PUBLIC CREATE)
+    // =========================
+    match /ScanLogs/{id} {
+      allow create: if true;
+      allow read: if isOwner(resource.data.UserID);
+      allow update, delete: if false; // immutable
+    }
+  }
+}

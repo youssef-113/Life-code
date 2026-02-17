@@ -1,0 +1,1216 @@
+{
+  "lifecode_json_document_structure": {
+    "version": "1.0.0",
+    "database": "MySQL/Firebase Firestore",
+    "description": "Complete JSON structure matching database schema with data types, constraints, and validation rules",
+    "charset": "utf8mb4",
+    "collation": "utf8mb4_unicode_ci",
+    
+    "collections": {
+      
+      "Users": {
+        "description": "User accounts and profiles",
+        "schema": {
+          "ID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "Username": {
+            "type": "string",
+            "maxLength": 50,
+            "unique": true,
+            "nullable": false,
+            "indexed": true,
+            "pattern": "^[a-zA-Z0-9_]{3,50}$",
+            "example": "john_doe"
+          },
+          "PasswordHash": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "description": "bcrypt hash - NULL for Google OAuth users",
+            "example": "$2a$10$rG4dqZwZ8qRlPf1x4nZ4.O8qkJ5xQ2pYqZjN5nZ4.O8qkJ5xQ2pYq"
+          },
+          "PasswordSalt": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "description": "Salt for password - NULL for Google OAuth users",
+            "example": "$2a$10$randomSaltValue"
+          },
+          "GoogleID": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "indexed": true,
+            "description": "NULL if normal signup",
+            "example": "1234567890abcdefghij"
+          },
+          "Email": {
+            "type": "string",
+            "maxLength": 100,
+            "unique": true,
+            "nullable": false,
+            "indexed": true,
+            "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+            "example": "john.doe@example.com"
+          },
+          "Gender": {
+            "type": "enum",
+            "values": ["male", "female", "other"],
+            "nullable": true,
+            "example": "male"
+          },
+          "NationalID": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true,
+            "description": "Government-issued ID number",
+            "example": "12345678901234"
+          },
+          "PhotoURL": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true,
+            "description": "Cloud storage URL for profile photo",
+            "pattern": "^https?://",
+            "example": "https://storage.example.com/photos/user123.jpg"
+          },
+          "IsActive": {
+            "type": "boolean",
+            "default": true,
+            "nullable": false,
+            "indexed": true,
+            "example": true
+          },
+          "CreatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          },
+          "UpdatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "onUpdate": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T15:30:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "unique_username",
+            "columns": ["Username"],
+            "type": "UNIQUE"
+          },
+          {
+            "name": "unique_email",
+            "columns": ["Email"],
+            "type": "UNIQUE"
+          },
+          {
+            "name": "idx_google_id",
+            "columns": ["GoogleID"],
+            "type": "INDEX"
+          },
+          {
+            "name": "idx_active_users",
+            "columns": ["IsActive", "CreatedAt"],
+            "type": "COMPOSITE"
+          }
+        ],
+        "example_document": {
+          "ID": 1,
+          "Username": "john_doe",
+          "PasswordHash": "$2a$10$rG4dqZwZ8qRlPf1x4nZ4.O8qkJ5xQ2pYqZjN5nZ4.O8qkJ5xQ2pYq",
+          "PasswordSalt": null,
+          "GoogleID": null,
+          "Email": "john.doe@example.com",
+          "Gender": "male",
+          "NationalID": "12345678901234",
+          "PhotoURL": "https://storage.example.com/photos/john.jpg",
+          "IsActive": true,
+          "CreatedAt": "2025-02-01T10:00:00.000Z",
+          "UpdatedAt": "2025-02-03T15:30:00.000Z"
+        }
+      },
+
+      "UserSessions": {
+        "description": "Active user sessions for authentication",
+        "schema": {
+          "ID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "UserID": {
+            "type": "integer",
+            "unsigned": true,
+            "nullable": false,
+            "foreignKey": {
+              "table": "Users",
+              "column": "ID",
+              "onDelete": "CASCADE",
+              "onUpdate": "CASCADE"
+            },
+            "indexed": true,
+            "example": 1
+          },
+          "SessionToken": {
+            "type": "string",
+            "maxLength": 255,
+            "unique": true,
+            "nullable": false,
+            "indexed": true,
+            "description": "JWT access token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjF9.abc123"
+          },
+          "RefreshToken": {
+            "type": "string",
+            "maxLength": 255,
+            "unique": true,
+            "nullable": false,
+            "description": "JWT refresh token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjF9.xyz789"
+          },
+          "UserAgent": {
+            "type": "text",
+            "nullable": true,
+            "description": "Client user agent string",
+            "example": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2)"
+          },
+          "IPAddress": {
+            "type": "string",
+            "maxLength": 45,
+            "nullable": true,
+            "description": "IPv4 or IPv6 address",
+            "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$",
+            "example": "192.168.1.10"
+          },
+          "IsActive": {
+            "type": "boolean",
+            "default": true,
+            "nullable": false,
+            "indexed": true,
+            "example": true
+          },
+          "CreatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          },
+          "ExpiresAt": {
+            "type": "datetime",
+            "nullable": false,
+            "indexed": true,
+            "description": "Token expiration timestamp",
+            "format": "ISO 8601",
+            "example": "2025-02-03T11:00:00.000Z"
+          },
+          "LastUsed": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "onUpdate": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:45:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "unique_session_token",
+            "columns": ["SessionToken"],
+            "type": "UNIQUE"
+          },
+          {
+            "name": "unique_refresh_token",
+            "columns": ["RefreshToken"],
+            "type": "UNIQUE"
+          },
+          {
+            "name": "idx_user_active",
+            "columns": ["UserID", "IsActive"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_expires",
+            "columns": ["ExpiresAt"],
+            "type": "INDEX"
+          }
+        ],
+        "example_document": {
+          "ID": 1,
+          "UserID": 1,
+          "SessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjF9.abc123",
+          "RefreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjF9.xyz789",
+          "UserAgent": "LifeCode-iOS/2.1.0 (iPhone 15 Pro; iOS 17.2)",
+          "IPAddress": "192.168.1.10",
+          "IsActive": true,
+          "CreatedAt": "2025-02-03T10:00:00.000Z",
+          "ExpiresAt": "2025-02-03T11:00:00.000Z",
+          "LastUsed": "2025-02-03T10:45:00.000Z"
+        }
+      },
+
+      "SecurityLogs": {
+        "description": "Security audit trail for all user actions",
+        "schema": {
+          "LogID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "UserID": {
+            "type": "integer",
+            "unsigned": true,
+            "nullable": true,
+            "foreignKey": {
+              "table": "Users",
+              "column": "ID",
+              "onDelete": "SET NULL",
+              "onUpdate": "CASCADE"
+            },
+            "indexed": true,
+            "description": "NULL for failed login attempts",
+            "example": 1
+          },
+          "ActionType": {
+            "type": "enum",
+            "values": [
+              "LOGIN_SUCCESS",
+              "LOGIN_FAILED",
+              "LOGOUT",
+              "PASSWORD_CHANGED",
+              "PASSWORD_RESET_REQUEST",
+              "EMAIL_CHANGED",
+              "ACCOUNT_LOCKED",
+              "ACCOUNT_UNLOCKED"
+            ],
+            "nullable": false,
+            "indexed": true,
+            "example": "LOGIN_SUCCESS"
+          },
+          "IPAddress": {
+            "type": "string",
+            "maxLength": 45,
+            "nullable": true,
+            "indexed": true,
+            "example": "192.168.1.10"
+          },
+          "UserAgent": {
+            "type": "text",
+            "nullable": true,
+            "example": "LifeCode-iOS/2.1.0"
+          },
+          "Metadata": {
+            "type": "json",
+            "nullable": true,
+            "description": "Additional context data as JSON object",
+            "example": {
+              "deviceName": "iPhone 15 Pro",
+              "location": "Cairo, Egypt",
+              "reason": "Successful login"
+            }
+          },
+          "Timestamp": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "indexed": true,
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "idx_user_logs",
+            "columns": ["UserID", "Timestamp"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_action_type",
+            "columns": ["ActionType", "Timestamp"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_ip_address",
+            "columns": ["IPAddress"],
+            "type": "INDEX"
+          }
+        ],
+        "example_document": {
+          "LogID": 1,
+          "UserID": 1,
+          "ActionType": "LOGIN_SUCCESS",
+          "IPAddress": "192.168.1.10",
+          "UserAgent": "LifeCode-iOS/2.1.0",
+          "Metadata": {
+            "deviceName": "iPhone 15 Pro",
+            "deviceType": "ios",
+            "sessionID": "sess_123"
+          },
+          "Timestamp": "2025-02-03T10:00:00.000Z"
+        }
+      },
+
+      "Devices": {
+        "description": "User devices for push notifications and multi-device support",
+        "schema": {
+          "DeviceID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "UserID": {
+            "type": "integer",
+            "unsigned": true,
+            "nullable": false,
+            "foreignKey": {
+              "table": "Users",
+              "column": "ID",
+              "onDelete": "CASCADE",
+              "onUpdate": "CASCADE"
+            },
+            "indexed": true,
+            "example": 1
+          },
+          "DeviceName": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "description": "User-friendly device name",
+            "example": "iPhone 15 Pro"
+          },
+          "DeviceType": {
+            "type": "enum",
+            "values": ["ios", "android", "web", "other"],
+            "default": "other",
+            "nullable": false,
+            "example": "ios"
+          },
+          "DeviceToken": {
+            "type": "string",
+            "maxLength": 300,
+            "unique": true,
+            "nullable": true,
+            "description": "FCM or APNs push notification token",
+            "example": "fcm_token_abc123xyz789def456"
+          },
+          "DeviceOS": {
+            "type": "string",
+            "maxLength": 50,
+            "nullable": true,
+            "description": "Operating system version",
+            "example": "iOS 17.2"
+          },
+          "AppVersion": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true,
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "example": "2.1.0"
+          },
+          "IsActive": {
+            "type": "boolean",
+            "default": true,
+            "nullable": false,
+            "indexed": true,
+            "example": true
+          },
+          "CreatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-01T10:00:00.000Z"
+          },
+          "LastUsed": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "onUpdate": "CURRENT_TIMESTAMP",
+            "indexed": true,
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:45:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "unique_device_token",
+            "columns": ["DeviceToken"],
+            "type": "UNIQUE"
+          },
+          {
+            "name": "idx_user_devices",
+            "columns": ["UserID", "IsActive"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_last_used",
+            "columns": ["LastUsed"],
+            "type": "INDEX"
+          }
+        ],
+        "example_document": {
+          "DeviceID": 1,
+          "UserID": 1,
+          "DeviceName": "iPhone 15 Pro",
+          "DeviceType": "ios",
+          "DeviceToken": "fcm_token_abc123xyz789def456",
+          "DeviceOS": "iOS 17.2",
+          "AppVersion": "2.1.0",
+          "IsActive": true,
+          "CreatedAt": "2025-02-01T10:00:00.000Z",
+          "LastUsed": "2025-02-03T10:45:00.000Z"
+        }
+      },
+
+      "Wristbands": {
+        "description": "Medical wristbands with QR and NFC identifiers",
+        "schema": {
+          "ID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "UserID": {
+            "type": "integer",
+            "unsigned": true,
+            "nullable": false,
+            "foreignKey": {
+              "table": "Users",
+              "column": "ID",
+              "onDelete": "CASCADE",
+              "onUpdate": "CASCADE"
+            },
+            "indexed": true,
+            "example": 1
+          },
+          "QRCode": {
+            "type": "string",
+            "maxLength": 255,
+            "unique": true,
+            "nullable": false,
+            "indexed": true,
+            "pattern": "^LIFECODE-QR-[0-9]{5,}$",
+            "example": "LIFECODE-QR-00001"
+          },
+          "NFCTag": {
+            "type": "string",
+            "maxLength": 255,
+            "unique": true,
+            "nullable": false,
+            "indexed": true,
+            "pattern": "^LIFECODE-NFC-[0-9]{5,}$",
+            "example": "LIFECODE-NFC-00001"
+          },
+          "SerialNumber": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "description": "Physical wristband serial number",
+            "pattern": "^SN-\\d{4}-\\d{5}$",
+            "example": "SN-2025-00001"
+          },
+          "IsActive": {
+            "type": "boolean",
+            "default": true,
+            "nullable": false,
+            "indexed": true,
+            "example": true
+          },
+          "IsRevoked": {
+            "type": "boolean",
+            "default": false,
+            "nullable": false,
+            "indexed": true,
+            "description": "Security disable flag",
+            "example": false
+          },
+          "ActivatedAt": {
+            "type": "datetime",
+            "nullable": true,
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          },
+          "RevokedAt": {
+            "type": "datetime",
+            "nullable": true,
+            "format": "ISO 8601",
+            "example": null
+          },
+          "RevokeReason": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "example": null
+          },
+          "CreatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          },
+          "UpdatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "onUpdate": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "unique_qr_code",
+            "columns": ["QRCode"],
+            "type": "UNIQUE"
+          },
+          {
+            "name": "unique_nfc_tag",
+            "columns": ["NFCTag"],
+            "type": "UNIQUE"
+          },
+          {
+            "name": "idx_user_wristbands",
+            "columns": ["UserID", "IsActive"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_qr_lookup",
+            "columns": ["QRCode", "IsActive"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_nfc_lookup",
+            "columns": ["NFCTag", "IsActive"],
+            "type": "COMPOSITE"
+          }
+        ],
+        "example_document": {
+          "ID": 1,
+          "UserID": 1,
+          "QRCode": "LIFECODE-QR-00001",
+          "NFCTag": "LIFECODE-NFC-00001",
+          "SerialNumber": "SN-2025-00001",
+          "IsActive": true,
+          "IsRevoked": false,
+          "ActivatedAt": "2025-02-03T10:00:00.000Z",
+          "RevokedAt": null,
+          "RevokeReason": null,
+          "CreatedAt": "2025-02-03T10:00:00.000Z",
+          "UpdatedAt": "2025-02-03T10:00:00.000Z"
+        }
+      },
+
+      "MedicalInfo": {
+        "description": "User medical information (one-to-one with Users)",
+        "schema": {
+          "ID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "UserID": {
+            "type": "integer",
+            "unsigned": true,
+            "unique": true,
+            "nullable": false,
+            "foreignKey": {
+              "table": "Users",
+              "column": "ID",
+              "onDelete": "CASCADE",
+              "onUpdate": "CASCADE"
+            },
+            "description": "One-to-one relationship",
+            "example": 1
+          },
+          "BloodType": {
+            "type": "string",
+            "maxLength": 5,
+            "nullable": true,
+            "pattern": "^(A|B|AB|O)[+-]$",
+            "example": "A+"
+          },
+          "Height": {
+            "type": "decimal",
+            "precision": 5,
+            "scale": 2,
+            "nullable": true,
+            "description": "Height in centimeters",
+            "min": 0,
+            "max": 300,
+            "example": 175.5
+          },
+          "Weight": {
+            "type": "decimal",
+            "precision": 5,
+            "scale": 2,
+            "nullable": true,
+            "description": "Weight in kilograms",
+            "min": 0,
+            "max": 500,
+            "example": 75.0
+          },
+          "ChronicDiseases": {
+            "type": "text",
+            "nullable": true,
+            "description": "Comma-separated or JSON array",
+            "example": "Diabetes Type 2, Hypertension"
+          },
+          "Allergies": {
+            "type": "text",
+            "nullable": true,
+            "description": "Comma-separated or JSON array",
+            "example": "Penicillin, Shellfish, Peanuts"
+          },
+          "Medications": {
+            "type": "text",
+            "nullable": true,
+            "description": "Current medications with dosages",
+            "example": "Metformin 500mg twice daily, Lisinopril 10mg once daily"
+          },
+          "Surgeries": {
+            "type": "text",
+            "nullable": true,
+            "description": "Past surgeries with dates",
+            "example": "Appendectomy (2015), Knee surgery (2020)"
+          },
+          "Notes": {
+            "type": "text",
+            "nullable": true,
+            "description": "Additional medical notes",
+            "example": "Patient prefers no ibuprofen due to stomach sensitivity"
+          },
+          "EmergencyInstructions": {
+            "type": "text",
+            "nullable": true,
+            "description": "Critical instructions for responders",
+            "example": "Call emergency contact immediately. Patient is diabetic - check blood sugar levels."
+          },
+          "CreatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          },
+          "UpdatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "onUpdate": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T15:30:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "unique_user_medical",
+            "columns": ["UserID"],
+            "type": "UNIQUE"
+          }
+        ],
+        "example_document": {
+          "ID": 1,
+          "UserID": 1,
+          "BloodType": "A+",
+          "Height": 175.5,
+          "Weight": 75.0,
+          "ChronicDiseases": "Diabetes Type 2, Hypertension",
+          "Allergies": "Penicillin, Shellfish, Peanuts",
+          "Medications": "Metformin 500mg twice daily, Lisinopril 10mg once daily",
+          "Surgeries": "Appendectomy (2015), Knee surgery (2020)",
+          "Notes": "Patient prefers no ibuprofen due to stomach sensitivity",
+          "EmergencyInstructions": "Call emergency contact immediately. Patient is diabetic - check blood sugar levels.",
+          "CreatedAt": "2025-02-03T10:00:00.000Z",
+          "UpdatedAt": "2025-02-03T15:30:00.000Z"
+        }
+      },
+
+      "EmergencyContacts": {
+        "description": "Emergency contact information for users",
+        "schema": {
+          "ID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "UserID": {
+            "type": "integer",
+            "unsigned": true,
+            "nullable": false,
+            "foreignKey": {
+              "table": "Users",
+              "column": "ID",
+              "onDelete": "CASCADE",
+              "onUpdate": "CASCADE"
+            },
+            "indexed": true,
+            "example": 1
+          },
+          "ContactName": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": false,
+            "example": "Jane Doe"
+          },
+          "Relation": {
+            "type": "string",
+            "maxLength": 50,
+            "nullable": true,
+            "description": "Relationship to user",
+            "example": "Spouse"
+          },
+          "PhoneNumber": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": false,
+            "pattern": "^\\+?[1-9]\\d{1,14}$",
+            "description": "E.164 format recommended",
+            "example": "+20123456789"
+          },
+          "SecondaryPhone": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true,
+            "pattern": "^\\+?[1-9]\\d{1,14}$",
+            "example": "+20198765432"
+          },
+          "Email": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+            "example": "jane.doe@example.com"
+          },
+          "IsPrimary": {
+            "type": "boolean",
+            "default": false,
+            "nullable": false,
+            "indexed": true,
+            "description": "Primary emergency contact flag",
+            "example": true
+          },
+          "Priority": {
+            "type": "integer",
+            "unsigned": true,
+            "default": 1,
+            "nullable": true,
+            "min": 1,
+            "max": 10,
+            "description": "Contact priority (1=highest)",
+            "example": 1
+          },
+          "Notes": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "example": "Available 24/7"
+          },
+          "CreatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          },
+          "UpdatedAt": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "onUpdate": "CURRENT_TIMESTAMP",
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "idx_user_contacts",
+            "columns": ["UserID", "Priority"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_primary_contact",
+            "columns": ["UserID", "IsPrimary"],
+            "type": "COMPOSITE"
+          }
+        ],
+        "example_document": {
+          "ID": 1,
+          "UserID": 1,
+          "ContactName": "Jane Doe",
+          "Relation": "Spouse",
+          "PhoneNumber": "+20123456789",
+          "SecondaryPhone": "+20198765432",
+          "Email": "jane.doe@example.com",
+          "IsPrimary": true,
+          "Priority": 1,
+          "Notes": "Available 24/7",
+          "CreatedAt": "2025-02-03T10:00:00.000Z",
+          "UpdatedAt": "2025-02-03T10:00:00.000Z"
+        },
+        "example_array": [
+          {
+            "ID": 1,
+            "UserID": 1,
+            "ContactName": "Jane Doe",
+            "Relation": "Spouse",
+            "PhoneNumber": "+20123456789",
+            "SecondaryPhone": "+20198765432",
+            "Email": "jane.doe@example.com",
+            "IsPrimary": true,
+            "Priority": 1,
+            "Notes": "Available 24/7",
+            "CreatedAt": "2025-02-03T10:00:00.000Z",
+            "UpdatedAt": "2025-02-03T10:00:00.000Z"
+          },
+          {
+            "ID": 2,
+            "UserID": 1,
+            "ContactName": "Dr. Ahmed Hassan",
+            "Relation": "Doctor",
+            "PhoneNumber": "+20111222333",
+            "SecondaryPhone": null,
+            "Email": "dr.hassan@hospital.com",
+            "IsPrimary": false,
+            "Priority": 2,
+            "Notes": "Primary care physician",
+            "CreatedAt": "2025-02-03T10:05:00.000Z",
+            "UpdatedAt": "2025-02-03T10:05:00.000Z"
+          }
+        ]
+      },
+
+      "ScanLogs": {
+        "description": "QR/NFC scan tracking for analytics and security",
+        "schema": {
+          "ScanID": {
+            "type": "integer",
+            "unsigned": true,
+            "autoIncrement": true,
+            "primaryKey": true,
+            "nullable": false,
+            "example": 1
+          },
+          "WristbandID": {
+            "type": "integer",
+            "unsigned": true,
+            "nullable": false,
+            "foreignKey": {
+              "table": "Wristbands",
+              "column": "ID",
+              "onDelete": "CASCADE",
+              "onUpdate": "CASCADE"
+            },
+            "indexed": true,
+            "example": 1
+          },
+          "UserID": {
+            "type": "integer",
+            "unsigned": true,
+            "nullable": false,
+            "foreignKey": {
+              "table": "Users",
+              "column": "ID",
+              "onDelete": "CASCADE",
+              "onUpdate": "CASCADE"
+            },
+            "indexed": true,
+            "example": 1
+          },
+          "ScanType": {
+            "type": "enum",
+            "values": ["QR", "NFC"],
+            "nullable": false,
+            "indexed": true,
+            "example": "QR"
+          },
+          "ScannerType": {
+            "type": "enum",
+            "values": ["emergency", "hospital", "public", "personal"],
+            "default": "public",
+            "nullable": true,
+            "description": "Type of scanner that performed the scan",
+            "example": "emergency"
+          },
+          "Location": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "description": "GPS coordinates or facility name",
+            "example": "Cairo General Hospital"
+          },
+          "Latitude": {
+            "type": "decimal",
+            "precision": 10,
+            "scale": 8,
+            "nullable": true,
+            "min": -90,
+            "max": 90,
+            "example": 30.0444
+          },
+          "Longitude": {
+            "type": "decimal",
+            "precision": 11,
+            "scale": 8,
+            "nullable": true,
+            "min": -180,
+            "max": 180,
+            "example": 31.2357
+          },
+          "IPAddress": {
+            "type": "string",
+            "maxLength": 45,
+            "nullable": true,
+            "example": "41.32.45.78"
+          },
+          "UserAgent": {
+            "type": "text",
+            "nullable": true,
+            "example": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2)"
+          },
+          "Timestamp": {
+            "type": "datetime",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "indexed": true,
+            "format": "ISO 8601",
+            "example": "2025-02-03T10:00:00.000Z"
+          }
+        },
+        "indexes": [
+          {
+            "name": "idx_wristband_scans",
+            "columns": ["WristbandID", "Timestamp"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_user_scans",
+            "columns": ["UserID", "Timestamp"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_scan_type",
+            "columns": ["ScanType", "Timestamp"],
+            "type": "COMPOSITE"
+          },
+          {
+            "name": "idx_timestamp",
+            "columns": ["Timestamp"],
+            "type": "INDEX"
+          }
+        ],
+        "example_document": {
+          "ScanID": 1,
+          "WristbandID": 1,
+          "UserID": 1,
+          "ScanType": "QR",
+          "ScannerType": "emergency",
+          "Location": "Cairo General Hospital",
+          "Latitude": 30.0444,
+          "Longitude": 31.2357,
+          "IPAddress": "41.32.45.78",
+          "UserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2)",
+          "Timestamp": "2025-02-03T10:00:00.000Z"
+        },
+        "example_array": [
+          {
+            "ScanID": 1,
+            "WristbandID": 1,
+            "UserID": 1,
+            "ScanType": "QR",
+            "ScannerType": "emergency",
+            "Location": "Cairo General Hospital",
+            "Latitude": 30.0444,
+            "Longitude": 31.2357,
+            "IPAddress": "41.32.45.78",
+            "UserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2)",
+            "Timestamp": "2025-02-03T10:00:00.000Z"
+          },
+          {
+            "ScanID": 2,
+            "WristbandID": 1,
+            "UserID": 1,
+            "ScanType": "NFC",
+            "ScannerType": "hospital",
+            "Location": "Emergency Room - Bed 5",
+            "Latitude": 30.0445,
+            "Longitude": 31.2358,
+            "IPAddress": "41.32.45.79",
+            "UserAgent": "Mozilla/5.0 (Linux; Android 13)",
+            "Timestamp": "2025-02-03T09:45:00.000Z"
+          }
+        ]
+      }
+    },
+
+    "data_type_definitions": {
+      "integer": {
+        "description": "Whole numbers",
+        "range_unsigned": "0 to 4,294,967,295",
+        "range_signed": "-2,147,483,648 to 2,147,483,647",
+        "storage": "4 bytes",
+        "json_type": "number",
+        "example": 1
+      },
+      "string": {
+        "description": "Variable-length text",
+        "maxLength_range": "1 to 65,535 characters",
+        "storage": "Variable",
+        "json_type": "string",
+        "example": "Example text"
+      },
+      "text": {
+        "description": "Long text fields",
+        "maxLength": "65,535 characters",
+        "storage": "Variable",
+        "json_type": "string",
+        "example": "Long text content..."
+      },
+      "boolean": {
+        "description": "True/false values",
+        "values": [true, false],
+        "storage": "1 byte (TINYINT)",
+        "json_type": "boolean",
+        "example": true
+      },
+      "datetime": {
+        "description": "Date and time",
+        "format": "ISO 8601",
+        "range": "1000-01-01 to 9999-12-31",
+        "storage": "5 bytes",
+        "json_type": "string",
+        "example": "2025-02-03T10:00:00.000Z"
+      },
+      "decimal": {
+        "description": "Fixed-point numbers",
+        "precision": "Total digits",
+        "scale": "Digits after decimal",
+        "storage": "Variable",
+        "json_type": "number",
+        "example": 175.5
+      },
+      "enum": {
+        "description": "Predefined list of values",
+        "storage": "1-2 bytes",
+        "json_type": "string",
+        "example": "value1"
+      },
+      "json": {
+        "description": "JSON object/array",
+        "storage": "Variable",
+        "json_type": "object",
+        "example": {"key": "value"}
+      }
+    },
+
+    "validation_rules": {
+      "email": {
+        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        "example": "user@example.com"
+      },
+      "phone": {
+        "pattern": "^\\+?[1-9]\\d{1,14}$",
+        "format": "E.164 international format",
+        "example": "+201234567890"
+      },
+      "url": {
+        "pattern": "^https?://[\\w\\-]+(\\.[\\w\\-]+)+[/#?]?.*$",
+        "example": "https://example.com/path"
+      },
+      "username": {
+        "pattern": "^[a-zA-Z0-9_]{3,50}$",
+        "minLength": 3,
+        "maxLength": 50,
+        "example": "user_name123"
+      },
+      "bloodType": {
+        "pattern": "^(A|B|AB|O)[+-]$",
+        "values": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+        "example": "A+"
+      },
+      "version": {
+        "pattern": "^\\d+\\.\\d+\\.\\d+$",
+        "format": "semantic versioning",
+        "example": "2.1.0"
+      }
+    },
+
+    "relationship_mappings": {
+      "one_to_one": [
+        {
+          "parent": "Users",
+          "child": "MedicalInfo",
+          "foreignKey": "UserID",
+          "description": "Each user has exactly one medical profile"
+        }
+      ],
+      "one_to_many": [
+        {
+          "parent": "Users",
+          "child": "UserSessions",
+          "foreignKey": "UserID",
+          "description": "Each user can have multiple active sessions"
+        },
+        {
+          "parent": "Users",
+          "child": "Devices",
+          "foreignKey": "UserID",
+          "description": "Each user can have multiple registered devices"
+        },
+        {
+          "parent": "Users",
+          "child": "Wristbands",
+          "foreignKey": "UserID",
+          "description": "Each user can have multiple wristbands"
+        },
+        {
+          "parent": "Users",
+          "child": "EmergencyContacts",
+          "foreignKey": "UserID",
+          "description": "Each user can have multiple emergency contacts"
+        },
+        {
+          "parent": "Users",
+          "child": "SecurityLogs",
+          "foreignKey": "UserID",
+          "description": "Each user has multiple security log entries"
+        },
+        {
+          "parent": "Wristbands",
+          "child": "ScanLogs",
+          "foreignKey": "WristbandID",
+          "description": "Each wristband has multiple scan records"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1001 @@
+{
+  "lifecode_api_specification": {
+    "version": "1.0.0",
+    "last_updated": "2025-02-03",
+    "description": "Complete JSON structure for LifeCode API - POST endpoints for Mobile App, GET endpoints for Web Dashboard",
+    "base_url": "https://api.lifecode.app",
+    
+    "authentication": {
+      "description": "JWT-based authentication using Bearer tokens",
+      "header": "Authorization: Bearer {session_token}",
+      "token_expiry": "1 hour",
+      "refresh_token_expiry": "30 days"
+    },
+
+    "app_endpoints_post": {
+      "description": "Mobile app endpoints - All use POST method for data submission",
+      
+      "1_register_user": {
+        "endpoint": "POST /api/app/register",
+        "description": "Register new user account",
+        "authentication": "Not required",
+        "request": {
+          "username": "john_doe",
+          "email": "john.doe@example.com",
+          "password": "SecurePass123!",
+          "gender": "male",
+          "nationalID": "12345678901234",
+          "photoURL": "https://storage.example.com/photos/john.jpg"
+        },
+        "response_success": {
+          "success": true,
+          "message": "User registered successfully",
+          "data": {
+            "userID": 1,
+            "username": "john_doe",
+            "email": "john.doe@example.com",
+            "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjEsImlhdCI6MTcwNjg2MDgwMCwiZXhwIjoxNzA2ODY0NDAwfQ.abc123",
+            "refreshToken": "refresh_abc123xyz789",
+            "expiresAt": "2025-02-03T18:00:00Z",
+            "createdAt": "2025-02-03T17:00:00Z"
+          }
+        },
+        "response_error": {
+          "success": false,
+          "error": "Validation Error",
+          "message": "Email already exists",
+          "code": 400
+        }
+      },
+
+      "2_register_google": {
+        "endpoint": "POST /api/app/register/google",
+        "description": "Register user with Google OAuth",
+        "authentication": "Not required",
+        "request": {
+          "googleID": "1234567890abcdef",
+          "email": "john.doe@gmail.com",
+          "username": "john_doe_google",
+          "photoURL": "https://lh3.googleusercontent.com/a/photo.jpg",
+          "gender": "male"
+        },
+        "response_success": {
+          "success": true,
+          "message": "User registered with Google successfully",
+          "data": {
+            "userID": 2,
+            "username": "john_doe_google",
+            "email": "john.doe@gmail.com",
+            "googleID": "1234567890abcdef",
+            "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "refreshToken": "refresh_xyz456...",
+            "expiresAt": "2025-02-03T18:00:00Z"
+          }
+        }
+      },
+
+      "3_login": {
+        "endpoint": "POST /api/app/login",
+        "description": "User login and create session",
+        "authentication": "Not required",
+        "request": {
+          "email": "john.doe@example.com",
+          "password": "SecurePass123!",
+          "deviceName": "iPhone 15 Pro",
+          "deviceType": "ios",
+          "deviceToken": "fcm_token_abc123xyz789",
+          "deviceOS": "iOS 17.2",
+          "appVersion": "2.1.0"
+        },
+        "response_success": {
+          "success": true,
+          "message": "Login successful",
+          "data": {
+            "userID": 1,
+            "username": "john_doe",
+            "email": "john.doe@example.com",
+            "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "refreshToken": "refresh_abc123xyz789",
+            "expiresAt": "2025-02-03T18:00:00Z",
+            "sessionID": 1,
+            "deviceID": 1
+          }
+        },
+        "response_error": {
+          "success": false,
+          "error": "Authentication Failed",
+          "message": "Invalid email or password",
+          "code": 401
+        }
+      },
+
+      "4_logout": {
+        "endpoint": "POST /api/app/logout",
+        "description": "Logout and invalidate session",
+        "authentication": "Required",
+        "request": {
+          "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        },
+        "response_success": {
+          "success": true,
+          "message": "Logged out successfully",
+          "data": {
+            "loggedOutAt": "2025-02-03T17:30:00Z"
+          }
+        }
+      },
+
+      "5_refresh_token": {
+        "endpoint": "POST /api/app/refresh",
+        "description": "Refresh expired session token",
+        "authentication": "Refresh token required",
+        "request": {
+          "refreshToken": "refresh_abc123xyz789"
+        },
+        "response_success": {
+          "success": true,
+          "message": "Token refreshed successfully",
+          "data": {
+            "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_token",
+            "expiresAt": "2025-02-03T19:00:00Z"
+          }
+        }
+      },
+
+      "6_register_wristband": {
+        "endpoint": "POST /api/app/wristband",
+        "description": "Link wristband to user account",
+        "authentication": "Required",
+        "request": {
+          "qrCode": "LIFECODE-QR-00001",
+          "nfcTag": "LIFECODE-NFC-00001",
+          "serialNumber": "SN-2025-00001"
+        },
+        "response_success": {
+          "success": true,
+          "message": "Wristband registered successfully",
+          "data": {
+            "wristbandID": 1,
+            "userID": 1,
+            "qrCode": "LIFECODE-QR-00001",
+            "nfcTag": "LIFECODE-NFC-00001",
+            "serialNumber": "SN-2025-00001",
+            "isActive": true,
+            "isRevoked": false,
+            "createdAt": "2025-02-03T17:00:00Z"
+          }
+        },
+        "response_error": {
+          "success": false,
+          "error": "Conflict",
+          "message": "Wristband already registered to another user",
+          "code": 409
+        }
+      },
+
+      "7_activate_wristband": {
+        "endpoint": "POST /api/app/wristband/activate",
+        "description": "Activate an inactive wristband",
+        "authentication": "Required",
+        "request": {
+          "wristbandID": 1
+        },
+        "response_success": {
+          "success": true,
+          "message": "Wristband activated successfully",
+          "data": {
+            "wristbandID": 1,
+            "isActive": true,
+            "activatedAt": "2025-02-03T17:15:00Z"
+          }
+        }
+      },
+
+      "8_revoke_wristband": {
+        "endpoint": "POST /api/app/wristband/revoke",
+        "description": "Revoke wristband (security feature)",
+        "authentication": "Required",
+        "request": {
+          "wristbandID": 1,
+          "reason": "Lost wristband"
+        },
+        "response_success": {
+          "success": true,
+          "message": "Wristband revoked successfully",
+          "data": {
+            "wristbandID": 1,
+            "isRevoked": true,
+            "isActive": false,
+            "revokedAt": "2025-02-03T17:20:00Z",
+            "revokeReason": "Lost wristband"
+          }
+        }
+      },
+
+      "9_add_medical_info": {
+        "endpoint": "POST /api/app/medical",
+        "description": "Add or update medical information (upsert)",
+        "authentication": "Required",
+        "request": {
+          "bloodType": "A+",
+          "height": 175.5,
+          "weight": 75.0,
+          "chronicDiseases": "Diabetes Type 2, Hypertension",
+          "allergies": "Penicillin, Shellfish, Peanuts",
+          "medications": "Metformin 500mg twice daily, Lisinopril 10mg once daily",
+          "surgeries": "Appendectomy (2015), Knee surgery (2020)",
+          "notes": "Patient prefers no ibuprofen due to stomach sensitivity",
+          "emergencyInstructions": "Call emergency contact immediately. Patient is diabetic - check blood sugar levels."
+        },
+        "response_success": {
+          "success": true,
+          "message": "Medical information saved successfully",
+          "data": {
+            "medicalID": 1,
+            "userID": 1,
+            "bloodType": "A+",
+            "createdAt": "2025-02-03T17:00:00Z",
+            "updatedAt": "2025-02-03T17:00:00Z"
+          }
+        }
+      },
+
+      "10_add_emergency_contact": {
+        "endpoint": "POST /api/app/emergency-contact",
+        "description": "Add emergency contact",
+        "authentication": "Required",
+        "request": {
+          "contactName": "Jane Doe",
+          "relation": "Spouse",
+          "phoneNumber": "+20123456789",
+          "secondaryPhone": "+20198765432",
+          "email": "jane.doe@example.com",
+          "isPrimary": true,
+          "priority": 1,
+          "notes": "Available 24/7"
+        },
+        "response_success": {
+          "success": true,
+          "message": "Emergency contact added successfully",
+          "data": {
+            "contactID": 1,
+            "userID": 1,
+            "contactName": "Jane Doe",
+            "relation": "Spouse",
+            "phoneNumber": "+20123456789",
+            "isPrimary": true,
+            "priority": 1,
+            "createdAt": "2025-02-03T17:00:00Z"
+          }
+        }
+      },
+
+      "11_register_device": {
+        "endpoint": "POST /api/app/device",
+        "description": "Register device for push notifications",
+        "authentication": "Required",
+        "request": {
+          "deviceName": "iPhone 15 Pro",
+          "deviceType": "ios",
+          "deviceToken": "fcm_token_abc123xyz789",
+          "deviceOS": "iOS 17.2",
+          "appVersion": "2.1.0"
+        },
+        "response_success": {
+          "success": true,
+          "message": "Device registered successfully",
+          "data": {
+            "deviceID": 1,
+            "userID": 1,
+            "deviceName": "iPhone 15 Pro",
+            "deviceType": "ios",
+            "deviceToken": "fcm_token_abc123xyz789",
+            "isActive": true,
+            "createdAt": "2025-02-03T17:00:00Z"
+          }
+        }
+      },
+
+      "12_change_password": {
+        "endpoint": "POST /api/app/password/change",
+        "description": "Change user password",
+        "authentication": "Required",
+        "request": {
+          "currentPassword": "SecurePass123!",
+          "newPassword": "NewSecurePass456!"
+        },
+        "response_success": {
+          "success": true,
+          "message": "Password changed successfully",
+          "data": {
+            "changedAt": "2025-02-03T17:30:00Z",
+            "securityLogID": 5
+          }
+        },
+        "response_error": {
+          "success": false,
+          "error": "Authentication Failed",
+          "message": "Current password is incorrect",
+          "code": 401
+        }
+      },
+
+      "13_scan_qr_code": {
+        "endpoint": "POST /api/public/scan/qr",
+        "description": "Public endpoint - Scan QR code and log the scan",
+        "authentication": "Not required",
+        "request": {
+          "qrCode": "LIFECODE-QR-00001",
+          "scannerType": "emergency",
+          "location": "Cairo General Hospital",
+          "latitude": 30.0444,
+          "longitude": 31.2357
+        },
+        "response_success": {
+          "success": true,
+          "message": "Scan logged successfully",
+          "data": {
+            "scanID": 1,
+            "timestamp": "2025-02-03T17:00:00Z",
+            "user": {
+              "username": "john_doe",
+              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "gender": "male",
+              "nationalID": "12345678901234"
+            },
+            "medical": {
+              "bloodType": "A+",
+              "height": 175.5,
+              "weight": 75.0,
+              "allergies": "Penicillin, Shellfish, Peanuts",
+              "chronicDiseases": "Diabetes Type 2, Hypertension",
+              "medications": "Metformin 500mg, Lisinopril 10mg",
+              "emergencyInstructions": "Call emergency contact immediately. Patient is diabetic."
+            },
+            "emergencyContacts": [
+              {
+                "contactID": 1,
+                "contactName": "Jane Doe",
+                "relation": "Spouse",
+                "phoneNumber": "+20123456789",
+                "secondaryPhone": "+20198765432",
+                "isPrimary": true,
+                "priority": 1
+              }
+            ]
+          }
+        },
+        "response_error": {
+          "success": false,
+          "error": "Not Found",
+          "message": "QR code not found or wristband is revoked",
+          "code": 404
+        }
+      },
+
+      "14_scan_nfc_tag": {
+        "endpoint": "POST /api/public/scan/nfc",
+        "description": "Public endpoint - Scan NFC tag and log the scan",
+        "authentication": "Not required",
+        "request": {
+          "nfcTag": "LIFECODE-NFC-00001",
+          "scannerType": "hospital",
+          "location": "Emergency Room - Bed 5",
+          "latitude": 30.0444,
+          "longitude": 31.2357
+        },
+        "response_success": {
+          "success": true,
+          "message": "Scan logged successfully",
+          "data": {
+            "scanID": 2,
+            "timestamp": "2025-02-03T17:05:00Z",
+            "user": {
+              "username": "john_doe",
+              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "gender": "male"
+            },
+            "medical": {
+              "bloodType": "A+",
+              "allergies": "Penicillin, Shellfish",
+              "chronicDiseases": "Diabetes Type 2, Hypertension",
+              "medications": "Metformin 500mg, Lisinopril 10mg",
+              "emergencyInstructions": "Patient is diabetic - check blood sugar"
+            },
+            "emergencyContacts": [
+              {
+                "contactName": "Jane Doe",
+                "relation": "Spouse",
+                "phoneNumber": "+20123456789",
+                "isPrimary": true
+              }
+            ]
+          }
+        }
+      },
+
+      "15_security_log": {
+        "endpoint": "POST /api/app/security-log",
+        "description": "Internal endpoint - Auto-logged by server on security events",
+        "authentication": "Server-side only",
+        "request": {
+          "userID": 1,
+          "actionType": "LOGIN_SUCCESS",
+          "ipAddress": "192.168.1.10",
+          "userAgent": "LifeCode-iOS/2.1.0",
+          "metadata": {
+            "deviceName": "iPhone 15 Pro",
+            "location": "Cairo, Egypt"
+          }
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "logID": 1,
+            "timestamp": "2025-02-03T17:00:00Z"
+          }
+        },
+        "note": "This endpoint is called automatically by the server, not directly by the app"
+      }
+    },
+
+    "web_endpoints_get": {
+      "description": "Web dashboard endpoints - All use GET method for data retrieval",
+      
+      "1_get_user_full_profile": {
+        "endpoint": "GET /api/web/user/{userID}",
+        "description": "Get complete user profile with all related data",
+        "authentication": "Required",
+        "example_url": "/api/web/user/1",
+        "parameters": {
+          "userID": "Integer - User ID in URL path"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": 1,
+              "username": "john_doe",
+              "email": "john.doe@example.com",
+              "gender": "male",
+              "nationalID": "12345678901234",
+              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "isActive": true,
+              "createdAt": "2025-02-01T10:00:00Z",
+              "updatedAt": "2025-02-03T17:00:00Z"
+            },
+            "medicalInfo": {
+              "id": 1,
+              "bloodType": "A+",
+              "height": 175.5,
+              "weight": 75.0,
+              "chronicDiseases": "Diabetes Type 2, Hypertension",
+              "allergies": "Penicillin, Shellfish, Peanuts",
+              "medications": "Metformin 500mg twice daily, Lisinopril 10mg once daily",
+              "surgeries": "Appendectomy (2015), Knee surgery (2020)",
+              "notes": "Patient prefers no ibuprofen",
+              "emergencyInstructions": "Call emergency contact. Patient is diabetic.",
+              "updatedAt": "2025-02-03T17:00:00Z"
+            },
+            "emergencyContacts": [
+              {
+                "id": 1,
+                "contactName": "Jane Doe",
+                "relation": "Spouse",
+                "phoneNumber": "+20123456789",
+                "secondaryPhone": "+20198765432",
+                "email": "jane.doe@example.com",
+                "isPrimary": true,
+                "priority": 1,
+                "notes": "Available 24/7",
+                "createdAt": "2025-02-03T17:00:00Z"
+              },
+              {
+                "id": 2,
+                "contactName": "Dr. Ahmed Hassan",
+                "relation": "Doctor",
+                "phoneNumber": "+20111222333",
+                "email": "dr.hassan@hospital.com",
+                "isPrimary": false,
+                "priority": 2,
+                "notes": "Primary care physician",
+                "createdAt": "2025-02-03T17:05:00Z"
+              }
+            ],
+            "wristbands": [
+              {
+                "id": 1,
+                "qrCode": "LIFECODE-QR-00001",
+                "nfcTag": "LIFECODE-NFC-00001",
+                "serialNumber": "SN-2025-00001",
+                "isActive": true,
+                "isRevoked": false,
+                "activatedAt": "2025-02-03T17:00:00Z",
+                "createdAt": "2025-02-03T17:00:00Z"
+              }
+            ],
+            "statistics": {
+              "totalScans": 15,
+              "lastScan": "2025-02-03T17:00:00Z",
+              "activeDevices": 2,
+              "totalDevices": 3,
+              "accountAgeDays": 2
+            }
+          }
+        },
+        "response_error": {
+          "success": false,
+          "error": "Not Found",
+          "message": "User not found",
+          "code": 404
+        }
+      },
+
+      "2_get_security_logs": {
+        "endpoint": "GET /api/web/user/{userID}/security-logs",
+        "description": "Get user security audit logs with pagination",
+        "authentication": "Required",
+        "example_url": "/api/web/user/1/security-logs?limit=50&offset=0&actionType=LOGIN_SUCCESS",
+        "parameters": {
+          "userID": "Integer - User ID in URL path",
+          "limit": "Integer - Number of records (default: 50, max: 100)",
+          "offset": "Integer - Pagination offset (default: 0)",
+          "actionType": "String - Filter by action type (optional)"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "logs": [
+              {
+                "logID": 1,
+                "userID": 1,
+                "actionType": "LOGIN_SUCCESS",
+                "ipAddress": "192.168.1.10",
+                "userAgent": "LifeCode-iOS/2.1.0",
+                "metadata": {
+                  "deviceName": "iPhone 15 Pro",
+                  "location": "Cairo, Egypt"
+                },
+                "timestamp": "2025-02-03T17:00:00Z"
+              },
+              {
+                "logID": 2,
+                "userID": 1,
+                "actionType": "PASSWORD_CHANGED",
+                "ipAddress": "10.0.0.5",
+                "userAgent": "Chrome/121.0 Windows",
+                "metadata": null,
+                "timestamp": "2025-02-02T14:30:00Z"
+              },
+              {
+                "logID": 3,
+                "userID": 1,
+                "actionType": "LOGOUT",
+                "ipAddress": "192.168.1.10",
+                "userAgent": "LifeCode-iOS/2.1.0",
+                "metadata": null,
+                "timestamp": "2025-02-01T22:00:00Z"
+              }
+            ],
+            "pagination": {
+              "total": 125,
+              "limit": 50,
+              "offset": 0,
+              "hasMore": true,
+              "nextOffset": 50
+            }
+          }
+        }
+      },
+
+      "3_get_active_devices": {
+        "endpoint": "GET /api/web/user/{userID}/devices",
+        "description": "Get all user devices (active and inactive)",
+        "authentication": "Required",
+        "example_url": "/api/web/user/1/devices",
+        "parameters": {
+          "userID": "Integer - User ID in URL path"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "devices": [
+              {
+                "deviceID": 1,
+                "userID": 1,
+                "deviceName": "iPhone 15 Pro",
+                "deviceType": "ios",
+                "deviceToken": "fcm_token_abc123xyz789",
+                "deviceOS": "iOS 17.2",
+                "appVersion": "2.1.0",
+                "isActive": true,
+                "createdAt": "2025-02-01T10:00:00Z",
+                "lastUsed": "2025-02-03T17:00:00Z"
+              },
+              {
+                "deviceID": 2,
+                "userID": 1,
+                "deviceName": "Samsung Galaxy S24",
+                "deviceType": "android",
+                "deviceToken": "fcm_token_def456abc123",
+                "deviceOS": "Android 14",
+                "appVersion": "2.1.0",
+                "isActive": true,
+                "createdAt": "2025-02-02T14:00:00Z",
+                "lastUsed": "2025-02-03T15:30:00Z"
+              },
+              {
+                "deviceID": 3,
+                "userID": 1,
+                "deviceName": "iPad Pro",
+                "deviceType": "ios",
+                "deviceToken": "fcm_token_ghi789xyz456",
+                "deviceOS": "iPadOS 17.2",
+                "appVersion": "2.0.5",
+                "isActive": false,
+                "createdAt": "2025-01-15T08:00:00Z",
+                "lastUsed": "2025-01-30T12:00:00Z"
+              }
+            ],
+            "summary": {
+              "totalDevices": 3,
+              "activeDevices": 2,
+              "inactiveDevices": 1
+            }
+          }
+        }
+      },
+
+      "4_get_scan_history": {
+        "endpoint": "GET /api/web/user/{userID}/scan-history",
+        "description": "Get wristband scan history with location data",
+        "authentication": "Required",
+        "example_url": "/api/web/user/1/scan-history?limit=100&offset=0&scanType=QR",
+        "parameters": {
+          "userID": "Integer - User ID in URL path",
+          "limit": "Integer - Number of records (default: 100, max: 500)",
+          "offset": "Integer - Pagination offset (default: 0)",
+          "scanType": "String - Filter by QR or NFC (optional)",
+          "scannerType": "String - Filter by scanner type (optional)",
+          "startDate": "ISO 8601 date - Filter from date (optional)",
+          "endDate": "ISO 8601 date - Filter to date (optional)"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "scans": [
+              {
+                "scanID": 1,
+                "wristbandID": 1,
+                "userID": 1,
+                "scanType": "QR",
+                "scannerType": "emergency",
+                "location": "Cairo General Hospital",
+                "latitude": 30.0444,
+                "longitude": 31.2357,
+                "ipAddress": "41.32.45.78",
+                "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2)",
+                "timestamp": "2025-02-03T17:00:00Z"
+              },
+              {
+                "scanID": 2,
+                "wristbandID": 1,
+                "userID": 1,
+                "scanType": "NFC",
+                "scannerType": "hospital",
+                "location": "Emergency Room - Bed 5",
+                "latitude": 30.0445,
+                "longitude": 31.2358,
+                "ipAddress": "41.32.45.79",
+                "userAgent": "Mozilla/5.0 (Linux; Android 13)",
+                "timestamp": "2025-02-03T16:45:00Z"
+              },
+              {
+                "scanID": 3,
+                "wristbandID": 1,
+                "userID": 1,
+                "scanType": "QR",
+                "scannerType": "public",
+                "location": "Pharmacy - Downtown Cairo",
+                "latitude": 30.0446,
+                "longitude": 31.2359,
+                "ipAddress": "41.32.45.80",
+                "userAgent": "Mozilla/5.0 (Windows NT 10.0)",
+                "timestamp": "2025-02-03T14:20:00Z"
+              }
+            ],
+            "pagination": {
+              "total": 15,
+              "limit": 100,
+              "offset": 0,
+              "hasMore": false
+            },
+            "statistics": {
+              "totalScans": 15,
+              "qrScans": 10,
+              "nfcScans": 5,
+              "emergencyScans": 2,
+              "hospitalScans": 3,
+              "publicScans": 10
+            }
+          }
+        }
+      },
+
+      "5_get_wristbands": {
+        "endpoint": "GET /api/web/user/{userID}/wristbands",
+        "description": "Get all user wristbands",
+        "authentication": "Required",
+        "example_url": "/api/web/user/1/wristbands",
+        "parameters": {
+          "userID": "Integer - User ID in URL path"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "wristbands": [
+              {
+                "id": 1,
+                "userID": 1,
+                "qrCode": "LIFECODE-QR-00001",
+                "nfcTag": "LIFECODE-NFC-00001",
+                "serialNumber": "SN-2025-00001",
+                "isActive": true,
+                "isRevoked": false,
+                "activatedAt": "2025-02-03T17:00:00Z",
+                "revokedAt": null,
+                "revokeReason": null,
+                "createdAt": "2025-02-03T17:00:00Z",
+                "updatedAt": "2025-02-03T17:00:00Z",
+                "scanCount": 15,
+                "lastScan": "2025-02-03T17:00:00Z"
+              }
+            ],
+            "summary": {
+              "totalWristbands": 1,
+              "activeWristbands": 1,
+              "revokedWristbands": 0
+            }
+          }
+        }
+      },
+
+      "6_get_emergency_profile_by_qr": {
+        "endpoint": "GET /api/public/emergency/qr/{qrCode}",
+        "description": "Public endpoint - Get emergency profile by QR code",
+        "authentication": "Not required",
+        "example_url": "/api/public/emergency/qr/LIFECODE-QR-00001",
+        "parameters": {
+          "qrCode": "String - QR code identifier in URL path"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "user": {
+              "username": "john_doe",
+              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "gender": "male",
+              "nationalID": "12345678901234"
+            },
+            "medical": {
+              "bloodType": "A+",
+              "height": 175.5,
+              "weight": 75.0,
+              "allergies": "Penicillin, Shellfish, Peanuts",
+              "chronicDiseases": "Diabetes Type 2, Hypertension",
+              "medications": "Metformin 500mg, Lisinopril 10mg",
+              "surgeries": "Appendectomy (2015)",
+              "emergencyInstructions": "Call emergency contact immediately. Patient is diabetic - check blood sugar."
+            },
+            "emergencyContacts": [
+              {
+                "contactName": "Jane Doe",
+                "relation": "Spouse",
+                "phoneNumber": "+20123456789",
+                "secondaryPhone": "+20198765432",
+                "isPrimary": true,
+                "priority": 1
+              }
+            ],
+            "wristband": {
+              "qrCode": "LIFECODE-QR-00001",
+              "nfcTag": "LIFECODE-NFC-00001",
+              "isActive": true
+            }
+          }
+        },
+        "response_error": {
+          "success": false,
+          "error": "Not Found",
+          "message": "QR code not found or wristband is revoked",
+          "code": 404
+        }
+      },
+
+      "7_get_emergency_profile_by_nfc": {
+        "endpoint": "GET /api/public/emergency/nfc/{nfcTag}",
+        "description": "Public endpoint - Get emergency profile by NFC tag",
+        "authentication": "Not required",
+        "example_url": "/api/public/emergency/nfc/LIFECODE-NFC-00001",
+        "parameters": {
+          "nfcTag": "String - NFC tag identifier in URL path"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "user": {
+              "username": "john_doe",
+              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "gender": "male"
+            },
+            "medical": {
+              "bloodType": "A+",
+              "allergies": "Penicillin, Shellfish",
+              "chronicDiseases": "Diabetes Type 2, Hypertension",
+              "medications": "Metformin 500mg, Lisinopril 10mg",
+              "emergencyInstructions": "Patient is diabetic - check blood sugar"
+            },
+            "emergencyContacts": [
+              {
+                "contactName": "Jane Doe",
+                "relation": "Spouse",
+                "phoneNumber": "+20123456789",
+                "isPrimary": true
+              }
+            ]
+          }
+        }
+      },
+
+      "8_get_active_users_admin": {
+        "endpoint": "GET /api/web/admin/users/active",
+        "description": "Admin endpoint - Get all active users with statistics",
+        "authentication": "Required (Admin only)",
+        "example_url": "/api/web/admin/users/active?limit=50&offset=0",
+        "parameters": {
+          "limit": "Integer - Number of records (default: 50)",
+          "offset": "Integer - Pagination offset (default: 0)"
+        },
+        "response_success": {
+          "success": true,
+          "data": {
+            "users": [
+              {
+                "userID": 1,
+                "username": "john_doe",
+                "email": "john.doe@example.com",
+                "wristbandCount": 1,
+                "deviceCount": 2,
+                "lastActivity": "2025-02-03T17:00:00Z",
+                "createdAt": "2025-02-01T10:00:00Z"
+              },
+              {
+                "userID": 2,
+                "username": "jane_smith",
+                "email": "jane.smith@example.com",
+                "wristbandCount": 1,
+                "deviceCount": 1,
+                "lastActivity": "2025-02-03T16:30:00Z",
+                "createdAt": "2025-02-02T14:00:00Z"
+              }
+            ],
+            "pagination": {
+              "total": 150,
+              "limit": 50,
+              "offset": 0,
+              "hasMore": true
+            }
+          }
+        }
+      },
+
+      "9_get_dashboard_statistics": {
+        "endpoint": "GET /api/web/admin/stats",
+        "description": "Admin endpoint - Get platform-wide statistics",
+        "authentication": "Required (Admin only)",
+        "example_url": "/api/web/admin/stats",
+        "response_success": {
+          "success": true,
+          "data": {
+            "users": {
+              "totalUsers": 1500,
+              "activeUsers": 1350,
+              "newUsersToday": 25,
+              "newUsersThisWeek": 180,
+              "newUsersThisMonth": 450
+            },
+            "wristbands": {
+              "totalWristbands": 1480,
+              "activeWristbands": 1420,
+              "revokedWristbands": 60,
+              "registeredToday": 23
+            },
+            "scans": {
+              "totalScans": 45000,
+              "scansToday": 1200,
+              "scansThisWeek": 8500,
+              "scansThisMonth": 32000,
+              "qrScans": 30000,
+              "nfcScans": 15000,
+              "emergencyScans": 500,
+              "hospitalScans": 1200,
+              "publicScans": 43300
+            },
+            "devices": {
+              "totalDevices": 2200,
+              "activeDevices": 1800,
+              "iosDevices": 1100,
+              "androidDevices": 1100
+            },
+            "sessions": {
+              "activeSessions": 850,
+              "totalSessions": 125000
+            }
+          }
+        }
+      }
+    },
+
+    "http_status_codes": {
+      "200": "OK - Request successful",
+      "201": "Created - Resource created successfully",
+      "400": "Bad Request - Invalid input data",
+      "401": "Unauthorized - Invalid or missing authentication",
+      "403": "Forbidden - Insufficient permissions",
+      "404": "Not Found - Resource not found",
+      "409": "Conflict - Resource already exists",
+      "422": "Unprocessable Entity - Validation failed",
+      "500": "Internal Server Error - Server error"
+    },
+
+    "common_error_responses": {
+      "unauthorized": {
+        "success": false,
+        "error": "Unauthorized",
+        "message": "Invalid or expired session token",
+        "code": 401
+      },
+      "validation_error": {
+        "success": false,
+        "error": "Validation Error",
+        "message": "Invalid input data",
+        "code": 400,
+        "details": {
+          "email": "Invalid email format",
+          "password": "Password must be at least 8 characters"
+        }
+      },
+      "not_found": {
+        "success": false,
+        "error": "Not Found",
+        "message": "Resource not found",
+        "code": 404
+      },
+      "conflict": {
+        "success": false,
+        "error": "Conflict",
+        "message": "Resource already exists",
+        "code": 409
+      },
+      "server_error": {
+        "success": false,
+        "error": "Internal Server Error",
+        "message": "An unexpected error occurred",
+        "code": 500
+      }
+    },
+
+    "implementation_notes": {
+      "note_1": "All timestamps are in ISO 8601 format (UTC)",
+      "note_2": "Authentication uses JWT Bearer tokens in Authorization header",
+      "note_3": "Public scan endpoints don't require authentication for emergency access",
+      "note_4": "Session tokens expire after 1 hour, use refresh token to renew",
+      "note_5": "All POST endpoints return 201 status on successful resource creation",
+      "note_6": "GET endpoints with pagination return hasMore boolean and nextOffset",
+      "note_7": "QR codes and NFC tags must be unique across the entire system",
+      "note_8": "Medical information and emergency contacts are only shown in public scans",
+      "note_9": "Security logs are automatically created for login/logout/password changes",
+      "note_10": "Admin endpoints require additional role-based authentication"
+    }
+  }
+}
