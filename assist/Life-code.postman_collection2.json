@@ -1,0 +1,1174 @@
+{
+  "info": {
+    "_postman_id": "41fc1e49-34cd-403a-b429-03a0befc2bdf",
+    "name": "Life-code",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47847160"
+  },
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Youssef\",\r\n  \"email\": \"Youssef@lifecode.com\",\r\n  \"password\": \"Youssef123\",\r\n  \"confirmPassword\": \"Youssef123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"Youssef@lifecode.com\",\r\n  \"password\": \"Youssef123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "login"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "login",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"Youssef@lifecode.com\",\r\n  \"password\": \"Youssef123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "login"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "482"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"1e2-ss+61JsSTwI8NRZwWbFqxwUS2uk\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 18:10:29 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Login successful\",\n    \"data\": {\n        \"userID\": \"5JWPe1yQNvRxhyO39jnqUh3Lba53\",\n        \"username\": \"Youssef bassiony\",\n        \"email\": \"youssef@lifecode.com\",\n        \"sessionToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI1SldQZTF5UU52UnhoeU8zOWpucVVoM0xiYTUzIiwiaWF0IjoxNzc0NTQ4NjI4LCJleHAiOjE3NzQ1NTU4Mjh9.opaCPzgPBZB16V6aV3yHsDArSurVEYrGeMmQ3ylqURs\",\n        \"refreshToken\": \"49b18fe9-47ea-454a-8960-e18cedbd2dfb\",\n        \"expiresAt\": \"2026-03-26T19:10:28.280Z\",\n        \"sessionID\": \"7WEvifUqo8fRVTJAbPOh\"\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "update personal info",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI1SldQZTF5UU52UnhoeU8zOWpucVVoM0xiYTUzIiwiaWF0IjoxNzczMjc0NDI2LCJleHAiOjE3NzMyNzgwMjZ9.OIw7zfweKtF4P36Hw43ypA0ZgTn_IziAXHqtVcr3A2g",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"fullName\":\"Youssef bassiony\",\r\n  \"gender\" : \"male\",\r\n  \"address\" : \"21 nasr city\"\r\n\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/profile/personal-info",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "profile",
+            "personal-info"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "update personal info",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\":\"Youssef bassiony\",\r\n  \"gender\" : \"male\",\r\n  \"address\" : \"21 nasr city\"\r\n\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/profile/personal-info",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "profile",
+                "personal-info"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "229"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"e5-kqtVgibeT0g9QdxMkaYb0ASiBWs\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 18:12:06 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Personal information updated successfully\",\n    \"data\": {\n        \"userID\": \"5JWPe1yQNvRxhyO39jnqUh3Lba53\",\n        \"fullName\": \"Youssef bassiony\",\n        \"gender\": \"male\",\n        \"address\": \"21 nasr city\",\n        \"updatedAt\": \"2026-03-26T18:12:06.916Z\"\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "personal info",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/profile/personal-info",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "profile",
+            "personal-info"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "personal info",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/profile/personal-info",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "profile",
+                "personal-info"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "228"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"e4-hPbGfJ0gk4kfv3qzaRlh3O/2bqo\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 16:21:28 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"data\": {\n        \"userID\": \"5JWPe1yQNvRxhyO39jnqUh3Lba53\",\n        \"fullName\": \"Youssef bassiony\",\n        \"gender\": \"male\",\n        \"address\": \"21 nasr city\",\n        \"email\": \"youssef@lifecode.com\",\n        \"updatedAt\": {\n            \"_seconds\": 1773275769,\n            \"_nanoseconds\": 987000000\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update Emergency Contacts",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"primaryContact\": {\r\n    \"fullName\": \"Gawish \",\r\n    \"phoneNumber\": \"+201207799304\",\r\n    \"relationship\": \"Friend\"\r\n  },\r\n  \"secondaryContact\": {\r\n    \"fullName\": \"Hassan\",\r\n    \"phoneNumber\": \"+201019385016\",\r\n    \"relationship\": \"Friend\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/profile/emergency-contacts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "profile",
+            "emergency-contacts"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Update Emergency Contacts",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"primaryContact\": {\r\n    \"fullName\": \"Gawish \",\r\n    \"phoneNumber\": \"+201207799304\",\r\n    \"relationship\": \"Friend\"\r\n  },\r\n  \"secondaryContact\": {\r\n    \"fullName\": \"Hassan\",\r\n    \"phoneNumber\": \"+201019385016\",\r\n    \"relationship\": \"Friend\"\r\n  }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/profile/emergency-contacts",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "profile",
+                "emergency-contacts"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "422"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"1a6-kZcnAjq/CqdgLD5Q5INKlKPj1TM\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 17:59:28 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Emergency contacts updated successfully\",\n    \"data\": {\n        \"userID\": \"5JWPe1yQNvRxhyO39jnqUh3Lba53\",\n        \"primaryContact\": {\n            \"fullName\": \"Gawish\",\n            \"phoneNumber\": \"+201207799304\",\n            \"relationship\": \"Friend\",\n            \"updatedAt\": \"2026-03-26T17:59:27.103Z\"\n        },\n        \"secondaryContact\": {\n            \"fullName\": \"Hassan\",\n            \"phoneNumber\": \"+201019385016\",\n            \"relationship\": \"Friend\",\n            \"updatedAt\": \"2026-03-26T17:59:27.103Z\"\n        },\n        \"updatedAt\": \"2026-03-26T17:59:28.167Z\"\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "emergency info",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/app/profile/emergency-contacts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "profile",
+            "emergency-contacts"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "emergency info",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/app/profile/emergency-contacts",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "profile",
+                "emergency-contacts"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "375"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"177-3GQOp8sugnvbhrLccCnZnAprj7A\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 16:23:36 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"data\": {\n        \"userID\": \"5JWPe1yQNvRxhyO39jnqUh3Lba53\",\n        \"primaryContact\": {\n            \"FullName\": \"Gawish\",\n            \"Relationship\": \"Friend\",\n            \"PhoneNumber\": \"+201207799304\",\n            \"UpdatedAt\": {\n                \"_seconds\": 1773277946,\n                \"_nanoseconds\": 397000000\n            }\n        },\n        \"secondaryContact\": {\n            \"FullName\": \"Hassan\",\n            \"Relationship\": \"Friend\",\n            \"PhoneNumber\": \"+201019385016\",\n            \"UpdatedAt\": {\n                \"_seconds\": 1773277946,\n                \"_nanoseconds\": 397000000\n            }\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "refresh token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n     \"refreshToken\": \"4af12e86-bb57-46c6-ae5c-128a1641ca2d\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/refresh",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "refresh"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "medical info",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/medical/profile",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "medical",
+            "profile"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "medical info",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/medical/profile",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "medical",
+                "profile"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "1399"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"577-VmMr/HnI+W6Cv/fhKoEpDzoDb+w\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 17:44:36 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"data\": {\n        \"userHeader\": {\n            \"Username\": \"Youssef bassiony\",\n            \"PhotoURL\": null,\n            \"UpdatedAt\": {\n                \"_seconds\": 1774546869,\n                \"_nanoseconds\": 782000000\n            }\n        },\n        \"profileCompletion\": 57,\n        \"quickStats\": {\n            \"BloodType\": null,\n            \"AllergiesCount\": 2,\n            \"MedicationsCount\": 2\n        },\n        \"sections\": {\n            \"generalInformation\": {\n                \"completed\": false,\n                \"summary\": \"Not set\",\n                \"data\": {\n                    \"Username\": \"Youssef bassiony\",\n                    \"DateOfBirth\": null,\n                    \"Gender\": \"male\",\n                    \"BloodType\": null,\n                    \"Height\": null,\n                    \"Weight\": null,\n                    \"NationalID\": null,\n                    \"PhoneNumber\": null\n                }\n            },\n            \"medicalConditions\": {\n                \"completed\": true,\n                \"summary\": \"Asthma, Diabetes Type 2\",\n                \"count\": 2,\n                \"data\": {\n                    \"MedicalConditions\": [\n                        \"Asthma\",\n                        \"Diabetes Type 2\"\n                    ],\n                    \"Notes\": \"\"\n                }\n            },\n            \"allergies\": {\n                \"completed\": true,\n                \"hasAllergies\": true,\n                \"summary\": \"2 allergies\",\n                \"count\": 2,\n                \"data\": {\n                    \"HasAllergies\": true,\n                    \"AllergiesList\": [\n                        {\n                            \"type\": \"Peanuts\",\n                            \"severity\": \"Severe\"\n                        },\n                        {\n                            \"type\": \"Penicillin\",\n                            \"severity\": \"Mild\"\n                        }\n                    ]\n                }\n            },\n            \"currentMedications\": {\n                \"completed\": true,\n                \"hasMedications\": true,\n                \"summary\": \"2 medications\",\n                \"count\": 2,\n                \"data\": {\n                    \"HasMedications\": true,\n                    \"MedicationsList\": [\n                        {\n                            \"name\": \"Metformin\",\n                            \"dosage\": \"500 mg\",\n                            \"schedule\": \"Once a day\"\n                        },\n                        {\n                            \"name\": \"Lisinopril\",\n                            \"dosage\": \"10 mg\",\n                            \"schedule\": \"Morning\"\n                        }\n                    ]\n                }\n            },\n            \"surgicalHistory\": {\n                \"completed\": true,\n                \"hasSurgeries\": true,\n                \"summary\": \"1 procedures\",\n                \"count\": 1,\n                \"data\": {\n                    \"HasSurgeries\": true,\n                    \"SurgeriesList\": [\n                        {\n                            \"type\": \"Appendectomy\",\n                            \"date\": \"15/06/2018\",\n                            \"notes\": \"No complications, done at General Hospital\"\n                        }\n                    ]\n                }\n            }\n        },\n        \"emergencyContactsCount\": 0,\n        \"emergencyInstructions\": \"\"\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "update medical info",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"BloodType\": \"A+\",\r\n  \"MedicalConditions\": [\r\n    \"Diabetes\",\r\n    \"Asthma\"\r\n  ]\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/medical/general-info",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "medical",
+            "general-info"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "update medical info",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"BloodType\": \"A+\",\r\n  \"MedicalConditions\": [\r\n    \"Diabetes\",\r\n    \"Asthma\"\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/medical/general-info",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "medical",
+                "general-info"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "176"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"b0-uS5q/Rtzusd11vI9amcLATCT4Kk\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 17:46:05 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"General information updated successfully\",\n    \"data\": {\n        \"UpdatedAt\": \"2026-03-26T17:46:04.055Z\",\n        \"BloodType\": \"A+\",\n        \"MedicalConditions\": [\n            \"Diabetes\",\n            \"Asthma\"\n        ]\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "update allergies",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"HasAllergies\": true,\r\n  \"AllergiesList\": [\r\n    {\r\n      \"type\": \"Peanuts\",\r\n      \"severity\": \"Severe\"\r\n    },\r\n    {\r\n      \"type\": \"Penicillin\",\r\n      \"severity\": \"Mild\"\r\n    }\r\n  ]\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/medical/allergies",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "medical",
+            "allergies"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "update allergies",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"HasAllergies\": true,\r\n  \"AllergiesList\": [\r\n    {\r\n      \"type\": \"Peanuts\",\r\n      \"severity\": \"Severe\"\r\n    },\r\n    {\r\n      \"type\": \"Penicillin\",\r\n      \"severity\": \"Mild\"\r\n    }\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/medical/allergies",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "medical",
+                "allergies"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "256"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"100-dXNfL++Kw8lO8Jq/qiKjW4cgeVM\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 16:51:59 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Allergies updated successfully\",\n    \"data\": {\n        \"HasAllergies\": true,\n        \"AllergiesList\": [\n            {\n                \"type\": \"Peanuts\",\n                \"severity\": \"Severe\"\n            },\n            {\n                \"type\": \"Penicillin\",\n                \"severity\": \"Mild\"\n            }\n        ],\n        \"count\": 2,\n        \"UpdatedAt\": {\n            \"_seconds\": 1774543917,\n            \"_nanoseconds\": 874000000\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "update medications",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"HasMedications\": true,\r\n  \"MedicationsList\": [\r\n    {\r\n      \"name\": \"Metformin\",\r\n      \"dosage\": \"500 mg\",\r\n      \"schedule\": \"Once a day\"\r\n    },\r\n    {\r\n      \"name\": \"Lisinopril\",\r\n      \"dosage\": \"10 mg\",\r\n      \"schedule\": \"Morning\"\r\n    }\r\n  ]\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/medical/medications",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "medical",
+            "medications"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "update medications",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"HasMedications\": true,\r\n  \"MedicationsList\": [\r\n    {\r\n      \"name\": \"Metformin\",\r\n      \"dosage\": \"500 mg\",\r\n      \"schedule\": \"Once a day\"\r\n    },\r\n    {\r\n      \"name\": \"Lisinopril\",\r\n      \"dosage\": \"10 mg\",\r\n      \"schedule\": \"Morning\"\r\n    }\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/medical/medications",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "medical",
+                "medications"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "306"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"132-0uF5AMGI8HNj8MQhm2YkGX3Lie8\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 16:57:53 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Medications updated successfully\",\n    \"data\": {\n        \"HasMedications\": true,\n        \"MedicationsList\": [\n            {\n                \"name\": \"Metformin\",\n                \"dosage\": \"500 mg\",\n                \"schedule\": \"Once a day\"\n            },\n            {\n                \"name\": \"Lisinopril\",\n                \"dosage\": \"10 mg\",\n                \"schedule\": \"Morning\"\n            }\n        ],\n        \"count\": 2,\n        \"UpdatedAt\": {\n            \"_seconds\": 1774544272,\n            \"_nanoseconds\": 174000000\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update Surgical History",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"HasSurgeries\": true,\r\n  \"SurgeriesList\": [\r\n    {\r\n      \"type\": \"Appendectomy\",\r\n      \"date\": \"15/06/2018\",\r\n      \"notes\": \"No complications, done at General Hospital\"\r\n    }\r\n  ]\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/app/medical/surgeries",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "app",
+            "medical",
+            "surgeries"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Update Surgical History",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"HasSurgeries\": true,\r\n  \"SurgeriesList\": [\r\n    {\r\n      \"type\": \"Appendectomy\",\r\n      \"date\": \"15/06/2018\",\r\n      \"notes\": \"No complications, done at General Hospital\"\r\n    }\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/app/medical/surgeries",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "app",
+                "medical",
+                "surgeries"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "281"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"119-1kPlP/pWb815bn/xVbMZogKzVvk\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Mar 2026 16:43:15 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Keep-Alive",
+              "value": "timeout=5"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Surgical history updated successfully\",\n    \"data\": {\n        \"HasSurgeries\": true,\n        \"SurgeriesList\": [\n            {\n                \"type\": \"Appendectomy\",\n                \"date\": \"15/06/2018\",\n                \"notes\": \"No complications, done at General Hospital\"\n            }\n        ],\n        \"count\": 1,\n        \"UpdatedAt\": {\n            \"_seconds\": 1774543393,\n            \"_nanoseconds\": 593000000\n        }\n    }\n}"
+        }
+      ]
+    }
+  ]
+}
