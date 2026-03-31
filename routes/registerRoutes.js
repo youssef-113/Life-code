@@ -2,6 +2,22 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { registerUser, registerWithGoogle, registerWithApple } = require('../controllers/registerController');
+const { registerLimiter } = require('../middleware/rateLimitMiddleware');
+
+// OAuth rate limiter - Moderate (10 attempts per hour per IP)
+const oauthLimiter = require('express-rate-limit')({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: {
+    success: false,
+    error: 'Too Many Requests',
+    message: 'Too many OAuth attempts. Please try again later.',
+    code: 429
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip
+});
 
 /**
  * Register Routes - User registration endpoints
@@ -12,7 +28,7 @@ const { registerUser, registerWithGoogle, registerWithApple } = require('../cont
  * @description Register new user with email/password
  * @access Public
  */
-router.post('/register', [
+router.post('/register', registerLimiter, [
   body('name')
     .trim()
     .isLength({ min: 2, max: 50 })
@@ -38,7 +54,7 @@ router.post('/register', [
  * @description Register user with Google OAuth
  * @access Public
  */
-router.post('/register/google', [
+router.post('/register/google', oauthLimiter, [
   body('googleID')
     .notEmpty()
     .withMessage('Google ID is required'),
@@ -66,7 +82,7 @@ router.post('/register/google', [
  * @description Register user with Apple Sign In
  * @access Public
  */
-router.post('/register/apple', [
+router.post('/register/apple', oauthLimiter, [
   body('appleID')
     .notEmpty()
     .withMessage('Apple ID is required'),

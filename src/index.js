@@ -2,7 +2,9 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { initializeFirebase } = require('../config/firebase');
+const { apiLimiter } = require('../middleware/rateLimitMiddleware');
 
 // Import routes
 const registerRoutes = require('../routes/registerRoutes');
@@ -27,7 +29,53 @@ try {
   process.exit(1);
 }
 
-// Middleware
+// Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      fontSrc: ["'self'", "https:"],
+      connectSrc: ["'self'", "https:"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  // Prevent MIME type sniffing
+  noSniff: true,
+  // Prevent clickjacking
+  frameguard: {
+    action: 'deny'
+  },
+  // XSS protection (legacy browsers)
+  xssFilter: true,
+  // Referrer policy
+  referrerPolicy: {
+    policy: 'strict-origin-when-cross-origin'
+  }
+}));
+
+// HTTPS enforcement in production
+if (process.env.NODE_ENV === 'production') {
+  // HTTP Strict Transport Security (HSTS) - forces HTTPS for 1 year
+  app.use((req, res, next) => {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    next();
+  });
+  
+  // Redirect HTTP to HTTPS
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https' && !req.secure) {
+      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
+}
+
+// CORS Configuration
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -36,6 +84,9 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// General API rate limiting (applied to all /api routes)
+app.use('/api', apiLimiter);
 
 // Request logging middleware
 app.use((req, res, next) => {

@@ -5,8 +5,8 @@ const { getFirestore, getAuth, createUserInFirebase, getUserByEmail, getUserByUi
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '2h';
-const REFRESH_TOKEN_EXPIRES_IN = '30d';
+const JWT_EXPIRES_IN = '15m'; // Short-lived access tokens (15 minutes)
+const REFRESH_TOKEN_EXPIRES_IN = '7d'; // Refresh tokens valid for 7 days
 
 /**
  * Auth Service - Handles all authentication operations
@@ -19,7 +19,7 @@ class AuthService {
    * @returns {Object} - User data with tokens
    */
   async registerUser(userData) {
-    const { username, email, password } = userData;
+    const { username, email, password, userAgent, ipAddress } = userData;
     const db = getFirestore();
     
     try {
@@ -28,6 +28,7 @@ class AuthService {
       const existingUserQuery = await usersRef.where('Email', '==', email).get();
       
       if (!existingUserQuery.empty) {
+        await this.logSecurityEvent(null, 'REGISTER_FAILED', { email, reason: 'Email already exists' });
         return {
           success: false,
           error: 'Validation Error',
@@ -40,6 +41,7 @@ class AuthService {
       const firebaseResult = await createUserInFirebase(email, password, username);
       
       if (!firebaseResult.success) {
+        await this.logSecurityEvent(null, 'REGISTER_FAILED', { email, reason: 'Firebase error', error: firebaseResult.error });
         return {
           success: false,
           error: 'Firebase Error',
@@ -64,11 +66,19 @@ class AuthService {
       // Generate tokens
       const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
 
-      // Create session
-      const session = await this.createSession(uid, accessToken, refreshToken);
+      // Create session with device info
+      const session = await this.createSession(uid, accessToken, refreshToken, {
+        userAgent,
+        ipAddress
+      });
 
       // Log security event
-      await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { sessionId: session.id });
+      await this.logSecurityEvent(uid, 'REGISTER_SUCCESS', { 
+        sessionId: session.id,
+        email,
+        deviceName: session.DeviceName,
+        ipAddress
+      });
 
       return {
         success: true,
@@ -80,6 +90,7 @@ class AuthService {
           sessionToken: accessToken,
           refreshToken,
           expiresAt,
+          deviceName: session.DeviceName,
           createdAt: userDoc.CreatedAt
         }
       };
@@ -100,7 +111,7 @@ class AuthService {
    * @returns {Object} - User data with tokens
    */
   async registerWithGoogle(userData) {
-    const { googleID, email, username, photoURL, gender } = userData;
+    const { googleID, email, username, photoURL, gender, userAgent, ipAddress } = userData;
     const db = getFirestore();
     
     try {
@@ -115,8 +126,13 @@ class AuthService {
         
         // Generate tokens for existing user
         const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-        await this.createSession(uid, accessToken, refreshToken);
-        await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { method: 'google' });
+        const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
+        await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { 
+          method: 'google', 
+          sessionId: session.id,
+          deviceName: session.DeviceName,
+          ipAddress 
+        });
 
         return {
           success: true,
@@ -128,7 +144,8 @@ class AuthService {
             googleID,
             sessionToken: accessToken,
             refreshToken,
-            expiresAt
+            expiresAt,
+            deviceName: session.DeviceName
           }
         };
       }
@@ -151,8 +168,13 @@ class AuthService {
 
       // Generate tokens
       const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-      await this.createSession(uid, accessToken, refreshToken);
-      await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { method: 'google' });
+      const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
+      await this.logSecurityEvent(uid, 'REGISTER_SUCCESS', { 
+        method: 'google', 
+        sessionId: session.id,
+        deviceName: session.DeviceName,
+        ipAddress 
+      });
 
       return {
         success: true,
@@ -164,7 +186,8 @@ class AuthService {
           googleID,
           sessionToken: accessToken,
           refreshToken,
-          expiresAt
+          expiresAt,
+          deviceName: session.DeviceName
         }
       };
     } catch (error) {
@@ -184,7 +207,7 @@ class AuthService {
    * @returns {Object} - User data with tokens
    */
   async registerWithApple(userData) {
-    const { appleID, email, name } = userData;
+    const { appleID, email, name, userAgent, ipAddress } = userData;
     const db = getFirestore();
     
     try {
@@ -199,8 +222,13 @@ class AuthService {
         
         // Generate tokens for existing user
         const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-        await this.createSession(uid, accessToken, refreshToken);
-        await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { method: 'apple' });
+        const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
+        await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { 
+          method: 'apple', 
+          sessionId: session.id,
+          deviceName: session.DeviceName,
+          ipAddress 
+        });
 
         return {
           success: true,
@@ -212,7 +240,8 @@ class AuthService {
             appleID,
             sessionToken: accessToken,
             refreshToken,
-            expiresAt
+            expiresAt,
+            deviceName: session.DeviceName
           }
         };
       }
@@ -233,8 +262,13 @@ class AuthService {
 
       // Generate tokens
       const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-      await this.createSession(uid, accessToken, refreshToken);
-      await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { method: 'apple' });
+      const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
+      await this.logSecurityEvent(uid, 'REGISTER_SUCCESS', { 
+        method: 'apple', 
+        sessionId: session.id,
+        deviceName: session.DeviceName,
+        ipAddress 
+      });
 
       return {
         success: true,
@@ -246,7 +280,8 @@ class AuthService {
           appleID,
           sessionToken: accessToken,
           refreshToken,
-          expiresAt
+          expiresAt,
+          deviceName: session.DeviceName
         }
       };
     } catch (error) {
@@ -267,8 +302,9 @@ class AuthService {
    * @returns {Object} - User data with tokens
    */
   async loginUser(credentials) {
-    const { email, password } = credentials;
+    const { email, password, ipAddress } = credentials;
     const db = getFirestore();
+    const { trackFailedAttempt, clearFailedAttempts } = require('../middleware/accountLockMiddleware');
     
     try {
       // Get user from Firestore
@@ -276,6 +312,8 @@ class AuthService {
       const userQuery = await usersRef.where('Email', '==', email).get();
       
       if (userQuery.empty) {
+        // Track failed attempt for non-existent user (anti-enumeration)
+        await trackFailedAttempt(email, ipAddress);
         await this.logSecurityEvent(null, 'LOGIN_FAILED', { email, reason: 'User not found' });
         return {
           success: false,
@@ -329,6 +367,9 @@ class AuthService {
         const data = await response.json();
 
         if (!response.ok) {
+          // Track failed attempt and get delay info
+          const lockInfo = await trackFailedAttempt(email, ipAddress);
+          
           // Map Firebase error codes to user-friendly messages
           const errorMap = {
             'INVALID_PASSWORD': 'Wrong password. Please try again.',
@@ -343,18 +384,26 @@ class AuthService {
           const errorMessage = errorMap[errorCode] || 'Invalid email or password';
 
           console.log('Firebase Auth error:', errorCode, '→', errorMessage);
-          await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: errorCode, email });
+          await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: errorCode, email, remainingAttempts: lockInfo.remainingAttempts });
+          
+          // Return with progressive delay hint and remaining attempts
           return {
             success: false,
             error: 'Authentication Failed',
             message: errorMessage,
-            code: 401
+            code: 401,
+            remainingAttempts: lockInfo.remainingAttempts,
+            delayMs: lockInfo.delayMs,
+            locked: lockInfo.locked
           };
         }
 
+        // Clear failed attempts on successful login
+        await clearFailedAttempts(email);
         console.log('Password verified successfully for:', email);
       } catch (firebaseError) {
         console.error('Firebase Auth request error:', firebaseError);
+        await trackFailedAttempt(email, ipAddress);
         await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: 'Auth service error' });
         return {
           success: false,
@@ -367,13 +416,34 @@ class AuthService {
       // Generate tokens
       const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
 
-      // Create session (matching schema: UserSessions)
-      const session = await this.createSession(uid, accessToken, refreshToken);
+      // Check for suspicious login (new device or location)
+      const suspiciousLoginCheck = await this.detectSuspiciousLogin(uid, credentials);
 
-      // Log security event
-      await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { 
-        sessionId: session.id
+      // Create session (matching schema: UserSessions)
+      const session = await this.createSession(uid, accessToken, refreshToken, {
+        userAgent: credentials.userAgent,
+        ipAddress: credentials.ipAddress
       });
+
+      // Log security event with device info
+      await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { 
+        sessionId: session.id,
+        deviceName: session.DeviceName,
+        deviceType: session.DeviceType,
+        ipAddress: credentials.ipAddress,
+        suspicious: suspiciousLoginCheck.suspicious
+      });
+
+      // If suspicious login, send alert (could integrate with email/notification service)
+      if (suspiciousLoginCheck.suspicious) {
+        console.log(`⚠️ Suspicious login detected for user ${uid}: ${suspiciousLoginCheck.reason}`);
+        await this.logSecurityEvent(uid, 'SUSPICIOUS_LOGIN', {
+          reason: suspiciousLoginCheck.reason,
+          sessionId: session.id,
+          deviceName: session.DeviceName,
+          ipAddress: credentials.ipAddress
+        });
+      }
 
       return {
         success: true,
@@ -385,7 +455,12 @@ class AuthService {
           sessionToken: accessToken,
           refreshToken,
           expiresAt,
-          sessionID: session.id
+          sessionID: session.id,
+          deviceName: session.DeviceName,
+          suspiciousLogin: suspiciousLoginCheck.suspicious ? {
+            detected: true,
+            reason: suspiciousLoginCheck.reason
+          } : null
         }
       };
     } catch (error) {
@@ -484,11 +559,12 @@ class AuthService {
       // Generate new tokens
       const { accessToken, refreshToken: newRefreshToken, expiresAt } = this.generateTokens(uid);
 
-      // Update session
+      // Update session with token rotation tracking
       await sessionDoc.ref.update({
         SessionToken: accessToken,
         RefreshToken: newRefreshToken,
-        LastUsed: new Date()
+        LastUsed: new Date(),
+        RefreshTokenRotatedAt: new Date()
       });
 
       await this.logSecurityEvent(uid, 'TOKEN_REFRESHED', { sessionId: sessionDoc.id });
@@ -526,7 +602,7 @@ class AuthService {
     );
 
     const refreshToken = uuidv4();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     return { accessToken, refreshToken, expiresAt };
   }
@@ -549,10 +625,13 @@ class AuthService {
       RefreshToken: refreshToken,
       UserAgent: requestOptions.userAgent || 'Unknown',
       IPAddress: requestOptions.ipAddress || 'unknown',
+      DeviceName: this.parseDeviceName(requestOptions.userAgent),
+      DeviceType: this.parseDeviceType(requestOptions.userAgent),
       IsActive: true,
       CreatedAt: new Date(),
-      ExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      LastUsed: new Date()
+      ExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days (matches refresh token)
+      LastUsed: new Date(),
+      RefreshTokenRotatedAt: new Date() // Track when refresh token was last rotated
     };
 
     const sessionRef = await db.collection('UserSessions').add(sessionData);
@@ -564,7 +643,114 @@ class AuthService {
   }
 
   /**
-   * Log security event
+   * Parse device name from user agent
+   */
+  parseDeviceName(userAgent) {
+    if (!userAgent) return 'Unknown Device';
+    if (userAgent.includes('iPhone')) return 'iPhone';
+    if (userAgent.includes('iPad')) return 'iPad';
+    if (userAgent.includes('Android')) return 'Android Device';
+    if (userAgent.includes('Windows')) return 'Windows PC';
+    if (userAgent.includes('Mac')) return 'Mac';
+    if (userAgent.includes('Linux')) return 'Linux';
+    return 'Unknown Device';
+  }
+
+  /**
+   * Parse device type from user agent
+   */
+  parseDeviceType(userAgent) {
+    if (!userAgent) return 'unknown';
+    const ua = userAgent.toLowerCase();
+    if (/mobile|android|iphone|ipad|ipod/.test(ua)) return 'mobile';
+    if (/tablet|ipad/.test(ua)) return 'tablet';
+    return 'desktop';
+  }
+
+  /**
+   * Detect suspicious login patterns
+   * @param {string} uid - User ID
+   * @param {Object} credentials - Login credentials with device info
+   * @returns {Object} - { suspicious: boolean, reason: string }
+   */
+  async detectSuspiciousLogin(uid, credentials) {
+    const db = getFirestore();
+    
+    try {
+      // Get recent sessions for this user (avoid composite index by filtering in memory)
+      const sessionsRef = db.collection('UserSessions');
+      const userSessions = await sessionsRef
+        .where('UserID', '==', uid)
+        .where('IsActive', '==', true)
+        .get();
+
+      // Sort in memory to avoid composite index requirement
+      const recentSessions = userSessions.docs
+        .sort((a, b) => {
+          const aTime = a.data().CreatedAt?.toDate?.() || new Date(a.data().CreatedAt);
+          const bTime = b.data().CreatedAt?.toDate?.() || new Date(b.data().CreatedAt);
+          return bTime - aTime;
+        })
+        .slice(0, 10);
+
+      // First login from this user - not suspicious
+      if (recentSessions.length === 0) {
+        return { suspicious: false, reason: null };
+      }
+
+      const currentDevice = this.parseDeviceName(credentials.userAgent);
+      const currentIP = credentials.ipAddress;
+
+      // Check for new device
+      const knownDevices = new Set();
+      const knownIPs = new Set();
+
+      recentSessions.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.DeviceName) knownDevices.add(data.DeviceName);
+        if (data.IPAddress) knownIPs.add(data.IPAddress);
+      });
+
+      // New device detected
+      if (!knownDevices.has(currentDevice)) {
+        return { 
+          suspicious: true, 
+          reason: `New device detected: ${currentDevice}` 
+        };
+      }
+
+      // New location/IP detected (could integrate with geo-IP service for better detection)
+      if (currentIP && !knownIPs.has(currentIP)) {
+        return { 
+          suspicious: true, 
+          reason: `New location detected: ${currentIP}` 
+        };
+      }
+
+      // Check for rapid successive logins from different devices (potential account takeover)
+      const lastSession = recentSessions.docs[0].data();
+      const lastLoginTime = lastSession.CreatedAt?.toDate?.() || new Date(lastSession.CreatedAt);
+      const timeSinceLastLogin = Date.now() - lastLoginTime.getTime();
+      const lastDevice = lastSession.DeviceName;
+
+      // If less than 5 minutes and different device
+      if (timeSinceLastLogin < 5 * 60 * 1000 && lastDevice !== currentDevice) {
+        return { 
+          suspicious: true, 
+          reason: 'Rapid login from different device - possible account takeover' 
+        };
+      }
+
+      return { suspicious: false, reason: null };
+    } catch (error) {
+      console.error('Suspicious login detection error:', error);
+      // Don't block login on detection error
+      return { suspicious: false, reason: null };
+    }
+  }
+
+  /**
+   * Log security event with enhanced tracking
    * @param {string} uid - User ID (nullable)
    * @param {string} actionType - Action type
    * @param {Object} metadata - Additional metadata
@@ -572,16 +758,42 @@ class AuthService {
   async logSecurityEvent(uid, actionType, metadata = {}) {
     const db = getFirestore();
     
+    // Determine severity based on action type
+    const severityMap = {
+      'LOGIN_SUCCESS': 'info',
+      'LOGIN_FAILED': 'warning',
+      'LOGOUT': 'info',
+      'TOKEN_REFRESHED': 'info',
+      'SUSPICIOUS_LOGIN': 'critical',
+      'UNAUTHORIZED_ACCESS': 'critical',
+      'SESSION_REVOKED': 'info',
+      'PASSWORD_CHANGED': 'warning',
+      'ACCOUNT_DELETED': 'warning',
+      'RATE_LIMIT_EXCEEDED': 'warning'
+    };
+
+    const severity = severityMap[actionType] || 'info';
+    
     const logData = {
       UserID: uid || null,
       ActionType: actionType,
+      Severity: severity,
       IPAddress: metadata.ipAddress || 'unknown',
       UserAgent: metadata.userAgent || 'unknown',
+      DeviceName: metadata.deviceName || this.parseDeviceName(metadata.userAgent),
+      DeviceType: metadata.deviceType || this.parseDeviceType(metadata.userAgent),
       Metadata: metadata,
-      Timestamp: new Date()
+      Timestamp: new Date(),
+      // For analytics queries
+      Date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      Hour: new Date().getHours() // 0-23 for hourly analytics
     };
 
     await db.collection('SecurityLogs').add(logData);
+    
+    // Log to console for real-time monitoring
+    const logPrefix = severity === 'critical' ? '🚨' : severity === 'warning' ? '⚠️' : 'ℹ️';
+    console.log(`${logPrefix} [${severity.toUpperCase()}] ${actionType} - User: ${uid || 'unknown'} - IP: ${metadata.ipAddress || 'unknown'}`);
   }
 
   /**

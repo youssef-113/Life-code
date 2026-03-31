@@ -69,7 +69,9 @@ const registerUser = async (req, res) => {
     const result = await authService.registerUser({
       username: name,
       email,
-      password
+      password,
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.connection.remoteAddress
     });
 
     const statusCode = result.success ? 201 : result.code || 500;
@@ -121,7 +123,9 @@ const registerWithGoogle = async (req, res) => {
       email,
       username: username || email.split('@')[0],
       photoURL: photoURL || '',
-      gender: gender || 'prefer_not_to_say'
+      gender: gender || 'prefer_not_to_say',
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.connection.remoteAddress
     });
 
     const statusCode = result.success ? 201 : result.code || 500;
@@ -171,7 +175,9 @@ const registerWithApple = async (req, res) => {
     const result = await authService.registerWithApple({
       appleID,
       email,
-      name: name || email.split('@')[0]
+      name: name || email.split('@')[0],
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.connection.remoteAddress
     });
 
     const statusCode = result.success ? 201 : result.code || 500;

@@ -35,7 +35,12 @@ const loginUser = async (req, res) => {
     }
 
     // Login user
-    const result = await authService.loginUser({ email, password });
+    const result = await authService.loginUser({ 
+      email, 
+      password,
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
 
     const statusCode = result.success ? 200 : result.code || 500;
     return res.status(statusCode).json(result);

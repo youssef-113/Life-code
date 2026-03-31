@@ -10,6 +10,8 @@ const {
   revokeSession
 } = require('../controllers/loginController');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const { loginLimiter, refreshTokenLimiter } = require('../middleware/rateLimitMiddleware');
+const { checkLockMiddleware, perEmailLimiter } = require('../middleware/accountLockMiddleware');
 
 /**
  * Login Routes - Authentication endpoints
@@ -20,7 +22,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
  * @description Login user with email/password
  * @access Public
  */
-router.post('/login', [
+router.post('/login', checkLockMiddleware, perEmailLimiter, loginLimiter, [
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -49,7 +51,7 @@ router.post('/logout-all', authenticateToken, logoutAllDevices);
  * @description Refresh access token
  * @access Public (requires refresh token)
  */
-router.post('/refresh', [
+router.post('/refresh', refreshTokenLimiter, [
   body('refreshToken')
     .notEmpty()
     .withMessage('Refresh token is required')
