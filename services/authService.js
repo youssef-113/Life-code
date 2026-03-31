@@ -329,13 +329,25 @@ class AuthService {
         const data = await response.json();
 
         if (!response.ok) {
-          // Password is wrong or user doesn't exist in Firebase Auth
-          console.log('Firebase Auth error:', data.error?.message);
-          await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: 'Invalid password', email });
+          // Map Firebase error codes to user-friendly messages
+          const errorMap = {
+            'INVALID_PASSWORD': 'Wrong password. Please try again.',
+            'EMAIL_NOT_FOUND': 'No account found with this email.',
+            'USER_DISABLED': 'This account has been disabled.',
+            'INVALID_EMAIL': 'Invalid email address format.',
+            'MISSING_PASSWORD': 'Password is required.',
+            'MISSING_EMAIL': 'Email is required.'
+          };
+
+          const errorCode = data.error?.message || 'UNKNOWN_ERROR';
+          const errorMessage = errorMap[errorCode] || 'Invalid email or password';
+
+          console.log('Firebase Auth error:', errorCode, '→', errorMessage);
+          await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: errorCode, email });
           return {
             success: false,
             error: 'Authentication Failed',
-            message: 'Invalid email or password',
+            message: errorMessage,
             code: 401
           };
         }
