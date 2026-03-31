@@ -300,15 +300,50 @@ class AuthService {
         };
       }
 
-      // Verify password with Firebase Auth
-      const auth = getAuth();
+      // Verify password with Firebase Auth REST API
+      const apiKey = process.env.FIREBASE_API_KEY;
+      if (!apiKey) {
+        console.error('FIREBASE_API_KEY not configured');
+        return {
+          success: false,
+          error: 'Server Error',
+          message: 'Authentication service not configured',
+          code: 500
+        };
+      }
+
       try {
-        // Firebase Auth handles password verification
-        const firebaseUser = await auth.getUserByEmail(email);
-        // Note: Password verification happens client-side with Firebase Auth
-        // For server-side, we'd need to use Firebase Auth REST API
+        const response = await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              password: password,
+              returnSecureToken: false
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          // Password is wrong or user doesn't exist in Firebase Auth
+          console.log('Firebase Auth error:', data.error?.message);
+          await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: 'Invalid password', email });
+          return {
+            success: false,
+            error: 'Authentication Failed',
+            message: 'Invalid email or password',
+            code: 401
+          };
+        }
+
+        console.log('Password verified successfully for:', email);
       } catch (firebaseError) {
-        await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: 'Invalid credentials' });
+        console.error('Firebase Auth request error:', firebaseError);
+        await this.logSecurityEvent(uid, 'LOGIN_FAILED', { reason: 'Auth service error' });
         return {
           success: false,
           error: 'Authentication Failed',
