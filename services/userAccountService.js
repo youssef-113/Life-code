@@ -359,6 +359,8 @@ class UserAccountService {
             id: userID,
             Username: userData.Username,
             Email: userData.Email,
+            Providers: userData.Providers || [],
+            PrimaryProvider: userData.PrimaryProvider || 'email',
             Gender: userData.Gender || null,
             NationalID: userData.NationalID || null,
             PhotoURL: userData.PhotoURL || null,

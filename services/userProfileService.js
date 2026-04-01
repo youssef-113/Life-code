@@ -103,9 +103,12 @@ class UserProfileService {
         data: {
           userID,
           fullName: userData.FullName || userData.Username || null,
+          email: userData.Email || null,
+          providers: userData.Providers || [],
+          primaryProvider: userData.PrimaryProvider || 'email',
           gender: userData.Gender || null,
           address: userData.Address || null,
-          email: userData.Email || null,
+          photoURL: userData.PhotoURL || null,
           updatedAt: userData.UpdatedAt || null
         }
       };

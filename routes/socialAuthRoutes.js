@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { authGoogle, authApple } = require('../controllers/socialAuthController');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 /**
  * Social Authentication Routes
@@ -11,6 +12,8 @@ const { authGoogle, authApple } = require('../controllers/socialAuthController')
  * Endpoints:
  * - POST /api/app/auth/google - Authenticate with Google
  * - POST /api/app/auth/apple - Authenticate with Apple
+ * - GET /api/app/auth/providers - Get linked providers
+ * - DELETE /api/app/auth/providers/:provider - Unlink a provider
  * 
  * Flow:
  * 1. Flutter gets idToken from Google/Apple SDK
@@ -24,7 +27,7 @@ const { authGoogle, authApple } = require('../controllers/socialAuthController')
  * @route POST /api/app/auth/google
  * @description Authenticate with Google (Login OR Register automatically)
  * @body { idToken: string }
- * @response { success, message, data: { userID, username, email, provider, sessionToken, refreshToken, expiresAt, isNewUser } }
+ * @response { success, message, data: { userID, username, email, providers, sessionToken, refreshToken, expiresAt, isNewUser, accountLinked } }
  * @access Public
  * 
  * Testing with Postman:
@@ -44,7 +47,7 @@ router.post('/auth/google', [
  * @route POST /api/app/auth/apple
  * @description Authenticate with Apple (Login OR Register automatically)
  * @body { idToken: string, authorizationCode?: string }
- * @response { success, message, data: { userID, username, email, provider, sessionToken, refreshToken, expiresAt, isNewUser } }
+ * @response { success, message, data: { userID, username, email, providers, sessionToken, refreshToken, expiresAt, isNewUser, accountLinked } }
  * @access Public
  * 
  * Testing with Postman:
@@ -66,5 +69,90 @@ router.post('/auth/apple', [
     .isString()
     .withMessage('authorizationCode must be a string')
 ], authApple);
+
+/**
+ * @route GET /api/app/auth/providers
+ * @description Get user's linked authentication providers
+ * @access Private
+ */
+router.get('/auth/providers', authenticateToken, async (req, res) => {
+  try {
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const socialAuthService = require('../services/socialAuthService');
+    const providers = await socialAuthService.getLinkedProviders(userID);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        userID,
+        providers,
+        count: providers.length
+      }
+    });
+  } catch (error) {
+    console.error('Get providers error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+});
+
+/**
+ * @route DELETE /api/app/auth/providers/:provider
+ * @description Unlink an authentication provider from account
+ * @access Private
+ * 
+ * Note: Cannot unlink the only remaining provider
+ */
+router.delete('/auth/providers/:provider', authenticateToken, async (req, res) => {
+  try {
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const { provider } = req.params;
+    
+    if (!['google', 'apple', 'email'].includes(provider)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Invalid provider. Must be google, apple, or email',
+        code: 400
+      });
+    }
+
+    const socialAuthService = require('../services/socialAuthService');
+    const result = await socialAuthService.unlinkProvider(userID, provider);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+  } catch (error) {
+    console.error('Unlink provider error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+});
 
 module.exports = router;

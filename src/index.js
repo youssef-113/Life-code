@@ -130,6 +130,8 @@ app.get('/', (req, res) => {
         register: 'POST /api/app/register (email/password)',
         authGoogle: 'POST /api/app/auth/google (login OR register)',
         authApple: 'POST /api/app/auth/apple (login OR register)',
+        getProviders: 'GET /api/app/auth/providers (linked auth methods)',
+        unlinkProvider: 'DELETE /api/app/auth/providers/:provider',
         login: 'POST /api/app/login',
         logout: 'POST /api/app/logout',
         logoutAll: 'POST /api/app/logout-all',
