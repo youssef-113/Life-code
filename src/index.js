@@ -9,6 +9,7 @@ const { apiLimiter } = require('../middleware/rateLimitMiddleware');
 // Import routes
 const registerRoutes = require('../routes/registerRoutes');
 const loginRoutes = require('../routes/loginRoutes');
+const socialAuthRoutes = require('../routes/socialAuthRoutes');
 const userProfileRoutes = require('../routes/userProfileRoutes');
 const medicalRoutes = require('../routes/medicalRoutes');
 const emergencyContactRoutes = require('../routes/emergencyContactRoutes');
@@ -108,6 +109,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/app', registerRoutes);
 app.use('/api/app', loginRoutes);
+app.use('/api/app', socialAuthRoutes);
 app.use('/api/app', userProfileRoutes);
 app.use('/api/app', medicalRoutes);
 app.use('/api/app', emergencyContactRoutes);
@@ -126,8 +128,10 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: {
         register: 'POST /api/app/register',
-        registerGoogle: 'POST /api/app/register/google',
-        registerApple: 'POST /api/app/register/apple',
+        registerGoogle: 'POST /api/app/register/google (legacy)',
+        registerApple: 'POST /api/app/register/apple (legacy)',
+        authGoogle: 'POST /api/app/auth/google (recommended)',
+        authApple: 'POST /api/app/auth/apple (recommended)',
         login: 'POST /api/app/login',
         logout: 'POST /api/app/logout',
         logoutAll: 'POST /api/app/logout-all',
