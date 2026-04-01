@@ -127,11 +127,9 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       auth: {
-        register: 'POST /api/app/register',
-        registerGoogle: 'POST /api/app/register/google (legacy)',
-        registerApple: 'POST /api/app/register/apple (legacy)',
-        authGoogle: 'POST /api/app/auth/google (recommended)',
-        authApple: 'POST /api/app/auth/apple (recommended)',
+        register: 'POST /api/app/register (email/password)',
+        authGoogle: 'POST /api/app/auth/google (login OR register)',
+        authApple: 'POST /api/app/auth/apple (login OR register)',
         login: 'POST /api/app/login',
         logout: 'POST /api/app/logout',
         logoutAll: 'POST /api/app/logout-all',

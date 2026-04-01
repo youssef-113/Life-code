@@ -52,10 +52,18 @@ class AuthService {
 
       const uid = firebaseResult.userRecord.uid;
 
-      // Create user document in Firestore (minimal fields - profile fields will be added later)
+      // Create user document in Firestore with Providers array for account linking
       const userDoc = {
         Username: username,
         Email: email,
+        Providers: [
+          {
+            provider: 'email',
+            providerId: null, // No external provider ID for email/password
+            linkedAt: new Date()
+          }
+        ],
+        PrimaryProvider: 'email',
         IsActive: true,
         CreatedAt: new Date(),
         UpdatedAt: new Date()
@@ -76,6 +84,7 @@ class AuthService {
       await this.logSecurityEvent(uid, 'REGISTER_SUCCESS', { 
         sessionId: session.id,
         email,
+        method: 'email',
         deviceName: session.DeviceName,
         ipAddress
       });
@@ -87,6 +96,8 @@ class AuthService {
           userID: uid,
           username,
           email,
+          providers: userDoc.Providers,
+          primaryProvider: 'email',
           sessionToken: accessToken,
           refreshToken,
           expiresAt,
@@ -96,196 +107,6 @@ class AuthService {
       };
     } catch (error) {
       console.error('Register error:', error);
-      return {
-        success: false,
-        error: 'Server Error',
-        message: error.message,
-        code: 500
-      };
-    }
-  }
-
-  /**
-   * Register user with Google OAuth
-   * @param {Object} userData - Google user data
-   * @returns {Object} - User data with tokens
-   */
-  async registerWithGoogle(userData) {
-    const { googleID, email, username, photoURL, gender, userAgent, ipAddress } = userData;
-    const db = getFirestore();
-    
-    try {
-      // Check if user already exists
-      const usersRef = db.collection('Users');
-      const existingUserQuery = await usersRef.where('Email', '==', email).get();
-      
-      if (!existingUserQuery.empty) {
-        // User exists - login instead
-        const existingDoc = existingUserQuery.docs[0];
-        const uid = existingDoc.id;
-        
-        // Generate tokens for existing user
-        const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-        const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
-        await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { 
-          method: 'google', 
-          sessionId: session.id,
-          deviceName: session.DeviceName,
-          ipAddress 
-        });
-
-        return {
-          success: true,
-          message: 'User logged in with Google successfully',
-          data: {
-            userID: uid,
-            username: existingDoc.data().Username,
-            email,
-            googleID,
-            sessionToken: accessToken,
-            refreshToken,
-            expiresAt,
-            deviceName: session.DeviceName
-          }
-        };
-      }
-
-      // Create new user with Google ID
-      const uid = uuidv4();
-      
-      const userDoc = {
-        Username: username,
-        Email: email,
-        GoogleID: googleID,
-        Gender: gender || 'prefer_not_to_say',
-        PhotoURL: photoURL || '',
-        IsActive: true,
-        CreatedAt: new Date(),
-        UpdatedAt: new Date()
-      };
-
-      await db.collection('Users').doc(uid).set(userDoc);
-
-      // Generate tokens
-      const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-      const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
-      await this.logSecurityEvent(uid, 'REGISTER_SUCCESS', { 
-        method: 'google', 
-        sessionId: session.id,
-        deviceName: session.DeviceName,
-        ipAddress 
-      });
-
-      return {
-        success: true,
-        message: 'User registered with Google successfully',
-        data: {
-          userID: uid,
-          username,
-          email,
-          googleID,
-          sessionToken: accessToken,
-          refreshToken,
-          expiresAt,
-          deviceName: session.DeviceName
-        }
-      };
-    } catch (error) {
-      console.error('Google register error:', error);
-      return {
-        success: false,
-        error: 'Server Error',
-        message: error.message,
-        code: 500
-      };
-    }
-  }
-
-  /**
-   * Register user with Apple Sign In
-   * @param {Object} userData - Apple user data
-   * @returns {Object} - User data with tokens
-   */
-  async registerWithApple(userData) {
-    const { appleID, email, name, userAgent, ipAddress } = userData;
-    const db = getFirestore();
-    
-    try {
-      // Check if user already exists
-      const usersRef = db.collection('Users');
-      const existingUserQuery = await usersRef.where('Email', '==', email).get();
-      
-      if (!existingUserQuery.empty) {
-        // User exists - login instead
-        const existingDoc = existingUserQuery.docs[0];
-        const uid = existingDoc.id;
-        
-        // Generate tokens for existing user
-        const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-        const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
-        await this.logSecurityEvent(uid, 'LOGIN_SUCCESS', { 
-          method: 'apple', 
-          sessionId: session.id,
-          deviceName: session.DeviceName,
-          ipAddress 
-        });
-
-        return {
-          success: true,
-          message: 'User logged in with Apple successfully',
-          data: {
-            userID: uid,
-            username: existingDoc.data().Username,
-            email,
-            appleID,
-            sessionToken: accessToken,
-            refreshToken,
-            expiresAt,
-            deviceName: session.DeviceName
-          }
-        };
-      }
-
-      // Create new user with Apple ID
-      const uid = uuidv4();
-      
-      const userDoc = {
-        Username: name,
-        Email: email,
-        AppleID: appleID,
-        IsActive: true,
-        CreatedAt: new Date(),
-        UpdatedAt: new Date()
-      };
-
-      await db.collection('Users').doc(uid).set(userDoc);
-
-      // Generate tokens
-      const { accessToken, refreshToken, expiresAt } = this.generateTokens(uid);
-      const session = await this.createSession(uid, accessToken, refreshToken, { userAgent, ipAddress });
-      await this.logSecurityEvent(uid, 'REGISTER_SUCCESS', { 
-        method: 'apple', 
-        sessionId: session.id,
-        deviceName: session.DeviceName,
-        ipAddress 
-      });
-
-      return {
-        success: true,
-        message: 'User registered with Apple successfully',
-        data: {
-          userID: uid,
-          username: name,
-          email,
-          appleID,
-          sessionToken: accessToken,
-          refreshToken,
-          expiresAt,
-          deviceName: session.DeviceName
-        }
-      };
-    } catch (error) {
-      console.error('Apple register error:', error);
       return {
         success: false,
         error: 'Server Error',

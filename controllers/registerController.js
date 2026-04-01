@@ -3,6 +3,9 @@ const { validationResult } = require('express-validator');
 
 /**
  * Register Controller - Handles user registration
+ * 
+ * Note: Google and Apple authentication now handled by socialAuthController
+ * Use POST /api/app/auth/google and POST /api/app/auth/apple instead
  */
 
 /**
@@ -88,114 +91,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-/**
- * Register user with Google OAuth
- * @route POST /api/app/register/google
- * @access Public
- */
-const registerWithGoogle = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation Error',
-        message: errors.array()[0].msg,
-        code: 400
-      });
-    }
-
-    const { googleID, email, username, photoURL, gender } = req.body;
-
-    // Validate required fields
-    if (!googleID || !email) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation Error',
-        message: 'Google ID and email are required',
-        code: 400
-      });
-    }
-
-    // Register with Google
-    const result = await authService.registerWithGoogle({
-      googleID,
-      email,
-      username: username || email.split('@')[0],
-      photoURL: photoURL || '',
-      gender: gender || 'prefer_not_to_say',
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip || req.connection.remoteAddress
-    });
-
-    const statusCode = result.success ? 201 : result.code || 500;
-    return res.status(statusCode).json(result);
-
-  } catch (error) {
-    console.error('Google register controller error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server Error',
-      message: 'An unexpected error occurred',
-      code: 500
-    });
-  }
-};
-
-/**
- * Register user with Apple Sign In
- * @route POST /api/app/register/apple
- * @access Public
- */
-const registerWithApple = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation Error',
-        message: errors.array()[0].msg,
-        code: 400
-      });
-    }
-
-    const { appleID, email, name } = req.body;
-
-    // Validate required fields
-    if (!appleID || !email) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation Error',
-        message: 'Apple ID and email are required',
-        code: 400
-      });
-    }
-
-    // Register with Apple
-    const result = await authService.registerWithApple({
-      appleID,
-      email,
-      name: name || email.split('@')[0],
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip || req.connection.remoteAddress
-    });
-
-    const statusCode = result.success ? 201 : result.code || 500;
-    return res.status(statusCode).json(result);
-
-  } catch (error) {
-    console.error('Apple register controller error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server Error',
-      message: 'An unexpected error occurred',
-      code: 500
-    });
-  }
-};
-
 module.exports = {
-  registerUser,
-  registerWithGoogle,
-  registerWithApple
+  registerUser
 };

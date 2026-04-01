@@ -1,26 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { registerUser, registerWithGoogle, registerWithApple } = require('../controllers/registerController');
+const { registerUser } = require('../controllers/registerController');
 const { registerLimiter } = require('../middleware/rateLimitMiddleware');
-
-// OAuth rate limiter - Moderate (10 attempts per hour per IP)
-const oauthLimiter = require('express-rate-limit')({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10,
-  message: {
-    success: false,
-    error: 'Too Many Requests',
-    message: 'Too many OAuth attempts. Please try again later.',
-    code: 429
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.ip
-});
 
 /**
  * Register Routes - User registration endpoints
+ * 
+ * Note: Google and Apple authentication now handled by socialAuthRoutes
+ * Use POST /api/app/auth/google and POST /api/app/auth/apple instead
  */
 
 /**
@@ -48,53 +36,5 @@ router.post('/register', registerLimiter, [
       return true;
     })
 ], registerUser);
-
-/**
- * @route POST /api/app/register/google
- * @description Register user with Google OAuth
- * @access Public
- */
-router.post('/register/google', oauthLimiter, [
-  body('googleID')
-    .notEmpty()
-    .withMessage('Google ID is required'),
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Invalid email address'),
-  body('username')
-    .optional()
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Username must be between 2 and 50 characters'),
-  body('photoURL')
-    .optional()
-    .isURL()
-    .withMessage('Photo URL must be a valid URL'),
-  body('gender')
-    .optional()
-    .isIn(['male', 'female', 'other', 'prefer_not_to_say'])
-    .withMessage('Invalid gender value')
-], registerWithGoogle);
-
-/**
- * @route POST /api/app/register/apple
- * @description Register user with Apple Sign In
- * @access Public
- */
-router.post('/register/apple', oauthLimiter, [
-  body('appleID')
-    .notEmpty()
-    .withMessage('Apple ID is required'),
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Invalid email address'),
-  body('name')
-    .optional()
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters')
-], registerWithApple);
 
 module.exports = router;
