@@ -235,12 +235,25 @@ class UserProfileService {
       const profileData = profileDoc.data();
       const contacts = profileData.EmergencyContacts || {};
 
+      // Transform to camelCase format (same as input)
+      const primaryContact = contacts.PrimaryContact ? {
+        fullName: contacts.PrimaryContact.FullName,
+        phoneNumber: contacts.PrimaryContact.PhoneNumber,
+        relationship: contacts.PrimaryContact.Relationship
+      } : null;
+
+      const secondaryContact = contacts.SecondaryContact ? {
+        fullName: contacts.SecondaryContact.FullName,
+        phoneNumber: contacts.SecondaryContact.PhoneNumber,
+        relationship: contacts.SecondaryContact.Relationship
+      } : null;
+
       return {
         success: true,
         data: {
           userID,
-          primaryContact: contacts.PrimaryContact || null,
-          secondaryContact: contacts.SecondaryContact || null
+          primaryContact,
+          secondaryContact
         }
       };
     } catch (error) {
