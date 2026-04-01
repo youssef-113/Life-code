@@ -4,6 +4,14 @@ const { validationResult } = require('express-validator');
 /**
  * Medical Profile Controller - Handles the Medical Profile screen
  * Endpoints for: dashboard GET, section-by-section PUTs
+ * 
+ * Data Structure:
+ * - personalInfo: { name, gender, address }
+ * - emergencyContact: { primary: {...}, secondary: [...] }
+ * - medicalProfile: { bloodType, medicalConditions }
+ * - allergies: [{ allergyType, severity, notes }]
+ * - medications: [{ medicationName, dosage, schedule, notes }]
+ * - surgeries: [{ surgeryName, surgeryDate, notes }]
  */
 
 /**
@@ -41,12 +49,12 @@ const getMedicalProfile = async (req, res) => {
 };
 
 /**
- * Update General Information section
- * Fields: Username, DateOfBirth, Gender, BloodType, Height, Weight, NationalID, PhoneNumber
- * @route PUT /api/app/medical/general-info
+ * Update Personal Information section
+ * Fields: name, gender, address
+ * @route PUT /api/app/medical/personal-info
  * @access Private
  */
-const updateGeneralInfo = async (req, res) => {
+const updatePersonalInfo = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -68,7 +76,7 @@ const updateGeneralInfo = async (req, res) => {
     }
 
     // Ensure at least one field is provided
-    const fields = ['Username', 'DateOfBirth', 'Gender', 'BloodType', 'Height', 'Weight', 'NationalID', 'PhoneNumber', 'MedicalConditions'];
+    const fields = ['name', 'gender', 'address'];
     const hasField = fields.some(f => req.body[f] !== undefined);
     if (!hasField) {
       return res.status(400).json({
@@ -79,13 +87,13 @@ const updateGeneralInfo = async (req, res) => {
       });
     }
 
-    const result = await medicalProfileService.updateGeneralInfo(userID, req.body);
+    const result = await medicalProfileService.updatePersonalInfo(userID, req.body);
 
     const statusCode = result.success ? 200 : result.code || 500;
     return res.status(statusCode).json(result);
 
   } catch (error) {
-    console.error('Update general info controller error:', error);
+    console.error('Update personal info controller error:', error);
     return res.status(500).json({
       success: false,
       error: 'Server Error',
@@ -96,12 +104,12 @@ const updateGeneralInfo = async (req, res) => {
 };
 
 /**
- * Update Medical Conditions section
- * Fields: ChronicDiseases, Notes
- * @route PUT /api/app/medical/conditions
+ * Update Emergency Contact section
+ * Fields: primary (object), secondary (array)
+ * @route PUT /api/app/medical/emergency-contact
  * @access Private
  */
-const updateConditions = async (req, res) => {
+const updateEmergencyContact = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -122,13 +130,56 @@ const updateConditions = async (req, res) => {
       });
     }
 
-    const result = await medicalProfileService.updateConditions(userID, req.body);
+    const result = await medicalProfileService.updateEmergencyContact(userID, req.body);
 
     const statusCode = result.success ? 200 : result.code || 500;
     return res.status(statusCode).json(result);
 
   } catch (error) {
-    console.error('Update conditions controller error:', error);
+    console.error('Update emergency contact controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
+/**
+ * Update Medical Profile section
+ * Fields: bloodType, medicalConditions
+ * @route PUT /api/app/medical/medical-profile
+ * @access Private
+ */
+const updateMedicalProfile = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: errors.array()[0].msg,
+        code: 400
+      });
+    }
+    const userID = req.targetUserID || req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const result = await medicalProfileService.updateMedicalProfile(userID, req.body);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Update medical profile controller error:', error);
     return res.status(500).json({
       success: false,
       error: 'Server Error',
@@ -140,7 +191,7 @@ const updateConditions = async (req, res) => {
 
 /**
  * Update Allergies section
- * Fields: Allergies
+ * Fields: allergies (array of { allergyType, severity, notes })
  * @route PUT /api/app/medical/allergies
  * @access Private
  */
@@ -183,7 +234,7 @@ const updateAllergies = async (req, res) => {
 
 /**
  * Update Current Medications section
- * Fields: Medications
+ * Fields: medications (array of { medicationName, dosage, schedule, notes })
  * @route PUT /api/app/medical/medications
  * @access Private
  */
@@ -226,7 +277,7 @@ const updateMedications = async (req, res) => {
 
 /**
  * Update Surgical History section
- * Fields: Surgeries
+ * Fields: surgeries (array of { surgeryName, surgeryDate, notes })
  * @route PUT /api/app/medical/surgeries
  * @access Private
  */
@@ -267,55 +318,12 @@ const updateSurgeries = async (req, res) => {
   }
 };
 
-/**
- * Update Emergency Instructions
- * Fields: EmergencyInstructions
- * @route PUT /api/app/medical/emergency-instructions
- * @access Private
- */
-const updateEmergencyInstructions = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation Error',
-        message: errors.array()[0].msg,
-        code: 400
-      });
-    }
-    const userID = req.targetUserID || req.user?.userID;
-    if (!userID) {
-      return res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-        message: 'User not authenticated',
-        code: 401
-      });
-    }
-
-    const result = await medicalProfileService.updateEmergencyInstructions(userID, req.body);
-
-    const statusCode = result.success ? 200 : result.code || 500;
-    return res.status(statusCode).json(result);
-
-  } catch (error) {
-    console.error('Update emergency instructions controller error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server Error',
-      message: 'An unexpected error occurred',
-      code: 500
-    });
-  }
-};
-
 module.exports = {
   getMedicalProfile,
-  updateGeneralInfo,
-  updateConditions,
+  updatePersonalInfo,
+  updateEmergencyContact,
+  updateMedicalProfile,
   updateAllergies,
   updateMedications,
-  updateSurgeries,
-  updateEmergencyInstructions
+  updateSurgeries
 };

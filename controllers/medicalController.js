@@ -34,38 +34,32 @@ const createMedicalInfo = async (req, res) => {
     }
 
     const { 
-      bloodType, 
-      height, 
-      weight, 
-      chronicDiseases, 
+      personalInfo, 
+      emergencyContact, 
+      medicalProfile, 
       allergies, 
       medications, 
-      surgeries, 
-      notes, 
-      emergencyInstructions 
+      surgeries 
     } = req.body;
 
     // Validate required fields
-    if (!bloodType || !height || !weight) {
+    if (!personalInfo || !personalInfo.name) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
-        message: 'Blood type, height, and weight are required',
+        message: 'Personal info with name is required',
         code: 400
       });
     }
 
     // Create medical info
     const result = await medicalService.createMedicalInfo(userID, {
-      bloodType,
-      height,
-      weight,
-      chronicDiseases,
+      personalInfo,
+      emergencyContact,
+      medicalProfile,
       allergies,
       medications,
-      surgeries,
-      notes,
-      emergencyInstructions
+      surgeries
     });
 
     const statusCode = result.success ? 201 : result.code || 500;
@@ -111,21 +105,17 @@ const updateMedicalInfo = async (req, res) => {
     }
 
     const { 
-      bloodType, 
-      height, 
-      weight, 
-      chronicDiseases, 
+      personalInfo, 
+      emergencyContact, 
+      medicalProfile, 
       allergies, 
       medications, 
-      surgeries, 
-      notes, 
-      emergencyInstructions 
+      surgeries 
     } = req.body;
 
     // Check if at least one field is provided
-    if (!bloodType && !height && !weight && chronicDiseases === undefined && 
-        allergies === undefined && medications === undefined && surgeries === undefined && 
-        notes === undefined && emergencyInstructions === undefined) {
+    if (!personalInfo && !emergencyContact && !medicalProfile && 
+        allergies === undefined && medications === undefined && surgeries === undefined) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
@@ -136,15 +126,12 @@ const updateMedicalInfo = async (req, res) => {
 
     // Update medical info
     const result = await medicalService.updateMedicalInfo(userID, {
-      bloodType,
-      height,
-      weight,
-      chronicDiseases,
+      personalInfo,
+      emergencyContact,
+      medicalProfile,
       allergies,
       medications,
-      surgeries,
-      notes,
-      emergencyInstructions
+      surgeries
     });
 
     const statusCode = result.success ? 200 : result.code || 500;

@@ -3,13 +3,16 @@ const authService = require('./authService');
 
 /**
  * Medical Profile Service - Handles the Medical Profile screen
- * Aggregates data from: Users, MedicalInfo, EmergencyContacts
- * Provides section-by-section updates for:
- *   - General Information (name, DOB, blood type, gender)
- *   - Medical Conditions (chronic diseases)
- *   - Allergies
- *   - Current Medications
- *   - Surgical History
+ * 
+ * Data Structure:
+ * {
+ *   personalInfo: { name, gender, address },
+ *   emergencyContact: { primary: {...}, secondary: [...] },
+ *   medicalProfile: { bloodType, medicalConditions },
+ *   allergies: [{ allergyType, severity, notes }],
+ *   medications: [{ medicationName, dosage, schedule, notes }],
+ *   surgeries: [{ surgeryName, surgeryDate, notes }]
+ * }
  */
 class MedicalProfileService {
 
@@ -24,13 +27,10 @@ class MedicalProfileService {
     const db = getFirestore();
 
     try {
-      // Fetch user + medical + contacts in parallel
-      const [userDoc, medicalDoc, contactsQuery] = await Promise.all([
+      // Fetch user + medical in parallel
+      const [userDoc, medicalDoc] = await Promise.all([
         db.collection('Users').doc(userID).get(),
-        db.collection('MedicalInfo').doc(userID).get(),
-        db.collection('EmergencyContacts')
-          .where('UserID', '==', userID)
-          .get()
+        db.collection('MedicalInfo').doc(userID).get()
       ]);
 
       if (!userDoc.exists) {
@@ -47,100 +47,103 @@ class MedicalProfileService {
 
       // --- Build user header ---
       const userHeader = {
-        Username: userData.Username || userData.FullName || '',
-        PhotoURL: userData.PhotoURL || null,
-        UpdatedAt: medicalData?.UpdatedAt || userData.UpdatedAt || null
+        name: medicalData?.PersonalInfo?.Name || userData.Username || userData.FullName || '',
+        photoURL: userData.PhotoURL || null,
+        updatedAt: medicalData?.UpdatedAt || userData.UpdatedAt || null
       };
 
       // --- Quick stats ---
-      const bloodType = medicalData?.BloodType || null;
-
       const quickStats = {
-        BloodType: bloodType,
-        AllergiesCount: medicalData?.AllergiesList ? medicalData.AllergiesList.length : 0,
-        MedicationsCount: medicalData?.MedicationsList ? medicalData.MedicationsList.length : 0
+        bloodType: medicalData?.MedicalProfile?.BloodType || null,
+        allergiesCount: medicalData?.Allergies ? medicalData.Allergies.length : 0,
+        medicationsCount: medicalData?.Medications ? medicalData.Medications.length : 0
       };
 
       // --- Sections with completion status ---
       const sections = {
-        generalInformation: {
-          completed: !!(medicalData?.BloodType && (userData.DateOfBirth || userData.Username)),
-          summary: this._buildGeneralSummary(userData, medicalData),
+        personalInfo: {
+          completed: !!(medicalData?.PersonalInfo?.Name),
           data: {
-            Username: userData.Username || userData.FullName || '',
-            DateOfBirth: userData.DateOfBirth || null,
-            Gender: userData.Gender || null,
-            BloodType: medicalData?.BloodType || null,
-            Height: medicalData?.Height || null,
-            Weight: medicalData?.Weight || null,
-            NationalID: userData.NationalID || null,
-            PhoneNumber: userData.PhoneNumber || null
+            name: medicalData?.PersonalInfo?.Name || '',
+            gender: medicalData?.PersonalInfo?.Gender || '',
+            address: medicalData?.PersonalInfo?.Address || ''
           }
         },
-        medicalConditions: {
-          completed: !!(medicalData?.MedicalConditions && medicalData.MedicalConditions.length > 0) || !!(medicalData?.ChronicDiseases && medicalData.ChronicDiseases.trim() !== ''),
-          summary: medicalData?.MedicalConditions ? medicalData.MedicalConditions.join(', ') : (medicalData?.ChronicDiseases || ''),
-          count: medicalData?.MedicalConditions ? medicalData.MedicalConditions.length : this._countItems(medicalData?.ChronicDiseases),
+        emergencyContact: {
+          completed: !!(medicalData?.EmergencyContact?.Primary),
           data: {
-            MedicalConditions: medicalData?.MedicalConditions || (medicalData?.ChronicDiseases ? medicalData.ChronicDiseases.split(',').map(s => s.trim()) : []),
-            Notes: medicalData?.Notes || ''
+            primary: medicalData?.EmergencyContact?.Primary ? {
+              fullName: medicalData.EmergencyContact.Primary.FullName || '',
+              phoneNumber: medicalData.EmergencyContact.Primary.PhoneNumber || '',
+              relationship: medicalData.EmergencyContact.Primary.Relationship || ''
+            } : null,
+            secondary: Array.isArray(medicalData?.EmergencyContact?.Secondary) 
+              ? medicalData.EmergencyContact.Secondary.map(c => ({
+                  fullName: c.FullName || '',
+                  phoneNumber: c.PhoneNumber || '',
+                  relationship: c.Relationship || ''
+                }))
+              : []
+          }
+        },
+        medicalProfile: {
+          completed: !!(medicalData?.MedicalProfile?.BloodType),
+          data: {
+            bloodType: medicalData?.MedicalProfile?.BloodType || null,
+            medicalConditions: medicalData?.MedicalProfile?.MedicalConditions || []
           }
         },
         allergies: {
-          completed: !!(medicalData?.AllergiesList && medicalData.AllergiesList.length > 0) || medicalData?.HasAllergies === false,
-          hasAllergies: medicalData?.HasAllergies !== false,
-          summary: medicalData?.AllergiesList ? `${medicalData.AllergiesList.length} allergies` : '',
-          count: medicalData?.AllergiesList ? medicalData.AllergiesList.length : 0,
-          data: {
-            HasAllergies: medicalData?.HasAllergies,
-            AllergiesList: medicalData?.AllergiesList || []
-          }
+          completed: !!(medicalData?.Allergies && medicalData.Allergies.length > 0),
+          count: medicalData?.Allergies ? medicalData.Allergies.length : 0,
+          data: Array.isArray(medicalData?.Allergies) 
+            ? medicalData.Allergies.map(a => ({
+                allergyType: a.AllergyType || '',
+                severity: a.Severity || '',
+                notes: a.Notes || ''
+              }))
+            : []
         },
-        currentMedications: {
-          completed: !!(medicalData?.MedicationsList && medicalData.MedicationsList.length > 0) || medicalData?.HasMedications === false,
-          hasMedications: medicalData?.HasMedications !== false,
-          summary: medicalData?.MedicationsList ? `${medicalData.MedicationsList.length} medications` : '',
-          count: medicalData?.MedicationsList ? medicalData.MedicationsList.length : 0,
-          data: {
-            HasMedications: medicalData?.HasMedications,
-            MedicationsList: medicalData?.MedicationsList || []
-          }
+        medications: {
+          completed: !!(medicalData?.Medications && medicalData.Medications.length > 0),
+          count: medicalData?.Medications ? medicalData.Medications.length : 0,
+          data: Array.isArray(medicalData?.Medications) 
+            ? medicalData.Medications.map(m => ({
+                medicationName: m.MedicationName || '',
+                dosage: m.Dosage || '',
+                schedule: m.Schedule || '',
+                notes: m.Notes || ''
+              }))
+            : []
         },
-        surgicalHistory: {
-          completed: !!(medicalData?.SurgeriesList && medicalData.SurgeriesList.length > 0) || medicalData?.HasSurgeries === false,
-          hasSurgeries: medicalData?.HasSurgeries !== false, // Default to true if not explicitly false
-          summary: medicalData?.SurgeriesList ? `${medicalData.SurgeriesList.length} procedures` : '',
-          count: medicalData?.SurgeriesList ? medicalData.SurgeriesList.length : 0,
-          data: {
-            HasSurgeries: medicalData?.HasSurgeries,
-            SurgeriesList: medicalData?.SurgeriesList || []
-          }
+        surgeries: {
+          completed: !!(medicalData?.Surgeries && medicalData.Surgeries.length > 0),
+          count: medicalData?.Surgeries ? medicalData.Surgeries.length : 0,
+          data: Array.isArray(medicalData?.Surgeries) 
+            ? medicalData.Surgeries.map(s => ({
+                surgeryName: s.SurgeryName || '',
+                surgeryDate: s.SurgeryDate || null,
+                notes: s.Notes || ''
+              }))
+            : []
         }
       };
 
       // --- Profile completion % ---
       const completionFields = [
-        userData.Username || userData.FullName,          // name
-        userData.DateOfBirth,                             // DOB
-        userData.Gender,                                 // gender
-        medicalData?.BloodType,                          // blood type
-        medicalData?.Height,                             // height
-        medicalData?.Weight,                             // weight
-        (medicalData?.MedicalConditions && medicalData.MedicalConditions.length > 0) || (medicalData?.ChronicDiseases ? medicalData.ChronicDiseases.trim() !== '' : null), // conditions
-        (medicalData?.AllergiesList && medicalData.AllergiesList.length > 0) || medicalData?.HasAllergies === false ? true : null, // allergies
-        (medicalData?.MedicationsList && medicalData.MedicationsList.length > 0) || medicalData?.HasMedications === false ? true : null, // medications
-        (medicalData?.SurgeriesList && medicalData.SurgeriesList.length > 0) || medicalData?.HasSurgeries === false ? true : null, // surgeries
-        medicalData?.EmergencyInstructions,              // emergency instructions
-        userData.PhoneNumber,                            // phone
-        userData.NationalID,                             // national ID
-        contactsQuery.size > 0 ? true : null             // emergency contacts
+        medicalData?.PersonalInfo?.Name,
+        medicalData?.PersonalInfo?.Gender,
+        medicalData?.PersonalInfo?.Address,
+        medicalData?.EmergencyContact?.Primary,
+        medicalData?.MedicalProfile?.BloodType,
+        medicalData?.MedicalProfile?.MedicalConditions?.length > 0,
+        medicalData?.Allergies?.length > 0,
+        medicalData?.Medications?.length > 0,
+        medicalData?.Surgeries?.length > 0
       ];
 
-      const filledCount = completionFields.filter(f => f !== null && f !== undefined && f !== '').length;
+      const filledCount = completionFields.filter(f => f !== null && f !== undefined && f !== '' && f !== false).length;
       const profileCompletion = Math.round((filledCount / completionFields.length) * 100);
-
-      // --- Emergency contacts count ---
-      const emergencyContactsCount = contactsQuery.size;
 
       return {
         success: true,
@@ -148,9 +151,7 @@ class MedicalProfileService {
           userHeader,
           profileCompletion,
           quickStats,
-          sections,
-          emergencyContactsCount,
-          emergencyInstructions: medicalData?.EmergencyInstructions || ''
+          sections
         }
       };
     } catch (error) {
@@ -165,88 +166,14 @@ class MedicalProfileService {
   }
 
   /**
-   * Update General Information section
-   * Fields: Username, DateOfBirth, Gender, BloodType, Height, Weight, NationalID, PhoneNumber
-   * Writes to: Users + MedicalInfo collections
-   * @param {string} userID - User ID
-   * @param {Object} data - General info data
-   * @returns {Object} - Update result
-   */
-  async updateGeneralInfo(userID, data) {
-    const db = getFirestore();
-
-    try {
-      const userResult = await authService.getUserById(userID);
-      if (!userResult.exists) {
-        return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
-      }
-
-      const {
-        Username, DateOfBirth, Gender, BloodType,
-        Height, Weight, NationalID, PhoneNumber, MedicalConditions
-      } = data;
-
-      // Update Users collection fields
-      const userUpdate = { UpdatedAt: new Date() };
-      if (Username !== undefined) { userUpdate.Username = Username; userUpdate.FullName = Username; }
-      if (DateOfBirth !== undefined) userUpdate.DateOfBirth = DateOfBirth;
-      if (Gender !== undefined) userUpdate.Gender = Gender;
-      if (NationalID !== undefined) userUpdate.NationalID = NationalID;
-      if (PhoneNumber !== undefined) userUpdate.PhoneNumber = PhoneNumber;
-
-      await db.collection('Users').doc(userID).update(userUpdate);
-
-      // Update MedicalInfo collection fields (upsert)
-      const medicalUpdate = { UpdatedAt: new Date() };
-      if (BloodType !== undefined) medicalUpdate.BloodType = BloodType;
-      if (Height !== undefined) medicalUpdate.Height = parseFloat(Height);
-      if (Weight !== undefined) medicalUpdate.Weight = parseFloat(Weight);
-      if (MedicalConditions !== undefined) medicalUpdate.MedicalConditions = MedicalConditions;
-
-      // Check if medical doc exists -> create or update
-      const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
-      if (medicalDoc.exists) {
-        await db.collection('MedicalInfo').doc(userID).update(medicalUpdate);
-      } else {
-        await db.collection('MedicalInfo').doc(userID).set({
-          UserID: userID,
-          BloodType: BloodType || '',
-          Height: Height ? parseFloat(Height) : 0,
-          Weight: Weight ? parseFloat(Weight) : 0,
-          ChronicDiseases: '',
-          Allergies: '',
-          Medications: '',
-          Surgeries: '',
-          Notes: '',
-          EmergencyInstructions: '',
-          CreatedAt: new Date(),
-          UpdatedAt: new Date()
-        });
-      }
-
-      return {
-        success: true,
-        message: 'General information updated successfully',
-        data: {
-          ...userUpdate,
-          ...medicalUpdate
-        }
-      };
-    } catch (error) {
-      console.error('Update general info error:', error);
-      return { success: false, error: 'Server Error', message: error.message, code: 500 };
-    }
-  }
-
-  /**
-   * Update Medical Conditions section
-   * Fields: ChronicDiseases, Notes
+   * Update Personal Information section
+   * Fields: name, gender, address
    * Writes to: MedicalInfo collection (upsert)
    * @param {string} userID - User ID
-   * @param {Object} data - Conditions data
+   * @param {Object} data - Personal info data
    * @returns {Object} - Update result
    */
-  async updateConditions(userID, data) {
+  async updatePersonalInfo(userID, data) {
     const db = getFirestore();
 
     try {
@@ -255,28 +182,45 @@ class MedicalProfileService {
         return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
       }
 
-      const { ChronicDiseases, Notes } = data;
+      const { name, gender, address } = data;
 
       const updateData = { UpdatedAt: new Date() };
-      if (ChronicDiseases !== undefined) updateData.ChronicDiseases = ChronicDiseases;
-      if (Notes !== undefined) updateData.Notes = Notes;
+      
+      // Build PersonalInfo object
+      const personalInfoUpdate = {};
+      if (name !== undefined) personalInfoUpdate.Name = name;
+      if (gender !== undefined) personalInfoUpdate.Gender = gender;
+      if (address !== undefined) personalInfoUpdate.Address = address;
+      
+      if (Object.keys(personalInfoUpdate).length > 0) {
+        updateData.PersonalInfo = personalInfoUpdate;
+      }
 
       // Upsert medical info
       const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
       if (medicalDoc.exists) {
+        // Merge with existing PersonalInfo
+        const existingData = medicalDoc.data();
+        if (updateData.PersonalInfo && existingData.PersonalInfo) {
+          updateData.PersonalInfo = {
+            ...existingData.PersonalInfo,
+            ...updateData.PersonalInfo
+          };
+        }
         await db.collection('MedicalInfo').doc(userID).update(updateData);
       } else {
         await db.collection('MedicalInfo').doc(userID).set({
           UserID: userID,
-          BloodType: '',
-          Height: 0,
-          Weight: 0,
-          ChronicDiseases: ChronicDiseases || '',
-          Allergies: '',
-          Medications: '',
-          Surgeries: '',
-          Notes: Notes || '',
-          EmergencyInstructions: '',
+          PersonalInfo: {
+            Name: name || '',
+            Gender: gender || '',
+            Address: address || ''
+          },
+          EmergencyContact: { Primary: null, Secondary: [] },
+          MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          Allergies: [],
+          Medications: [],
+          Surgeries: [],
           CreatedAt: new Date(),
           UpdatedAt: new Date()
         });
@@ -287,23 +231,201 @@ class MedicalProfileService {
 
       return {
         success: true,
-        message: 'Medical conditions updated successfully',
+        message: 'Personal information updated successfully',
         data: {
-          ChronicDiseases: updatedDoc.data().ChronicDiseases,
-          Notes: updatedDoc.data().Notes,
-          count: this._countItems(updatedDoc.data().ChronicDiseases),
-          UpdatedAt: updatedDoc.data().UpdatedAt
+          name: updatedDoc.data().PersonalInfo?.Name || '',
+          gender: updatedDoc.data().PersonalInfo?.Gender || '',
+          address: updatedDoc.data().PersonalInfo?.Address || '',
+          updatedAt: updatedDoc.data().UpdatedAt
         }
       };
     } catch (error) {
-      console.error('Update conditions error:', error);
+      console.error('Update personal info error:', error);
+      return { success: false, error: 'Server Error', message: error.message, code: 500 };
+    }
+  }
+
+  /**
+   * Update Emergency Contact section
+   * Fields: primary (object), secondary (array)
+   * Writes to: MedicalInfo collection (upsert)
+   * @param {string} userID - User ID
+   * @param {Object} data - Emergency contact data
+   * @returns {Object} - Update result
+   */
+  async updateEmergencyContact(userID, data) {
+    const db = getFirestore();
+
+    try {
+      const userResult = await authService.getUserById(userID);
+      if (!userResult.exists) {
+        return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
+      }
+
+      const { primary, secondary } = data;
+
+      const updateData = { UpdatedAt: new Date() };
+      
+      const emergencyContactUpdate = {};
+      
+      if (primary !== undefined) {
+        emergencyContactUpdate.Primary = primary ? {
+          FullName: primary.fullName || '',
+          PhoneNumber: primary.phoneNumber || '',
+          Relationship: primary.relationship || ''
+        } : null;
+      }
+      
+      if (secondary !== undefined) {
+        emergencyContactUpdate.Secondary = Array.isArray(secondary) 
+          ? secondary.map(c => ({
+              FullName: c.fullName || '',
+              PhoneNumber: c.phoneNumber || '',
+              Relationship: c.relationship || ''
+            }))
+          : [];
+      }
+
+      if (Object.keys(emergencyContactUpdate).length > 0) {
+        updateData.EmergencyContact = emergencyContactUpdate;
+      }
+
+      // Upsert medical info
+      const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
+      if (medicalDoc.exists) {
+        // Merge with existing EmergencyContact
+        const existingData = medicalDoc.data();
+        if (updateData.EmergencyContact && existingData.EmergencyContact) {
+          updateData.EmergencyContact = {
+            ...existingData.EmergencyContact,
+            ...updateData.EmergencyContact
+          };
+        }
+        await db.collection('MedicalInfo').doc(userID).update(updateData);
+      } else {
+        await db.collection('MedicalInfo').doc(userID).set({
+          UserID: userID,
+          PersonalInfo: { Name: '', Gender: '', Address: '' },
+          EmergencyContact: {
+            Primary: emergencyContactUpdate.Primary || null,
+            Secondary: emergencyContactUpdate.Secondary || []
+          },
+          MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          Allergies: [],
+          Medications: [],
+          Surgeries: [],
+          CreatedAt: new Date(),
+          UpdatedAt: new Date()
+        });
+      }
+
+      // Get updated data
+      const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
+
+      return {
+        success: true,
+        message: 'Emergency contact updated successfully',
+        data: {
+          primary: updatedDoc.data().EmergencyContact?.Primary ? {
+            fullName: updatedDoc.data().EmergencyContact.Primary.FullName || '',
+            phoneNumber: updatedDoc.data().EmergencyContact.Primary.PhoneNumber || '',
+            relationship: updatedDoc.data().EmergencyContact.Primary.Relationship || ''
+          } : null,
+          secondary: Array.isArray(updatedDoc.data().EmergencyContact?.Secondary) 
+            ? updatedDoc.data().EmergencyContact.Secondary.map(c => ({
+                fullName: c.FullName || '',
+                phoneNumber: c.PhoneNumber || '',
+                relationship: c.Relationship || ''
+              }))
+            : [],
+          updatedAt: updatedDoc.data().UpdatedAt
+        }
+      };
+    } catch (error) {
+      console.error('Update emergency contact error:', error);
+      return { success: false, error: 'Server Error', message: error.message, code: 500 };
+    }
+  }
+
+  /**
+   * Update Medical Profile section
+   * Fields: bloodType, medicalConditions
+   * Writes to: MedicalInfo collection (upsert)
+   * @param {string} userID - User ID
+   * @param {Object} data - Medical profile data
+   * @returns {Object} - Update result
+   */
+  async updateMedicalProfile(userID, data) {
+    const db = getFirestore();
+
+    try {
+      const userResult = await authService.getUserById(userID);
+      if (!userResult.exists) {
+        return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
+      }
+
+      const { bloodType, medicalConditions } = data;
+
+      const updateData = { UpdatedAt: new Date() };
+      
+      const medicalProfileUpdate = {};
+      if (bloodType !== undefined) medicalProfileUpdate.BloodType = bloodType;
+      if (medicalConditions !== undefined) medicalProfileUpdate.MedicalConditions = Array.isArray(medicalConditions) ? medicalConditions : [];
+      
+      if (Object.keys(medicalProfileUpdate).length > 0) {
+        updateData.MedicalProfile = medicalProfileUpdate;
+      }
+
+      // Upsert medical info
+      const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
+      if (medicalDoc.exists) {
+        // Merge with existing MedicalProfile
+        const existingData = medicalDoc.data();
+        if (updateData.MedicalProfile && existingData.MedicalProfile) {
+          updateData.MedicalProfile = {
+            ...existingData.MedicalProfile,
+            ...updateData.MedicalProfile
+          };
+        }
+        await db.collection('MedicalInfo').doc(userID).update(updateData);
+      } else {
+        await db.collection('MedicalInfo').doc(userID).set({
+          UserID: userID,
+          PersonalInfo: { Name: '', Gender: '', Address: '' },
+          EmergencyContact: { Primary: null, Secondary: [] },
+          MedicalProfile: {
+            BloodType: bloodType || null,
+            MedicalConditions: medicalConditions || []
+          },
+          Allergies: [],
+          Medications: [],
+          Surgeries: [],
+          CreatedAt: new Date(),
+          UpdatedAt: new Date()
+        });
+      }
+
+      // Get updated data
+      const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
+
+      return {
+        success: true,
+        message: 'Medical profile updated successfully',
+        data: {
+          bloodType: updatedDoc.data().MedicalProfile?.BloodType || null,
+          medicalConditions: updatedDoc.data().MedicalProfile?.MedicalConditions || [],
+          updatedAt: updatedDoc.data().UpdatedAt
+        }
+      };
+    } catch (error) {
+      console.error('Update medical profile error:', error);
       return { success: false, error: 'Server Error', message: error.message, code: 500 };
     }
   }
 
   /**
    * Update Allergies section
-   * Fields: HasAllergies (boolean), AllergiesList (array of objects with type, severity)
+   * Fields: allergies (array of { allergyType, severity, notes })
    * Writes to: MedicalInfo collection (upsert)
    * @param {string} userID - User ID
    * @param {Object} data - Allergies data
@@ -318,55 +440,53 @@ class MedicalProfileService {
         return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
       }
 
-      const { HasAllergies, AllergiesList } = data;
+      const { allergies } = data;
 
       const updateData = { UpdatedAt: new Date() };
       
-      if (HasAllergies !== undefined) {
-        updateData.HasAllergies = HasAllergies;
+      if (allergies !== undefined) {
+        updateData.Allergies = Array.isArray(allergies) 
+          ? allergies.map(a => ({
+              AllergyType: a.allergyType || '',
+              Severity: a.severity || '',
+              Notes: a.notes || ''
+            }))
+          : [];
       }
 
-      if (AllergiesList && Array.isArray(AllergiesList)) {
-        updateData.AllergiesList = AllergiesList.map(a => ({
-          type: a.type || '',
-          severity: a.severity || ''
-        }));
-      } else if (HasAllergies === false) {
-        updateData.AllergiesList = [];
-      }
-
+      // Upsert medical info
       const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
       if (medicalDoc.exists) {
         await db.collection('MedicalInfo').doc(userID).update(updateData);
       } else {
         await db.collection('MedicalInfo').doc(userID).set({
           UserID: userID,
-          BloodType: '',
-          Height: 0,
-          Weight: 0,
-          ChronicDiseases: '',
-          HasAllergies: HasAllergies !== undefined ? HasAllergies : true,
-          AllergiesList: updateData.AllergiesList || [],
-          Medications: '',
-          Surgeries: '',
-          Notes: '',
-          EmergencyInstructions: '',
+          PersonalInfo: { Name: '', Gender: '', Address: '' },
+          EmergencyContact: { Primary: null, Secondary: [] },
+          MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          Allergies: updateData.Allergies || [],
+          Medications: [],
+          Surgeries: [],
           CreatedAt: new Date(),
           UpdatedAt: new Date()
         });
       }
 
+      // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
 
       return {
         success: true,
         message: 'Allergies updated successfully',
-        data: {
-          HasAllergies: updatedDoc.data().HasAllergies,
-          AllergiesList: updatedDoc.data().AllergiesList,
-          count: updatedDoc.data().AllergiesList ? updatedDoc.data().AllergiesList.length : 0,
-          UpdatedAt: updatedDoc.data().UpdatedAt
-        }
+        data: Array.isArray(updatedDoc.data().Allergies) 
+          ? updatedDoc.data().Allergies.map(a => ({
+              allergyType: a.AllergyType || '',
+              severity: a.Severity || '',
+              notes: a.Notes || ''
+            }))
+          : [],
+        count: updatedDoc.data().Allergies ? updatedDoc.data().Allergies.length : 0,
+        updatedAt: updatedDoc.data().UpdatedAt
       };
     } catch (error) {
       console.error('Update allergies error:', error);
@@ -375,8 +495,8 @@ class MedicalProfileService {
   }
 
   /**
-   * Update Current Medications section
-   * Fields: HasMedications (boolean), MedicationsList (array of objects with name, dosage, schedule)
+   * Update Medications section
+   * Fields: medications (array of { medicationName, dosage, schedule, notes })
    * Writes to: MedicalInfo collection (upsert)
    * @param {string} userID - User ID
    * @param {Object} data - Medications data
@@ -391,57 +511,55 @@ class MedicalProfileService {
         return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
       }
 
-      const { HasMedications, MedicationsList } = data;
+      const { medications } = data;
 
       const updateData = { UpdatedAt: new Date() };
       
-      if (HasMedications !== undefined) {
-        updateData.HasMedications = HasMedications;
+      if (medications !== undefined) {
+        updateData.Medications = Array.isArray(medications) 
+          ? medications.map(m => ({
+              MedicationName: m.medicationName || '',
+              Dosage: m.dosage || '',
+              Schedule: m.schedule || '',
+              Notes: m.notes || ''
+            }))
+          : [];
       }
 
-      if (MedicationsList && Array.isArray(MedicationsList)) {
-        updateData.MedicationsList = MedicationsList.map(m => ({
-          name: m.name || '',
-          dosage: m.dosage || '',
-          schedule: m.schedule || ''
-        }));
-      } else if (HasMedications === false) {
-        updateData.MedicationsList = [];
-      }
-
+      // Upsert medical info
       const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
       if (medicalDoc.exists) {
         await db.collection('MedicalInfo').doc(userID).update(updateData);
       } else {
         await db.collection('MedicalInfo').doc(userID).set({
           UserID: userID,
-          BloodType: '',
-          Height: 0,
-          Weight: 0,
-          ChronicDiseases: '',
-          HasAllergies: true,
-          AllergiesList: [],
-          HasMedications: HasMedications !== undefined ? HasMedications : true,
-          MedicationsList: updateData.MedicationsList || [],
-          Surgeries: '',
-          Notes: '',
-          EmergencyInstructions: '',
+          PersonalInfo: { Name: '', Gender: '', Address: '' },
+          EmergencyContact: { Primary: null, Secondary: [] },
+          MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          Allergies: [],
+          Medications: updateData.Medications || [],
+          Surgeries: [],
           CreatedAt: new Date(),
           UpdatedAt: new Date()
         });
       }
 
+      // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
 
       return {
         success: true,
         message: 'Medications updated successfully',
-        data: {
-          HasMedications: updatedDoc.data().HasMedications,
-          MedicationsList: updatedDoc.data().MedicationsList,
-          count: updatedDoc.data().MedicationsList ? updatedDoc.data().MedicationsList.length : 0,
-          UpdatedAt: updatedDoc.data().UpdatedAt
-        }
+        data: Array.isArray(updatedDoc.data().Medications) 
+          ? updatedDoc.data().Medications.map(m => ({
+              medicationName: m.MedicationName || '',
+              dosage: m.Dosage || '',
+              schedule: m.Schedule || '',
+              notes: m.Notes || ''
+            }))
+          : [],
+        count: updatedDoc.data().Medications ? updatedDoc.data().Medications.length : 0,
+        updatedAt: updatedDoc.data().UpdatedAt
       };
     } catch (error) {
       console.error('Update medications error:', error);
@@ -450,8 +568,8 @@ class MedicalProfileService {
   }
 
   /**
-   * Update Surgical History section
-   * Fields: HasSurgeries (boolean), SurgeriesList (array of objects with type, date, notes)
+   * Update Surgeries section
+   * Fields: surgeries (array of { surgeryName, surgeryDate, notes })
    * Writes to: MedicalInfo collection (upsert)
    * @param {string} userID - User ID
    * @param {Object} data - Surgeries data
@@ -466,58 +584,53 @@ class MedicalProfileService {
         return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
       }
 
-      const { HasSurgeries, SurgeriesList } = data;
+      const { surgeries } = data;
 
       const updateData = { UpdatedAt: new Date() };
       
-      if (HasSurgeries !== undefined) {
-        updateData.HasSurgeries = HasSurgeries;
-      }
-      
-      if (SurgeriesList && Array.isArray(SurgeriesList)) {
-        // Sanitize objects
-        updateData.SurgeriesList = SurgeriesList.map(s => ({
-          type: s.type || '',
-          date: s.date || '',
-          notes: s.notes || ''
-        }));
-      } else if (HasSurgeries === false) {
-        // If explicitly no surgeries, clear the list
-        updateData.SurgeriesList = [];
+      if (surgeries !== undefined) {
+        updateData.Surgeries = Array.isArray(surgeries) 
+          ? surgeries.map(s => ({
+              SurgeryName: s.surgeryName || '',
+              SurgeryDate: s.surgeryDate || null,
+              Notes: s.notes || ''
+            }))
+          : [];
       }
 
+      // Upsert medical info
       const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
       if (medicalDoc.exists) {
         await db.collection('MedicalInfo').doc(userID).update(updateData);
       } else {
         await db.collection('MedicalInfo').doc(userID).set({
           UserID: userID,
-          BloodType: '',
-          Height: 0,
-          Weight: 0,
-          ChronicDiseases: '',
-          Allergies: '',
-          Medications: '',
-          HasSurgeries: HasSurgeries !== undefined ? HasSurgeries : true,
-          SurgeriesList: updateData.SurgeriesList || [],
-          Notes: '',
-          EmergencyInstructions: '',
+          PersonalInfo: { Name: '', Gender: '', Address: '' },
+          EmergencyContact: { Primary: null, Secondary: [] },
+          MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          Allergies: [],
+          Medications: [],
+          Surgeries: updateData.Surgeries || [],
           CreatedAt: new Date(),
           UpdatedAt: new Date()
         });
       }
 
+      // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
 
       return {
         success: true,
-        message: 'Surgical history updated successfully',
-        data: {
-          HasSurgeries: updatedDoc.data().HasSurgeries,
-          SurgeriesList: updatedDoc.data().SurgeriesList,
-          count: updatedDoc.data().SurgeriesList ? updatedDoc.data().SurgeriesList.length : 0,
-          UpdatedAt: updatedDoc.data().UpdatedAt
-        }
+        message: 'Surgeries updated successfully',
+        data: Array.isArray(updatedDoc.data().Surgeries) 
+          ? updatedDoc.data().Surgeries.map(s => ({
+              surgeryName: s.SurgeryName || '',
+              surgeryDate: s.SurgeryDate || null,
+              notes: s.Notes || ''
+            }))
+          : [],
+        count: updatedDoc.data().Surgeries ? updatedDoc.data().Surgeries.length : 0,
+        updatedAt: updatedDoc.data().UpdatedAt
       };
     } catch (error) {
       console.error('Update surgeries error:', error);
@@ -525,92 +638,16 @@ class MedicalProfileService {
     }
   }
 
-  /**
-   * Update Emergency Instructions
-   * @param {string} userID - User ID
-   * @param {Object} data - Emergency instructions data
-   * @returns {Object} - Update result
-   */
-  async updateEmergencyInstructions(userID, data) {
-    const db = getFirestore();
-
-    try {
-      const userResult = await authService.getUserById(userID);
-      if (!userResult.exists) {
-        return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
-      }
-
-      const { EmergencyInstructions } = data;
-
-      const updateData = { UpdatedAt: new Date() };
-      if (EmergencyInstructions !== undefined) updateData.EmergencyInstructions = EmergencyInstructions;
-
-      const medicalDoc = await db.collection('MedicalInfo').doc(userID).get();
-      if (medicalDoc.exists) {
-        await db.collection('MedicalInfo').doc(userID).update(updateData);
-      } else {
-        await db.collection('MedicalInfo').doc(userID).set({
-          UserID: userID,
-          BloodType: '',
-          Height: 0,
-          Weight: 0,
-          ChronicDiseases: '',
-          Allergies: '',
-          Medications: '',
-          Surgeries: '',
-          Notes: '',
-          EmergencyInstructions: EmergencyInstructions || '',
-          CreatedAt: new Date(),
-          UpdatedAt: new Date()
-        });
-      }
-
-      return {
-        success: true,
-        message: 'Emergency instructions updated successfully',
-        data: {
-          EmergencyInstructions: EmergencyInstructions || '',
-          UpdatedAt: new Date()
-        }
-      };
-    } catch (error) {
-      console.error('Update emergency instructions error:', error);
-      return { success: false, error: 'Server Error', message: error.message, code: 500 };
-    }
-  }
-
   // ─── Helper Methods ───────────────────────────────────────────────
 
   /**
-   * Count comma-separated items in a string
-   * @param {string} str - Comma-separated string
+   * Count items in an array
+   * @param {Array} arr - Array to count
    * @returns {number} - Item count
    */
-  _countItems(str) {
-    if (!str || typeof str !== 'string' || str.trim() === '') return 0;
-    return str.split(',').filter(item => item.trim() !== '').length;
-  }
-
-  /**
-   * Build general information summary for the card
-   * Example: "A+ • March 15, 1985"
-   * @param {Object} userData - User data
-   * @param {Object} medicalData - Medical data
-   * @returns {string} - Summary line
-   */
-  _buildGeneralSummary(userData, medicalData) {
-    const parts = [];
-    if (medicalData?.BloodType) parts.push(medicalData.BloodType);
-    if (userData.DateOfBirth) {
-      try {
-        const dob = new Date(userData.DateOfBirth);
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        parts.push(dob.toLocaleDateString('en-US', options));
-      } catch (e) {
-        parts.push(userData.DateOfBirth);
-      }
-    }
-    return parts.join(' • ') || 'Not set';
+  _countItems(arr) {
+    if (!arr || !Array.isArray(arr)) return 0;
+    return arr.length;
   }
 }
 

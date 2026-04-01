@@ -3,12 +3,12 @@ const router = express.Router();
 const { body } = require('express-validator');
 const {
   getMedicalProfile,
-  updateGeneralInfo,
-  updateConditions,
+  updatePersonalInfo,
+  updateEmergencyContact,
+  updateMedicalProfile,
   updateAllergies,
   updateMedications,
-  updateSurgeries,
-  updateEmergencyInstructions
+  updateSurgeries
 } = require('../controllers/medicalProfileController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { resolveProfileId } = require('../middleware/profileMiddleware');
@@ -16,8 +16,18 @@ const { resolveProfileId } = require('../middleware/profileMiddleware');
 /**
  * Medical Profile Routes - Medical Profile screen endpoints
  * All routes require authentication
- * Matches the Medical Profile UI with section-based data
+ * 
+ * Data Structure:
+ * - personalInfo: { name, gender, address }
+ * - emergencyContact: { primary: {...}, secondary: [...] }
+ * - medicalProfile: { bloodType, medicalConditions }
+ * - allergies: [{ allergyType, severity, notes }]
+ * - medications: [{ medicationName, dosage, schedule, notes }]
+ * - surgeries: [{ surgeryName, surgeryDate, notes }]
  */
+
+// Valid blood types
+const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 /**
  * @route GET /api/app/medical/profile
@@ -28,192 +38,200 @@ const { resolveProfileId } = require('../middleware/profileMiddleware');
 router.get('/medical/profile', [authenticateToken, resolveProfileId], getMedicalProfile);
 
 /**
- * @route PUT /api/app/medical/general-info
- * @description Update General Information section
- * @fields Username, DateOfBirth, Gender, BloodType, Height, Weight, NationalID, PhoneNumber, MedicalConditions
+ * @route PUT /api/app/medical/personal-info
+ * @description Update Personal Information section
+ * @fields name, gender, address
  * @access Private
  */
-router.put('/medical/general-info', [
+router.put('/medical/personal-info', [
   authenticateToken,
   resolveProfileId,
-  body('Username')
+  body('name')
     .optional()
     .trim()
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Username must be between 2 and 100 characters'),
-  body('DateOfBirth')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Name must be between 1 and 100 characters'),
+  body('gender')
     .optional()
-    .matches(/^\d{4}-\d{2}-\d{2}$/)
-    .withMessage('DateOfBirth must be in YYYY-MM-DD format'),
-  body('Gender')
-    .optional()
+    .trim()
     .isIn(['male', 'female', 'other'])
-    .withMessage('Gender must be one of: male, female, other'),
-  body('BloodType')
-    .optional()
-    .isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
-    .withMessage('BloodType must be A+, A-, B+, B-, AB+, AB-, O+, or O-'),
-  body('Height')
-    .optional()
-    .isFloat({ min: 0, max: 999.99 })
-    .withMessage('Height must be a positive number up to 999.99'),
-  body('Weight')
-    .optional()
-    .isFloat({ min: 0, max: 999.99 })
-    .withMessage('Weight must be a positive number up to 999.99'),
-  body('NationalID')
+    .withMessage('Gender must be male, female, or other'),
+  body('address')
     .optional()
     .trim()
-    .isLength({ max: 20 })
-    .withMessage('NationalID must not exceed 20 characters'),
-  body('PhoneNumber')
-    .optional()
-    .trim()
-    .matches(/^\+?[0-9]{10,15}$/)
-    .withMessage('PhoneNumber must be valid E.164 format'),
-  body('MedicalConditions')
-    .optional()
-    .isArray()
-    .withMessage('MedicalConditions must be an array of strings'),
-  body('MedicalConditions.*')
-    .if(body('MedicalConditions').exists())
-    .isString()
-    .trim()
-    .withMessage('Each condition must be a string')
-], updateGeneralInfo);
+    .isLength({ max: 500 })
+    .withMessage('Address must not exceed 500 characters')
+], updatePersonalInfo);
 
 /**
- * @route PUT /api/app/medical/conditions
- * @description Update Medical Conditions section
- * @fields ChronicDiseases, Notes
+ * @route PUT /api/app/medical/emergency-contact
+ * @description Update Emergency Contact section
+ * @fields primary (object), secondary (array)
  * @access Private
  */
-router.put('/medical/conditions', [
+router.put('/medical/emergency-contact', [
   authenticateToken,
   resolveProfileId,
-  body('ChronicDiseases')
+  body('primary')
+    .optional()
+    .isObject()
+    .withMessage('Primary contact must be an object'),
+  body('primary.fullName')
     .optional()
     .trim()
-    .isLength({ max: 5000 })
-    .withMessage('ChronicDiseases must not exceed 5000 characters'),
-  body('Notes')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Full name is required and must not exceed 100 characters'),
+  body('primary.phoneNumber')
     .optional()
     .trim()
-    .isLength({ max: 5000 })
-    .withMessage('Notes must not exceed 5000 characters')
-], updateConditions);
+    .matches(/^[+]?[0-9\s-]{8,20}$/)
+    .withMessage('Phone number must be valid'),
+  body('primary.relationship')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Relationship must not exceed 50 characters'),
+  body('secondary')
+    .optional()
+    .isArray({ max: 5 })
+    .withMessage('Secondary contacts must be an array with max 5 items'),
+  body('secondary.*.fullName')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Full name must not exceed 100 characters'),
+  body('secondary.*.phoneNumber')
+    .optional()
+    .trim()
+    .matches(/^[+]?[0-9\s-]{8,20}$/)
+    .withMessage('Phone number must be valid'),
+  body('secondary.*.relationship')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Relationship must not exceed 50 characters')
+], updateEmergencyContact);
+
+/**
+ * @route PUT /api/app/medical/medical-profile
+ * @description Update Medical Profile section
+ * @fields bloodType, medicalConditions
+ * @access Private
+ */
+router.put('/medical/medical-profile', [
+  authenticateToken,
+  resolveProfileId,
+  body('bloodType')
+    .optional()
+    .isIn(BLOOD_TYPES)
+    .withMessage('Blood type must be A+, A-, B+, B-, AB+, AB-, O+, or O-'),
+  body('medicalConditions')
+    .optional()
+    .isArray({ max: 50 })
+    .withMessage('Medical conditions must be an array with max 50 items'),
+  body('medicalConditions.*')
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Each condition must not exceed 200 characters')
+], updateMedicalProfile);
 
 /**
  * @route PUT /api/app/medical/allergies
  * @description Update Allergies section
- * @fields HasAllergies (boolean), AllergiesList (array of objects with type, severity)
+ * @fields allergies (array of { allergyType, severity, notes })
  * @access Private
  */
 router.put('/medical/allergies', [
   authenticateToken,
   resolveProfileId,
-  body('HasAllergies')
+  body('allergies')
     .optional()
-    .isBoolean()
-    .withMessage('HasAllergies must be a boolean'),
-  body('AllergiesList')
+    .isArray({ max: 50 })
+    .withMessage('Allergies must be an array with max 50 items'),
+  body('allergies.*.allergyType')
     .optional()
-    .isArray()
-    .withMessage('AllergiesList must be an array'),
-  body('AllergiesList.*.type')
-    .if(body('AllergiesList').exists())
     .trim()
     .notEmpty()
-    .withMessage('Allergy type is required'),
-  body('AllergiesList.*.severity')
-    .if(body('AllergiesList').exists())
+    .isLength({ max: 100 })
+    .withMessage('Allergy type is required and must not exceed 100 characters'),
+  body('allergies.*.severity')
+    .optional()
     .trim()
     .isIn(['Mild', 'Moderate', 'Severe'])
-    .withMessage('Allergy severity must be Mild, Moderate, or Severe')
+    .withMessage('Severity must be Mild, Moderate, or Severe'),
+  body('allergies.*.notes')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Notes must not exceed 500 characters')
 ], updateAllergies);
 
 /**
  * @route PUT /api/app/medical/medications
  * @description Update Current Medications section
- * @fields HasMedications (boolean), MedicationsList (array of objects with name, dosage, schedule)
+ * @fields medications (array of { medicationName, dosage, schedule, notes })
  * @access Private
  */
 router.put('/medical/medications', [
   authenticateToken,
   resolveProfileId,
-  body('HasMedications')
+  body('medications')
     .optional()
-    .isBoolean()
-    .withMessage('HasMedications must be a boolean'),
-  body('MedicationsList')
+    .isArray({ max: 50 })
+    .withMessage('Medications must be an array with max 50 items'),
+  body('medications.*.medicationName')
     .optional()
-    .isArray()
-    .withMessage('MedicationsList must be an array'),
-  body('MedicationsList.*.name')
-    .if(body('MedicationsList').exists())
     .trim()
     .notEmpty()
-    .withMessage('Medication name is required'),
-  body('MedicationsList.*.dosage')
+    .isLength({ max: 100 })
+    .withMessage('Medication name is required and must not exceed 100 characters'),
+  body('medications.*.dosage')
     .optional()
     .trim()
     .isLength({ max: 100 })
-    .withMessage('Medication dosage must not exceed 100 characters'),
-  body('MedicationsList.*.schedule')
+    .withMessage('Dosage must not exceed 100 characters'),
+  body('medications.*.schedule')
     .optional()
     .trim()
     .isLength({ max: 100 })
-    .withMessage('Medication schedule must not exceed 100 characters')
+    .withMessage('Schedule must not exceed 100 characters'),
+  body('medications.*.notes')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Notes must not exceed 500 characters')
 ], updateMedications);
 
 /**
  * @route PUT /api/app/medical/surgeries
  * @description Update Surgical History section
- * @fields HasSurgeries (boolean), SurgeriesList (array of objects with type, date, notes)
+ * @fields surgeries (array of { surgeryName, surgeryDate, notes })
  * @access Private
  */
 router.put('/medical/surgeries', [
   authenticateToken,
   resolveProfileId,
-  body('HasSurgeries')
+  body('surgeries')
     .optional()
-    .isBoolean()
-    .withMessage('HasSurgeries must be a boolean'),
-  body('SurgeriesList')
+    .isArray({ max: 50 })
+    .withMessage('Surgeries must be an array with max 50 items'),
+  body('surgeries.*.surgeryName')
     .optional()
-    .isArray()
-    .withMessage('SurgeriesList must be an array'),
-  body('SurgeriesList.*.type')
-    .if(body('SurgeriesList').exists())
-    .trim()
-    .isLength({ min: 1, max: 200 })
-    .withMessage('Surgery type is required and must not exceed 200 characters'),
-  body('SurgeriesList.*.date')
-    .if(body('SurgeriesList').exists())
     .trim()
     .notEmpty()
-    .withMessage('Surgery date is required'),
-  body('SurgeriesList.*.notes')
+    .isLength({ max: 200 })
+    .withMessage('Surgery name is required and must not exceed 200 characters'),
+  body('surgeries.*.surgeryDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Surgery date must be a valid date'),
+  body('surgeries.*.notes')
     .optional()
     .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Notes must not exceed 1000 characters')
+    .isLength({ max: 500 })
+    .withMessage('Notes must not exceed 500 characters')
 ], updateSurgeries);
-
-/**
- * @route PUT /api/app/medical/emergency-instructions
- * @description Update Emergency Instructions
- * @fields EmergencyInstructions
- * @access Private
- */
-router.put('/medical/emergency-instructions', [
-  authenticateToken,
-  resolveProfileId,
-  body('EmergencyInstructions')
-    .optional()
-    .trim()
-    .isLength({ max: 5000 })
-    .withMessage('Emergency instructions must not exceed 5000 characters')
-], updateEmergencyInstructions);
 
 module.exports = router;
