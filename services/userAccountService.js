@@ -574,8 +574,7 @@ class UserAccountService {
           .get(),
         db.collection('Wristbands')
           .where('UserID', '==', userID)
-          .orderBy('CreatedAt', 'desc')
-          .get()
+          .get() // Remove orderBy to avoid composite index requirement, sort in memory instead
       ]);
 
       if (!userDoc.exists) {
@@ -623,10 +622,16 @@ class UserAccountService {
             id: doc.id,
             ...doc.data()
           })).sort((a, b) => (a.Priority || 999) - (b.Priority || 999)),
-          wristbands: wristbandsQuery.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }))
+          wristbands: wristbandsQuery.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }))
+            .sort((a, b) => {
+              const aTime = a.CreatedAt?.toDate?.() || new Date(a.CreatedAt || 0);
+              const bTime = b.CreatedAt?.toDate?.() || new Date(b.CreatedAt || 0);
+              return bTime - aTime; // Descending order
+            })
         }
       };
     } catch (error) {
