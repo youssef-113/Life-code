@@ -140,12 +140,18 @@ router.put('/medical/medical-profile', [
 /**
  * @route PUT /api/app/medical/allergies
  * @description Update Allergies section
- * @fields allergies (array of { allergyType, severity, notes })
+ * @fields hasAllergies (boolean), allergies (array of { allergyType, severity, notes })
+ * - If hasAllergies is true: save allergies array (can be empty to add later)
+ * - If hasAllergies is false: clear allergies and set flag to false (user clicked "No")
  * @access Private
  */
 router.put('/medical/allergies', [
   authenticateToken,
   resolveProfileId,
+  body('hasAllergies')
+    .optional()
+    .isBoolean()
+    .withMessage('hasAllergies must be a boolean'),
   body('allergies')
     .optional()
     .isArray({ max: 50 })
@@ -171,12 +177,18 @@ router.put('/medical/allergies', [
 /**
  * @route PUT /api/app/medical/medications
  * @description Update Current Medications section
- * @fields medications (array of { medicationName, dosage, schedule, notes })
+ * @fields hasMedications (boolean), medications (array of { medicationName, dosage, schedule, notes })
+ * - If hasMedications is true: save medications array (can be empty to add later)
+ * - If hasMedications is false: clear medications and set flag to false (user clicked "No")
  * @access Private
  */
 router.put('/medical/medications', [
   authenticateToken,
   resolveProfileId,
+  body('hasMedications')
+    .optional()
+    .isBoolean()
+    .withMessage('hasMedications must be a boolean'),
   body('medications')
     .optional()
     .isArray({ max: 50 })
@@ -207,12 +219,18 @@ router.put('/medical/medications', [
 /**
  * @route PUT /api/app/medical/surgeries
  * @description Update Surgical History section
- * @fields surgeries (array of { surgeryName, surgeryDate, notes })
+ * @fields hasSurgeries (boolean), surgeries (array of { surgeryName, surgeryDate, notes })
+ * - If hasSurgeries is true: save surgeries array (can be empty to add later)
+ * - If hasSurgeries is false: clear surgeries and set flag to false (user clicked "No")
  * @access Private
  */
 router.put('/medical/surgeries', [
   authenticateToken,
   resolveProfileId,
+  body('hasSurgeries')
+    .optional()
+    .isBoolean()
+    .withMessage('hasSurgeries must be a boolean'),
   body('surgeries')
     .optional()
     .isArray({ max: 50 })

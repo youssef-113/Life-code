@@ -191,7 +191,9 @@ const updateMedicalProfile = async (req, res) => {
 
 /**
  * Update Allergies section
- * Fields: allergies (array of { allergyType, severity, notes })
+ * Fields: hasAllergies (boolean), allergies (array of { allergyType, severity, notes })
+ * - If hasAllergies is true: save allergies array (can be empty to add later)
+ * - If hasAllergies is false: clear allergies and set flag to false (user clicked "No")
  * @route PUT /api/app/medical/allergies
  * @access Private
  */
@@ -216,6 +218,18 @@ const updateAllergies = async (req, res) => {
       });
     }
 
+    const { hasAllergies, allergies } = req.body;
+
+    // Validate: must provide at least hasAllergies or allergies
+    if (hasAllergies === undefined && allergies === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Either hasAllergies or allergies must be provided',
+        code: 400
+      });
+    }
+
     const result = await medicalProfileService.updateAllergies(userID, req.body);
 
     const statusCode = result.success ? 200 : result.code || 500;
@@ -234,7 +248,9 @@ const updateAllergies = async (req, res) => {
 
 /**
  * Update Current Medications section
- * Fields: medications (array of { medicationName, dosage, schedule, notes })
+ * Fields: hasMedications (boolean), medications (array of { medicationName, dosage, schedule, notes })
+ * - If hasMedications is true: save medications array (can be empty to add later)
+ * - If hasMedications is false: clear medications and set flag to false (user clicked "No")
  * @route PUT /api/app/medical/medications
  * @access Private
  */
@@ -259,6 +275,18 @@ const updateMedications = async (req, res) => {
       });
     }
 
+    const { hasMedications, medications } = req.body;
+
+    // Validate: must provide at least hasMedications or medications
+    if (hasMedications === undefined && medications === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Either hasMedications or medications must be provided',
+        code: 400
+      });
+    }
+
     const result = await medicalProfileService.updateMedications(userID, req.body);
 
     const statusCode = result.success ? 200 : result.code || 500;
@@ -277,7 +305,9 @@ const updateMedications = async (req, res) => {
 
 /**
  * Update Surgical History section
- * Fields: surgeries (array of { surgeryName, surgeryDate, notes })
+ * Fields: hasSurgeries (boolean), surgeries (array of { surgeryName, surgeryDate, notes })
+ * - If hasSurgeries is true: save surgeries array (can be empty to add later)
+ * - If hasSurgeries is false: clear surgeries and set flag to false (user clicked "No")
  * @route PUT /api/app/medical/surgeries
  * @access Private
  */
@@ -299,6 +329,18 @@ const updateSurgeries = async (req, res) => {
         error: 'Unauthorized',
         message: 'User not authenticated',
         code: 401
+      });
+    }
+
+    const { hasSurgeries, surgeries } = req.body;
+
+    // Validate: must provide at least hasSurgeries or surgeries
+    if (hasSurgeries === undefined && surgeries === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Either hasSurgeries or surgeries must be provided',
+        code: 400
       });
     }
 

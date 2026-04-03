@@ -94,7 +94,8 @@ class MedicalProfileService {
           }
         },
         allergies: {
-          completed: !!(medicalData?.Allergies && medicalData.Allergies.length > 0),
+          completed: !!(medicalData?.HasAllergies === true || (medicalData?.Allergies && medicalData.Allergies.length > 0)),
+          hasAllergies: medicalData?.HasAllergies || false,
           count: medicalData?.Allergies ? medicalData.Allergies.length : 0,
           data: Array.isArray(medicalData?.Allergies) 
             ? medicalData.Allergies.map(a => ({
@@ -105,7 +106,8 @@ class MedicalProfileService {
             : []
         },
         medications: {
-          completed: !!(medicalData?.Medications && medicalData.Medications.length > 0),
+          completed: !!(medicalData?.HasMedications === true || (medicalData?.Medications && medicalData.Medications.length > 0)),
+          hasMedications: medicalData?.HasMedications || false,
           count: medicalData?.Medications ? medicalData.Medications.length : 0,
           data: Array.isArray(medicalData?.Medications) 
             ? medicalData.Medications.map(m => ({
@@ -117,7 +119,8 @@ class MedicalProfileService {
             : []
         },
         surgeries: {
-          completed: !!(medicalData?.Surgeries && medicalData.Surgeries.length > 0),
+          completed: !!(medicalData?.HasSurgeries === true || (medicalData?.Surgeries && medicalData.Surgeries.length > 0)),
+          hasSurgeries: medicalData?.HasSurgeries || false,
           count: medicalData?.Surgeries ? medicalData.Surgeries.length : 0,
           data: Array.isArray(medicalData?.Surgeries) 
             ? medicalData.Surgeries.map(s => ({
@@ -425,7 +428,9 @@ class MedicalProfileService {
 
   /**
    * Update Allergies section
-   * Fields: allergies (array of { allergyType, severity, notes })
+   * Fields: hasAllergies (boolean), allergies (array of { allergyType, severity, notes })
+   * - If hasAllergies is true: save allergies array (can be empty to add later)
+   * - If hasAllergies is false: clear allergies and set flag to false
    * Writes to: MedicalInfo collection (upsert)
    * @param {string} userID - User ID
    * @param {Object} data - Allergies data
@@ -440,11 +445,22 @@ class MedicalProfileService {
         return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
       }
 
-      const { allergies } = data;
+      const { hasAllergies, allergies } = data;
 
       const updateData = { UpdatedAt: new Date() };
-      
-      if (allergies !== undefined) {
+
+      // Handle hasAllergies flag
+      if (hasAllergies !== undefined) {
+        updateData.HasAllergies = hasAllergies === true;
+
+        // If user clicked "No" (hasAllergies = false), clear the allergies list
+        if (hasAllergies === false) {
+          updateData.Allergies = [];
+        }
+      }
+
+      // Handle allergies array (only if hasAllergies is true or not specified)
+      if (allergies !== undefined && hasAllergies !== false) {
         updateData.Allergies = Array.isArray(allergies) 
           ? allergies.map(a => ({
               AllergyType: a.allergyType || '',
@@ -452,6 +468,10 @@ class MedicalProfileService {
               Notes: a.notes || ''
             }))
           : [];
+        // Auto-set HasAllergies if allergies array has items
+        if (updateData.Allergies.length > 0 && hasAllergies === undefined) {
+          updateData.HasAllergies = true;
+        }
       }
 
       // Upsert medical info
@@ -464,8 +484,11 @@ class MedicalProfileService {
           PersonalInfo: { Name: '', Gender: '', Address: '' },
           EmergencyContact: { Primary: null, Secondary: [] },
           MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          HasAllergies: updateData.HasAllergies || false,
           Allergies: updateData.Allergies || [],
+          HasMedications: false,
           Medications: [],
+          HasSurgeries: false,
           Surgeries: [],
           CreatedAt: new Date(),
           UpdatedAt: new Date()
@@ -474,19 +497,25 @@ class MedicalProfileService {
 
       // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
+      const updatedData = updatedDoc.data();
 
       return {
         success: true,
-        message: 'Allergies updated successfully',
-        data: Array.isArray(updatedDoc.data().Allergies) 
-          ? updatedDoc.data().Allergies.map(a => ({
-              allergyType: a.AllergyType || '',
-              severity: a.Severity || '',
-              notes: a.Notes || ''
-            }))
-          : [],
-        count: updatedDoc.data().Allergies ? updatedDoc.data().Allergies.length : 0,
-        updatedAt: updatedDoc.data().UpdatedAt
+        message: hasAllergies === false 
+          ? 'Allergies section cleared' 
+          : 'Allergies updated successfully',
+        data: {
+          hasAllergies: updatedData.HasAllergies || false,
+          allergies: Array.isArray(updatedData.Allergies) 
+            ? updatedData.Allergies.map(a => ({
+                allergyType: a.AllergyType || '',
+                severity: a.Severity || '',
+                notes: a.Notes || ''
+              }))
+            : [],
+          count: updatedData.Allergies ? updatedData.Allergies.length : 0,
+          updatedAt: updatedData.UpdatedAt
+        }
       };
     } catch (error) {
       console.error('Update allergies error:', error);
@@ -496,7 +525,9 @@ class MedicalProfileService {
 
   /**
    * Update Medications section
-   * Fields: medications (array of { medicationName, dosage, schedule, notes })
+   * Fields: hasMedications (boolean), medications (array of { medicationName, dosage, schedule, notes })
+   * - If hasMedications is true: save medications array (can be empty to add later)
+   * - If hasMedications is false: clear medications and set flag to false
    * Writes to: MedicalInfo collection (upsert)
    * @param {string} userID - User ID
    * @param {Object} data - Medications data
@@ -511,11 +542,22 @@ class MedicalProfileService {
         return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
       }
 
-      const { medications } = data;
+      const { hasMedications, medications } = data;
 
       const updateData = { UpdatedAt: new Date() };
-      
-      if (medications !== undefined) {
+
+      // Handle hasMedications flag
+      if (hasMedications !== undefined) {
+        updateData.HasMedications = hasMedications === true;
+
+        // If user clicked "No" (hasMedications = false), clear the medications list
+        if (hasMedications === false) {
+          updateData.Medications = [];
+        }
+      }
+
+      // Handle medications array (only if hasMedications is true or not specified)
+      if (medications !== undefined && hasMedications !== false) {
         updateData.Medications = Array.isArray(medications) 
           ? medications.map(m => ({
               MedicationName: m.medicationName || '',
@@ -524,6 +566,10 @@ class MedicalProfileService {
               Notes: m.notes || ''
             }))
           : [];
+        // Auto-set HasMedications if medications array has items
+        if (updateData.Medications.length > 0 && hasMedications === undefined) {
+          updateData.HasMedications = true;
+        }
       }
 
       // Upsert medical info
@@ -536,8 +582,11 @@ class MedicalProfileService {
           PersonalInfo: { Name: '', Gender: '', Address: '' },
           EmergencyContact: { Primary: null, Secondary: [] },
           MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          HasAllergies: false,
           Allergies: [],
+          HasMedications: updateData.HasMedications || false,
           Medications: updateData.Medications || [],
+          HasSurgeries: false,
           Surgeries: [],
           CreatedAt: new Date(),
           UpdatedAt: new Date()
@@ -546,20 +595,26 @@ class MedicalProfileService {
 
       // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
+      const updatedData = updatedDoc.data();
 
       return {
         success: true,
-        message: 'Medications updated successfully',
-        data: Array.isArray(updatedDoc.data().Medications) 
-          ? updatedDoc.data().Medications.map(m => ({
-              medicationName: m.MedicationName || '',
-              dosage: m.Dosage || '',
-              schedule: m.Schedule || '',
-              notes: m.Notes || ''
-            }))
-          : [],
-        count: updatedDoc.data().Medications ? updatedDoc.data().Medications.length : 0,
-        updatedAt: updatedDoc.data().UpdatedAt
+        message: hasMedications === false 
+          ? 'Medications section cleared' 
+          : 'Medications updated successfully',
+        data: {
+          hasMedications: updatedData.HasMedications || false,
+          medications: Array.isArray(updatedData.Medications) 
+            ? updatedData.Medications.map(m => ({
+                medicationName: m.MedicationName || '',
+                dosage: m.Dosage || '',
+                schedule: m.Schedule || '',
+                notes: m.Notes || ''
+              }))
+            : [],
+          count: updatedData.Medications ? updatedData.Medications.length : 0,
+          updatedAt: updatedData.UpdatedAt
+        }
       };
     } catch (error) {
       console.error('Update medications error:', error);
@@ -569,7 +624,9 @@ class MedicalProfileService {
 
   /**
    * Update Surgeries section
-   * Fields: surgeries (array of { surgeryName, surgeryDate, notes })
+   * Fields: hasSurgeries (boolean), surgeries (array of { surgeryName, surgeryDate, notes })
+   * - If hasSurgeries is true: save surgeries array (can be empty to add later)
+   * - If hasSurgeries is false: clear surgeries and set flag to false
    * Writes to: MedicalInfo collection (upsert)
    * @param {string} userID - User ID
    * @param {Object} data - Surgeries data
@@ -584,11 +641,22 @@ class MedicalProfileService {
         return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
       }
 
-      const { surgeries } = data;
+      const { hasSurgeries, surgeries } = data;
 
       const updateData = { UpdatedAt: new Date() };
-      
-      if (surgeries !== undefined) {
+
+      // Handle hasSurgeries flag
+      if (hasSurgeries !== undefined) {
+        updateData.HasSurgeries = hasSurgeries === true;
+
+        // If user clicked "No" (hasSurgeries = false), clear the surgeries list
+        if (hasSurgeries === false) {
+          updateData.Surgeries = [];
+        }
+      }
+
+      // Handle surgeries array (only if hasSurgeries is true or not specified)
+      if (surgeries !== undefined && hasSurgeries !== false) {
         updateData.Surgeries = Array.isArray(surgeries) 
           ? surgeries.map(s => ({
               SurgeryName: s.surgeryName || '',
@@ -596,6 +664,10 @@ class MedicalProfileService {
               Notes: s.notes || ''
             }))
           : [];
+        // Auto-set HasSurgeries if surgeries array has items
+        if (updateData.Surgeries.length > 0 && hasSurgeries === undefined) {
+          updateData.HasSurgeries = true;
+        }
       }
 
       // Upsert medical info
@@ -608,8 +680,11 @@ class MedicalProfileService {
           PersonalInfo: { Name: '', Gender: '', Address: '' },
           EmergencyContact: { Primary: null, Secondary: [] },
           MedicalProfile: { BloodType: null, MedicalConditions: [] },
+          HasAllergies: false,
           Allergies: [],
+          HasMedications: false,
           Medications: [],
+          HasSurgeries: updateData.HasSurgeries || false,
           Surgeries: updateData.Surgeries || [],
           CreatedAt: new Date(),
           UpdatedAt: new Date()
@@ -618,19 +693,25 @@ class MedicalProfileService {
 
       // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
+      const updatedData = updatedDoc.data();
 
       return {
         success: true,
-        message: 'Surgeries updated successfully',
-        data: Array.isArray(updatedDoc.data().Surgeries) 
-          ? updatedDoc.data().Surgeries.map(s => ({
-              surgeryName: s.SurgeryName || '',
-              surgeryDate: s.SurgeryDate || null,
-              notes: s.Notes || ''
-            }))
-          : [],
-        count: updatedDoc.data().Surgeries ? updatedDoc.data().Surgeries.length : 0,
-        updatedAt: updatedDoc.data().UpdatedAt
+        message: hasSurgeries === false 
+          ? 'Surgeries section cleared' 
+          : 'Surgeries updated successfully',
+        data: {
+          hasSurgeries: updatedData.HasSurgeries || false,
+          surgeries: Array.isArray(updatedData.Surgeries) 
+            ? updatedData.Surgeries.map(s => ({
+                surgeryName: s.SurgeryName || '',
+                surgeryDate: s.SurgeryDate || null,
+                notes: s.Notes || ''
+              }))
+            : [],
+          count: updatedData.Surgeries ? updatedData.Surgeries.length : 0,
+          updatedAt: updatedData.UpdatedAt
+        }
       };
     } catch (error) {
       console.error('Update surgeries error:', error);
