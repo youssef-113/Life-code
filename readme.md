@@ -145,7 +145,7 @@ The LifeBand stores **no raw medical data** — only a cryptographically signed 
 {
   "userID": "auto-generated-uid",
   "email": "user@example.com",
-  "displayName": "John Doe",
+  "displayName": "yousseff besso",
   "phoneNumber": "+20xxxxxxxxxx",
   "photoURL": "https://...",
   "authProvider": "email | google | apple",
@@ -190,7 +190,7 @@ The LifeBand stores **no raw medical data** — only a cryptographically signed 
 {
   "contactID": "auto-generated-id",
   "userID": "reference-to-users",
-  "name": "Jane Doe",
+  "name": "Jane besso",
   "phone": "+20xxxxxxxxxx",
   "relation": "Spouse",
   "isPrimary": true,

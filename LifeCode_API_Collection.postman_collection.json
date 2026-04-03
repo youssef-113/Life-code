@@ -81,7 +81,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123\",\n  \"confirmPassword\": \"SecurePass123\"\n}",
+              "raw": "{\n  \"name\": \"yousseff besso\",\n  \"email\": \"yousseff@example.com\",\n  \"password\": \"SecurePass123\",\n  \"confirmPassword\": \"SecurePass123\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -122,7 +122,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+              "raw": "{\n  \"email\": \"yousseff@example.com\",\n  \"password\": \"SecurePass123\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -321,7 +321,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"gender\": \"male\",\n  \"address\": \"123 Main St, Cairo, Egypt\"\n}",
+              "raw": "{\n  \"fullName\": \"yousseff besso\",\n  \"gender\": \"male\",\n  \"address\": \"123 Main St, Cairo, Egypt\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -354,7 +354,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"primaryContact\": {\n    \"fullName\": \"Jane Doe\",\n    \"phoneNumber\": \"+201234567890\",\n    \"relationship\": \"Spouse\"\n  },\n  \"secondaryContact\": {\n    \"fullName\": \"Bob Smith\",\n    \"phoneNumber\": \"+201234567891\",\n    \"relationship\": \"Friend\"\n  }\n}",
+              "raw": "{\n  \"primaryContact\": {\n    \"fullName\": \"Jane besso\",\n    \"phoneNumber\": \"+201234567890\",\n    \"relationship\": \"Spouse\"\n  },\n  \"secondaryContact\": {\n    \"fullName\": \"Bob Smith\",\n    \"phoneNumber\": \"+201234567891\",\n    \"relationship\": \"Friend\"\n  }\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -379,7 +379,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"personalInfo\": {\n    \"name\": \"John Doe\",\n    \"gender\": \"male\",\n    \"address\": \"123 Main St, Cairo\"\n  },\n  \"emergencyContact\": {\n    \"primary\": {\n      \"fullName\": \"Jane Doe\",\n      \"phoneNumber\": \"+201234567890\",\n      \"relationship\": \"Spouse\"\n    },\n    \"secondary\": [\n      {\n        \"fullName\": \"Bob Smith\",\n        \"phoneNumber\": \"+201234567891\",\n        \"relationship\": \"Friend\"\n      }\n    ]\n  },\n  \"medicalProfile\": {\n    \"bloodType\": \"A+\",\n    \"medicalConditions\": [\"Diabetes\", \"Hypertension\"]\n  },\n  \"allergies\": [\n    {\n      \"allergyType\": \"Peanuts\",\n      \"severity\": \"High\",\n      \"notes\": \"Anaphylaxis risk\"\n    }\n  ],\n  \"medications\": [\n    {\n      \"medicationName\": \"Insulin\",\n      \"dosage\": \"10 units\",\n      \"schedule\": \"Daily\",\n      \"notes\": \"Before meals\"\n    }\n  ],\n  \"surgeries\": [\n    {\n      \"surgeryName\": \"Appendectomy\",\n      \"surgeryDate\": \"2020-01-15\",\n      \"notes\": \"No complications\"\n    }\n  ]\n}",
+              "raw": "{\n  \"personalInfo\": {\n    \"name\": \"yousseff besso\",\n    \"gender\": \"male\",\n    \"address\": \"123 Main St, Cairo\"\n  },\n  \"emergencyContact\": {\n    \"primary\": {\n      \"fullName\": \"Jane besso\",\n      \"phoneNumber\": \"+201234567890\",\n      \"relationship\": \"Spouse\"\n    },\n    \"secondary\": [\n      {\n        \"fullName\": \"Bob Smith\",\n        \"phoneNumber\": \"+201234567891\",\n        \"relationship\": \"Friend\"\n      }\n    ]\n  },\n  \"medicalProfile\": {\n    \"bloodType\": \"A+\",\n    \"medicalConditions\": [\"Diabetes\", \"Hypertension\"]\n  },\n  \"allergies\": [\n    {\n      \"allergyType\": \"Peanuts\",\n      \"severity\": \"High\",\n      \"notes\": \"Anaphylaxis risk\"\n    }\n  ],\n  \"medications\": [\n    {\n      \"medicationName\": \"Insulin\",\n      \"dosage\": \"10 units\",\n      \"schedule\": \"Daily\",\n      \"notes\": \"Before meals\"\n    }\n  ],\n  \"surgeries\": [\n    {\n      \"surgeryName\": \"Appendectomy\",\n      \"surgeryDate\": \"2020-01-15\",\n      \"notes\": \"No complications\"\n    }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -412,7 +412,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"personalInfo\": {\n    \"name\": \"John Doe\",\n    \"gender\": \"male\",\n    \"address\": \"456 New Street, Cairo\"\n  },\n  \"medicalProfile\": {\n    \"bloodType\": \"O+\",\n    \"medicalConditions\": [\"Diabetes\"]\n  },\n  \"allergies\": [\n    {\n      \"allergyType\": \"Shellfish\",\n      \"severity\": \"Medium\",\n      \"notes\": \"Mild reaction\"\n    }\n  ],\n  \"medications\": [\n    {\n      \"medicationName\": \"Metformin\",\n      \"dosage\": \"500mg\",\n      \"schedule\": \"Twice daily\",\n      \"notes\": \"With food\"\n    }\n  ]\n}",
+              "raw": "{\n  \"personalInfo\": {\n    \"name\": \"yousseff besso\",\n    \"gender\": \"male\",\n    \"address\": \"456 New Street, Cairo\"\n  },\n  \"medicalProfile\": {\n    \"bloodType\": \"O+\",\n    \"medicalConditions\": [\"Diabetes\"]\n  },\n  \"allergies\": [\n    {\n      \"allergyType\": \"Shellfish\",\n      \"severity\": \"Medium\",\n      \"notes\": \"Mild reaction\"\n    }\n  ],\n  \"medications\": [\n    {\n      \"medicationName\": \"Metformin\",\n      \"dosage\": \"500mg\",\n      \"schedule\": \"Twice daily\",\n      \"notes\": \"With food\"\n    }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -445,7 +445,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"gender\": \"male\",\n  \"address\": \"123 Main St, Cairo\"\n}",
+              "raw": "{\n  \"name\": \"yousseff besso\",\n  \"gender\": \"male\",\n  \"address\": \"123 Main St, Cairo\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -465,7 +465,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"primary\": {\n    \"fullName\": \"Jane Doe\",\n    \"phoneNumber\": \"+201234567890\",\n    \"relationship\": \"Spouse\"\n  },\n  \"secondary\": [\n    {\n      \"fullName\": \"Bob Smith\",\n      \"phoneNumber\": \"+201234567891\",\n      \"relationship\": \"Friend\"\n    }\n  ]\n}",
+              "raw": "{\n  \"primary\": {\n    \"fullName\": \"Jane besso\",\n    \"phoneNumber\": \"+201234567890\",\n    \"relationship\": \"Spouse\"\n  },\n  \"secondary\": [\n    {\n      \"fullName\": \"Bob Smith\",\n      \"phoneNumber\": \"+201234567891\",\n      \"relationship\": \"Friend\"\n    }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -588,7 +588,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ContactName\": \"Jane Doe\",\n  \"Relation\": \"Spouse\",\n  \"PhoneNumber\": \"+201234567890\",\n  \"SecondaryPhone\": \"+201234567891\",\n  \"Email\": \"jane@example.com\",\n  \"IsPrimary\": true,\n  \"Priority\": 1,\n  \"Notes\": \"Primary emergency contact\"\n}",
+              "raw": "{\n  \"ContactName\": \"Jane besso\",\n  \"Relation\": \"Spouse\",\n  \"PhoneNumber\": \"+201234567890\",\n  \"SecondaryPhone\": \"+201234567891\",\n  \"Email\": \"jane@example.com\",\n  \"IsPrimary\": true,\n  \"Priority\": 1,\n  \"Notes\": \"Primary emergency contact\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -621,7 +621,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ContactName\": \"Jane Doe Updated\",\n  \"Relation\": \"Wife\",\n  \"PhoneNumber\": \"+201234567890\",\n  \"SecondaryPhone\": \"+201234567899\",\n  \"Email\": \"jane.updated@example.com\",\n  \"IsPrimary\": true,\n  \"Priority\": 1,\n  \"Notes\": \"Updated contact info\"\n}",
+              "raw": "{\n  \"ContactName\": \"Jane besso Updated\",\n  \"Relation\": \"Wife\",\n  \"PhoneNumber\": \"+201234567890\",\n  \"SecondaryPhone\": \"+201234567899\",\n  \"Email\": \"jane.updated@example.com\",\n  \"IsPrimary\": true,\n  \"Priority\": 1,\n  \"Notes\": \"Updated contact info\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {

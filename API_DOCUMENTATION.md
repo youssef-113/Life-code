@@ -13,12 +13,15 @@ Complete API reference for Flutter integration with the LifeCode Emergency Healt
 1. [Authentication](#authentication)
 2. [User Profile](#user-profile)
 3. [Medical Information](#medical-information)
-4. [Emergency Contacts](#emergency-contacts)
-5. [Family Management](#family-management)
-6. [Wristband Management](#wristband-management)
-7. [Scan Operations](#scan-operations)
-8. [Flutter Integration Guide](#flutter-integration-guide)
-9. [Error Handling](#error-handling)
+4. [Medical Profile Dashboard](#medical-profile-dashboard)
+5. [Emergency Contacts](#emergency-contacts)
+6. [User Account Management](#user-account-management)
+7. [Family Management](#family-management)
+8. [Wristband Management](#wristband-management)
+9. [Scan Operations](#scan-operations)
+10. [Profile Completion](#profile-completion)
+11. [Flutter Integration Guide](#flutter-integration-guide)
+12. [Error Handling](#error-handling)
 
 ---
 
@@ -38,8 +41,8 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "name": "John Doe",
-  "email": "john@example.com",
+  "name": "yousseff besso",
+  "email": "yousseff@example.com",
   "password": "SecurePass123",
   "confirmPassword": "SecurePass123"
 }
@@ -60,8 +63,8 @@ Content-Type: application/json
   "message": "User registered successfully",
   "data": {
     "userID": "firebase-uid",
-    "username": "John Doe",
-    "email": "john@example.com",
+    "username": "yousseff besso",
+    "email": "yousseff@example.com",
     "providers": [
       {
         "provider": "email",
@@ -120,7 +123,7 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "email": "john@example.com",
+  "email": "yousseff@example.com",
   "password": "SecurePass123"
 }
 ```
@@ -132,8 +135,8 @@ Content-Type: application/json
   "message": "Login successful",
   "data": {
     "userID": "firebase-uid",
-    "username": "John Doe",
-    "email": "john@example.com",
+    "username": "yousseff besso",
+    "email": "yousseff@example.com",
     "providers": [...],
     "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
@@ -195,8 +198,8 @@ Content-Type: application/json
   "message": "User logged in with Google successfully",
   "data": {
     "userID": "uuid",
-    "username": "John Doe",
-    "email": "john@gmail.com",
+    "username": "yousseff besso",
+    "email": "yousseff@gmail.com",
     "providers": [
       {
         "provider": "google",
@@ -296,8 +299,8 @@ Content-Type: application/json
   "message": "User logged in with Apple successfully",
   "data": {
     "userID": "uuid",
-    "username": "John",
-    "email": "john@privaterelay.appleid.com",
+    "username": "yousseff",
+    "email": "yousseff@privaterelay.appleid.com",
     "providers": [
       {
         "provider": "apple",
@@ -564,6 +567,112 @@ Authorization: Bearer <sessionToken>
 
 ---
 
+### Get Active Sessions
+
+Get all active sessions for the authenticated user.
+
+**Endpoint:** `GET /sessions`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "sessions": [
+      {
+        "sessionId": "session-uuid-1",
+        "deviceName": "Chrome on Windows",
+        "deviceType": "browser",
+        "ipAddress": "192.168.1.1",
+        "lastActive": "2026-04-01T20:00:00.000Z",
+        "createdAt": "2026-04-01T19:00:00.000Z",
+        "isCurrent": true
+      },
+      {
+        "sessionId": "session-uuid-2",
+        "deviceName": "Flutter App on Android",
+        "deviceType": "mobile",
+        "ipAddress": "192.168.1.2",
+        "lastActive": "2026-04-01T18:30:00.000Z",
+        "createdAt": "2026-04-01T10:00:00.000Z",
+        "isCurrent": false
+      }
+    ],
+    "count": 2
+  }
+}
+```
+
+**Flutter Integration:**
+```dart
+Future<List<Session>> getActiveSessions() async {
+  final token = await getToken();
+  final response = await http.get(
+    Uri.parse('$baseUrl/sessions'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
+  
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return (data['data']['sessions'] as List)
+        .map((s) => Session.fromJson(s))
+        .toList();
+  }
+  throw Exception('Failed to get sessions');
+}
+```
+
+---
+
+### Revoke Session
+
+Revoke a specific session (logout from one device).
+
+**Endpoint:** `DELETE /sessions/:sessionId`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**URL Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| sessionId | string | Session ID to revoke |
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Session revoked successfully",
+  "data": {
+    "revokedSessionId": "session-uuid-2"
+  }
+}
+```
+
+**Flutter Integration:**
+```dart
+Future<void> revokeSession(String sessionId) async {
+  final token = await getToken();
+  final response = await http.delete(
+    Uri.parse('$baseUrl/sessions/$sessionId'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
+  
+  if (response.statusCode != 200) {
+    throw Exception('Failed to revoke session');
+  }
+}
+```
+
+---
+
 ## User Profile
 
 ### Get Personal Info
@@ -583,8 +692,8 @@ Authorization: Bearer <sessionToken>
   "success": true,
   "data": {
     "userID": "uuid",
-    "fullName": "John Doe",
-    "email": "john@example.com",
+    "fullName": "yousseff besso",
+    "email": "yousseff@example.com",
     "providers": [...],
     "primaryProvider": "email",
     "gender": "male",
@@ -628,7 +737,7 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "fullName": "John Doe",
+  "fullName": "yousseff besso",
   "gender": "male",
   "address": "123 Main St, City"
 }
@@ -648,7 +757,7 @@ Content-Type: application/json
   "message": "Personal information updated successfully",
   "data": {
     "userID": "uuid",
-    "fullName": "John Doe",
+    "fullName": "yousseff besso",
     "gender": "male",
     "address": "123 Main St, City",
     "updatedAt": "2026-04-01T20:00:00.000Z"
@@ -676,7 +785,7 @@ Authorization: Bearer <sessionToken>
   "data": {
     "userID": "uuid",
     "primaryContact": {
-      "fullName": "Jane Doe",
+      "fullName": "Jane besso",
       "phoneNumber": "+201234567890",
       "relationship": "Spouse"
     },
@@ -707,7 +816,7 @@ Content-Type: application/json
 ```json
 {
   "primaryContact": {
-    "fullName": "Jane Doe",
+    "fullName": "Jane besso",
     "phoneNumber": "+201234567890",
     "relationship": "Spouse"
   },
@@ -766,13 +875,13 @@ Content-Type: application/json
 ```json
 {
   "personalInfo": {
-    "name": "John Doe",
+    "name": "yousseff besso",
     "gender": "male",
     "address": "123 Main St"
   },
   "emergencyContact": {
     "primary": {
-      "fullName": "Jane Doe",
+      "fullName": "Jane besso",
       "phoneNumber": "+201234567890",
       "relationship": "Spouse"
     },
@@ -896,7 +1005,7 @@ Authorization: Bearer <sessionToken>
   "success": true,
   "data": {
     "userHeader": {
-      "name": "John Doe",
+      "name": "yousseff besso",
       "photoURL": "https://...",
       "updatedAt": "..."
     },
@@ -958,7 +1067,428 @@ Content-Type: application/json
 
 ---
 
-## Emergency Contacts (Legacy)
+## Medical Profile Dashboard
+
+### Get Medical Profile Dashboard
+
+Get complete medical profile for dashboard with profile completion percentage.
+
+**Endpoint:** `GET /medical/profile`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userHeader": {
+      "name": "yousseff besso",
+      "photoURL": "https://...",
+      "updatedAt": "2026-04-01T20:00:00.000Z"
+    },
+    "profileCompletion": 75,
+    "completionLevel": "medium",
+    "nextRecommendedStep": "Add your blood type and medical conditions",
+    "quickStats": {
+      "bloodType": "A+",
+      "allergiesCount": 2,
+      "medicationsCount": 3,
+      "surgeriesCount": 1
+    },
+    "sections": {
+      "personalInfo": {
+        "completed": true,
+        "hasName": true,
+        "hasGender": true,
+        "hasAddress": true,
+        "data": {
+          "name": "yousseff besso",
+          "gender": "male",
+          "address": "123 Main St"
+        }
+      },
+      "emergencyContact": {
+        "completed": true,
+        "hasPrimaryContact": true,
+        "data": {...}
+      },
+      "medicalProfile": {
+        "completed": true,
+        "hasBloodType": true,
+        "hasConditions": true,
+        "data": {
+          "bloodType": "A+",
+          "medicalConditions": ["Diabetes"]
+        }
+      },
+      "allergies": {
+        "completed": true,
+        "hasAllergiesFlag": true,
+        "count": 2,
+        "items": [...]
+      },
+      "medications": {
+        "completed": true,
+        "hasMedicationsFlag": true,
+        "count": 3,
+        "items": [...]
+      },
+      "surgeries": {
+        "completed": false,
+        "hasSurgeriesFlag": false,
+        "count": 0,
+        "items": []
+      }
+    }
+  }
+}
+```
+
+**Profile Completion Levels:**
+| Level | Percentage | Description |
+|-------|------------|-------------|
+| `low` | 0-19% | Just started |
+| `partial` | 20-49% | Some sections completed |
+| `medium` | 50-79% | Most sections completed |
+| `complete` | 80-100% | Profile nearly/fully complete |
+
+---
+
+### Update Personal Information
+
+Update personal information section.
+
+**Endpoint:** `PUT /medical/personal-info`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "name": "yousseff besso",
+  "gender": "male",
+  "address": "123 Main St, City"
+}
+```
+
+**Field Requirements:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| name | string | No | 1-100 characters |
+| gender | string | No | `male`, `female`, `other` |
+| address | string | No | Max 500 characters |
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Personal information updated successfully",
+  "data": {
+    "name": "yousseff besso",
+    "gender": "male",
+    "address": "123 Main St, City",
+    "updatedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 80,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add an emergency contact"
+}
+```
+
+---
+
+### Update Emergency Contact (Medical Profile)
+
+Update emergency contact section in medical profile.
+
+**Endpoint:** `PUT /medical/emergency-contact`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "primary": {
+    "fullName": "Jane besso",
+    "phoneNumber": "+201234567890",
+    "relationship": "Spouse"
+  },
+  "secondary": [
+    {
+      "fullName": "Bob Smith",
+      "phoneNumber": "+201234567891",
+      "relationship": "Friend"
+    }
+  ]
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Emergency contact updated successfully",
+  "data": {
+    "primary": {...},
+    "secondary": [...],
+    "updatedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 85,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add your allergies"
+}
+```
+
+---
+
+### Update Medical Profile
+
+Update medical profile section (blood type, conditions).
+
+**Endpoint:** `PUT /medical/medical-profile`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "bloodType": "A+",
+  "medicalConditions": ["Diabetes", "Hypertension"]
+}
+```
+
+**Blood Type Values:** `A+`, `A-`, `B+`, `B-`, `AB+`, `AB-`, `O+`, `O-`
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Medical profile updated successfully",
+  "data": {
+    "bloodType": "A+",
+    "medicalConditions": ["Diabetes", "Hypertension"],
+    "updatedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 90,
+  "completionLevel": "complete",
+  "nextRecommendedStep": "Profile complete!"
+}
+```
+
+---
+
+### Update Allergies (with Yes/No Flag)
+
+Update allergies section with confirmation flag.
+
+**Endpoint:** `PUT /medical/allergies`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body (User has allergies - clicked "Yes"):**
+```json
+{
+  "hasAllergies": true,
+  "allergies": [
+    {
+      "allergyType": "Peanuts",
+      "severity": "Severe",
+      "notes": "Anaphylaxis risk"
+    },
+    {
+      "allergyType": "Shellfish",
+      "severity": "Moderate",
+      "notes": ""
+    }
+  ]
+}
+```
+
+**Request Body (User has NO allergies - clicked "No"):**
+```json
+{
+  "hasAllergies": false
+}
+```
+
+**Field Requirements:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| hasAllergies | boolean | Yes* | User confirmation flag |
+| allergies | array | No | Array of allergy objects |
+
+*Either `hasAllergies` or `allergies` must be provided
+
+**Severity Values:** `Mild`, `Moderate`, `Severe`
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Allergies updated successfully",
+  "data": {
+    "hasAllergies": true,
+    "allergies": [...],
+    "count": 2,
+    "updatedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 95,
+  "completionLevel": "complete",
+  "nextRecommendedStep": "Profile complete!"
+}
+```
+
+**Flutter Integration:**
+```dart
+Future<void> updateAllergies({
+  required bool hasAllergies,
+  List<Allergy>? allergies,
+}) async {
+  final token = await getToken();
+  final body = <String, dynamic>{'hasAllergies': hasAllergies};
+  if (allergies != null) {
+    body['allergies'] = allergies.map((a) => a.toJson()).toList();
+  }
+  
+  final response = await http.put(
+    Uri.parse('$baseUrl/medical/allergies'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode(body),
+  );
+}
+```
+
+---
+
+### Update Medications (with Yes/No Flag)
+
+Update medications section with confirmation flag.
+
+**Endpoint:** `PUT /medical/medications`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body (User has medications - clicked "Yes"):**
+```json
+{
+  "hasMedications": true,
+  "medications": [
+    {
+      "medicationName": "Insulin",
+      "dosage": "10 units",
+      "schedule": "Daily before meals",
+      "notes": "Check blood sugar first"
+    }
+  ]
+}
+```
+
+**Request Body (User has NO medications - clicked "No"):**
+```json
+{
+  "hasMedications": false
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Medications updated successfully",
+  "data": {
+    "hasMedications": true,
+    "medications": [...],
+    "count": 1,
+    "updatedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 85,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add your surgical history"
+}
+```
+
+---
+
+### Update Surgeries (with Yes/No Flag)
+
+Update surgeries section with confirmation flag.
+
+**Endpoint:** `PUT /medical/surgeries`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body (User has surgeries - clicked "Yes"):**
+```json
+{
+  "hasSurgeries": true,
+  "surgeries": [
+    {
+      "surgeryName": "Appendectomy",
+      "surgeryDate": "2020-01-15",
+      "notes": "No complications"
+    }
+  ]
+}
+```
+
+**Request Body (User has NO surgeries - clicked "No"):**
+```json
+{
+  "hasSurgeries": false
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Surgeries updated successfully",
+  "data": {
+    "hasSurgeries": true,
+    "surgeries": [...],
+    "count": 1,
+    "updatedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 100,
+  "completionLevel": "complete",
+  "nextRecommendedStep": "Profile complete!"
+}
+```
+
+---
+
+## Emergency Contacts
 
 ### Add Emergency Contact
 
@@ -975,7 +1505,7 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "ContactName": "Jane Doe",
+  "ContactName": "Jane besso",
   "Relation": "Spouse",
   "PhoneNumber": "+201234567890",
   "SecondaryPhone": "+201234567891",
@@ -994,11 +1524,121 @@ Content-Type: application/json
 | Relation | string | No | Max 50 chars |
 | IsPrimary | boolean | No | true/false |
 
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "message": "Emergency contact added successfully",
+  "data": {
+    "id": "contact-id",
+    "ContactName": "Jane besso",
+    "Relation": "Spouse",
+    "PhoneNumber": "+201234567890",
+    "IsPrimary": true,
+    "CreatedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 75,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Upload a profile photo"
+}
+```
+
+---
+
+### Add Multiple Emergency Contacts (Bulk)
+
+Add multiple emergency contacts at once.
+
+**Endpoint:** `POST /emergency/contacts/bulk`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "contacts": [
+    {
+      "ContactName": "Jane besso",
+      "Relation": "Spouse",
+      "PhoneNumber": "+201234567890",
+      "IsPrimary": true
+    },
+    {
+      "ContactName": "Bob Smith",
+      "Relation": "Friend",
+      "PhoneNumber": "+201234567891",
+      "IsPrimary": false
+    }
+  ]
+}
+```
+
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "message": "2 emergency contact(s) added successfully",
+  "data": {
+    "contacts": [...],
+    "count": 2
+  },
+  "profileCompletion": 80,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add your blood type"
+}
+```
+
 ---
 
 ### Get All Emergency Contacts
 
+Get all emergency contacts for user.
+
 **Endpoint:** `GET /emergency/contacts`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "contact-id-1",
+      "ContactName": "Jane besso",
+      "Relation": "Spouse",
+      "PhoneNumber": "+201234567890",
+      "IsPrimary": true,
+      "Priority": 1
+    },
+    {
+      "id": "contact-id-2",
+      "ContactName": "Bob Smith",
+      "Relation": "Friend",
+      "PhoneNumber": "+201234567891",
+      "IsPrimary": false,
+      "Priority": 2
+    }
+  ],
+  "count": 2,
+  "profileCompletion": 75,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Complete your medical profile"
+}
+```
+
+---
+
+### Get Single Emergency Contact
+
+**Endpoint:** `GET /emergency/contact/:id`
 
 **Headers:**
 ```
@@ -1017,6 +1657,18 @@ Authorization: Bearer <sessionToken>
 Content-Type: application/json
 ```
 
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Contact updated successfully",
+  "data": {...},
+  "profileCompletion": 75,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "..."
+}
+```
+
 ---
 
 ### Delete Emergency Contact
@@ -1026,6 +1678,355 @@ Content-Type: application/json
 **Headers:**
 ```
 Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Contact deleted successfully",
+  "data": {
+    "deletedId": "contact-id"
+  },
+  "profileCompletion": 70,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add an emergency contact"
+}
+```
+
+---
+
+### Set Primary Contact
+
+**Endpoint:** `PUT /emergency/contact/:id/primary`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+---
+
+## User Account Management
+
+### Change Password
+
+Change user password.
+
+**Endpoint:** `POST /user/password`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "currentPassword": "OldPass123",
+  "newPassword": "NewSecurePass456"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+---
+
+### Upload Profile Photo
+
+Upload or update user profile photo.
+
+**Endpoint:** `POST /user/photo`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body (Base64):**
+```json
+{
+  "photoData": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+}
+```
+
+**Request Body (URL):**
+```json
+{
+  "photoData": "https://example.com/photo.jpg"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Photo uploaded successfully",
+  "data": {
+    "userID": "user-id",
+    "photoURL": "data:image/jpeg;base64,...",
+    "photoType": "base64",
+    "uploadedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 85,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add your allergies"
+}
+```
+
+---
+
+### Get Profile Photo
+
+Get current user's profile photo.
+
+**Endpoint:** `GET /user/photo`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userID": "user-id",
+    "photoURL": "data:image/jpeg;base64,...",
+    "photoType": "base64",
+    "uploadedAt": "2026-04-01T20:00:00.000Z"
+  }
+}
+```
+
+---
+
+### Get Photo by User ID
+
+Get another user's profile photo (respects privacy settings).
+
+**Endpoint:** `GET /user/:userId/photo`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userID": "target-user-id",
+    "photoURL": "...",
+    "photoType": "url",
+    "uploadedAt": "2026-04-01T20:00:00.000Z"
+  }
+}
+```
+
+---
+
+### Delete Profile Photo
+
+Delete user's profile photo.
+
+**Endpoint:** `DELETE /user/photo`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Photo deleted successfully",
+  "data": {
+    "deletedAt": "2026-04-01T20:00:00.000Z"
+  },
+  "profileCompletion": 75,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Upload a profile photo"
+}
+```
+
+---
+
+### Delete Account
+
+Soft delete user account.
+
+**Endpoint:** `DELETE /user/account`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Account deleted successfully",
+  "data": {
+    "deactivatedAt": "2026-04-01T20:00:00.000Z",
+    "sessionsDeactivated": 3
+  }
+}
+```
+
+---
+
+### Update Preferences
+
+Update user notification and privacy preferences.
+
+**Endpoint:** `PUT /user/preferences`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "pushNotifications": true,
+  "emailNotifications": true,
+  "showMedicalOnScan": true,
+  "showContactsOnScan": true,
+  "showPhotoOnScan": false
+}
+```
+
+---
+
+### Get Preferences
+
+**Endpoint:** `GET /user/preferences`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+---
+
+### Get Complete Profile
+
+Get complete user profile with all related data.
+
+**Endpoint:** `GET /user/complete`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user-id",
+      "Username": "yousseff besso",
+      "Email": "yousseff@example.com",
+      "PhotoURL": "...",
+      ...
+    },
+    "medical": {...},
+    "emergencyContacts": [...],
+    "wristbands": [...]
+  },
+  "profileCompletion": 90,
+  "completionLevel": "complete",
+  "nextRecommendedStep": "Profile complete!"
+}
+```
+
+---
+
+## Profile Completion
+
+### Overview
+
+The profile completion system tracks user progress through the onboarding workflow. Each section contributes to the overall completion percentage.
+
+**Section Weights:**
+| Section | Weight | Description |
+|---------|--------|-------------|
+| Personal Info | 15% | Name, Gender, Address |
+| Photo | 10% | Profile photo uploaded |
+| Emergency Contact | 15% | At least one contact |
+| Medical Profile | 15% | Blood type, Conditions |
+| Allergies | 15% | HasAllergies flag + items |
+| Medications | 15% | HasMedications flag + items |
+| Surgeries | 15% | HasSurgeries flag + items |
+
+**Total: 100%**
+
+### Completion Logic
+
+- **Allergies/Medications/Surgeries:**
+  - If user clicks "No" (`hasXxx = false`): Section marked 100% complete
+  - If user clicks "Yes" (`hasXxx = true`) with items: Section marked 100% complete
+  - If user clicks "Yes" with no items yet: Section marked 50% complete
+
+### Response Fields
+
+All update and get endpoints now include:
+```json
+{
+  "profileCompletion": 75,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add your blood type and medical conditions"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| profileCompletion | number | 0-100 percentage |
+| completionLevel | string | `low`, `partial`, `medium`, `complete` |
+| nextRecommendedStep | string | Human-readable next action |
+
+### Flutter Integration
+
+```dart
+class ProfileCompletion {
+  final int percentage;
+  final String level;
+  final String nextStep;
+  
+  ProfileCompletion.fromJson(Map<String, dynamic> json)
+    : percentage = json['profileCompletion'] ?? 0,
+      level = json['completionLevel'] ?? 'low',
+      nextStep = json['nextRecommendedStep'] ?? '';
+}
+
+// Usage in API response handling
+void handleUpdateResponse(http.Response response) {
+  final data = jsonDecode(response.body);
+  
+  if (data['success']) {
+    // Update UI with new completion
+    final completion = ProfileCompletion.fromJson(data);
+    updateProgressBar(completion.percentage);
+    showNextStep(completion.nextStep);
+  }
+}
 ```
 
 ---
@@ -1217,6 +2218,130 @@ Authorization: Bearer <sessionToken>
 
 ---
 
+### Get Primary Wristband
+
+Get the user's primary wristband.
+
+**Endpoint:** `GET /wristband/primary`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "wristband-id",
+    "SerialNumber": "SN-2026-00001",
+    "QRCode": "QR123456",
+    "NFCTag": "NFC-ABC",
+    "Status": "active",
+    "IsPrimary": true,
+    "ActivatedAt": "2026-04-01T20:00:00.000Z"
+  }
+}
+```
+
+---
+
+### Set Primary Wristband
+
+Set a wristband as the primary one.
+
+**Endpoint:** `PUT /wristband/:wristbandId/primary`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Primary wristband updated successfully",
+  "data": {
+    "wristbandId": "wristband-id",
+    "IsPrimary": true
+  }
+}
+```
+
+---
+
+### Get Wristband with Full User Info
+
+Get wristband details with complete user information.
+
+**Endpoint:** `GET /wristband/:wristbandId/full`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "wristband": {
+      "id": "wristband-id",
+      "QRCode": "QR123456",
+      "NFCTag": "NFC-ABC",
+      "Status": "active"
+    },
+    "user": {
+      "userID": "user-id",
+      "Username": "yousseff besso",
+      "Email": "yousseff@example.com",
+      "PhotoURL": "..."
+    },
+    "medical": {...}
+  }
+}
+```
+
+---
+
+### Resolve User from QR/NFC
+
+Resolve user ID from QR code or NFC tag identifier.
+
+**Endpoint:** `POST /wristband/resolve-user`
+
+**Headers:**
+```
+Authorization: Bearer <sessionToken>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "identifier": "QR123456789",
+  "type": "qr"
+}
+```
+
+**Type Values:** `qr`, `nfc`
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userID": "user-uuid",
+    "wristbandId": "wristband-id"
+  }
+}
+```
+
+---
+
 ## Scan Operations
 
 ### Scan QR Code (Public)
@@ -1250,7 +2375,7 @@ Content-Type: application/json
   "message": "Scan successful",
   "data": {
     "user": {
-      "Username": "John Doe",
+      "Username": "yousseff besso",
       "Gender": "male",
       "PhotoURL": "https://..."
     },
@@ -1262,7 +2387,7 @@ Content-Type: application/json
     },
     "emergencyContacts": [
       {
-        "ContactName": "Jane Doe",
+        "ContactName": "Jane besso",
         "Relation": "Spouse",
         "PhoneNumber": "+201234567890",
         "IsPrimary": true
@@ -1508,7 +2633,7 @@ classpath 'com.google.gms:google-services:4.3.15'
 | 400 | Bad Request | Check request body |
 | 401 | Unauthorized | Token expired/invalid, refresh or login |
 | 403 | Forbidden | No permission for this action |
-| 404 | Not Found | Resource doesn't exist |
+| 404 | Not Found | Resource bessosn't exist |
 | 409 | Conflict | Resource already exists |
 | 429 | Too Many Requests | Rate limit hit, retry later |
 | 500 | Server Error | Server issue, report to admin |
@@ -1612,21 +2737,73 @@ class EmergencyContact {
 }
 ```
 
+### Session Model
+
+```dart
+class Session {
+  final String sessionId;
+  final String deviceName;
+  final String deviceType;
+  final String ipAddress;
+  final DateTime lastActive;
+  final DateTime createdAt;
+  final bool isCurrent;
+  
+  Session.fromJson(Map<String, dynamic> json)
+    : sessionId = json['sessionId'],
+      deviceName = json['deviceName'],
+      deviceType = json['deviceType'],
+      ipAddress = json['ipAddress'],
+      lastActive = DateTime.parse(json['lastActive']),
+      createdAt = DateTime.parse(json['createdAt']),
+      isCurrent = json['isCurrent'] ?? false;
+}
+```
+
+### Profile Completion Model
+
+```dart
+class ProfileCompletion {
+  final int percentage;
+  final String level;
+  final String nextStep;
+  
+  ProfileCompletion.fromJson(Map<String, dynamic> json)
+    : percentage = json['profileCompletion'] ?? 0,
+      level = json['completionLevel'] ?? 'low',
+      nextStep = json['nextRecommendedStep'] ?? '';
+  
+  // Check if profile is complete
+  bool get isComplete => percentage >= 80;
+  
+  // Get progress color for UI
+  String get progressColor {
+    if (percentage >= 80) return 'green';
+    if (percentage >= 50) return 'yellow';
+    if (percentage >= 20) return 'orange';
+    return 'red';
+  }
+}
+```
+
 ---
 
 ## API Summary
 
 | Category | Endpoints | Auth Required |
 |----------|-----------|---------------|
-| **Auth** | Register, Login, Google, Apple, Refresh | Some public |
-| **Profile** | Personal Info, Emergency Contacts | Yes |
-| **Medical** | Medical Info, Profile Dashboard | Yes |
-| **Emergency** | Contacts CRUD | Yes |
-| **Family** | Family Members CRUD | Yes |
-| **Wristband** | Register, List, Activate, Revoke | Yes |
+| **Auth** | Register, Login, Google, Apple, Refresh, Logout, Logout All, Sessions, Revoke Session, Get Providers, Unlink Provider | Some public |
+| **Profile** | Get/Update Personal Info, Get/Update Emergency Contacts | Yes |
+| **Medical** | Create/Update/Get Medical Info | Yes |
+| **Medical Profile** | Dashboard, Personal Info, Emergency Contact, Medical Profile, Allergies, Medications, Surgeries | Yes |
+| **Emergency Contacts** | Add, Bulk Add, Get All, Get One, Update, Delete, Set Primary | Yes |
+| **User Account** | Change Password, Upload/Get/Delete Photo, Delete Account, Preferences, Complete Profile | Yes |
+| **Family** | List, Add, Update, Delete Dependent | Yes |
+| **Wristband** | Register, Activate, Revoke, List, Primary, Set Primary, Full Info, Resolve User | Yes |
 | **Scan** | QR Scan (Public), NFC Scan (Public), History | Partial |
+| **Health** | Health Check | Public |
 
-**Total Endpoints:** 30+
+**Total Endpoints:** 47
 
 ---
 

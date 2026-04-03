@@ -26,7 +26,7 @@
             "nullable": false,
             "indexed": true,
             "pattern": "^[a-zA-Z0-9_]{3,50}$",
-            "example": "john_doe"
+            "example": "yousseff_besso"
           },
           "PasswordHash": {
             "type": "string",
@@ -57,7 +57,7 @@
             "nullable": false,
             "indexed": true,
             "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-            "example": "john.doe@example.com"
+            "example": "yousseff.besso@example.com"
           },
           "Gender": {
             "type": "enum",
@@ -127,14 +127,14 @@
         ],
         "example_document": {
           "ID": 1,
-          "Username": "john_doe",
+          "Username": "yousseff_besso",
           "PasswordHash": "$2a$10$rG4dqZwZ8qRlPf1x4nZ4.O8qkJ5xQ2pYqZjN5nZ4.O8qkJ5xQ2pYq",
           "PasswordSalt": null,
           "GoogleID": null,
-          "Email": "john.doe@example.com",
+          "Email": "yousseff.besso@example.com",
           "Gender": "male",
           "NationalID": "12345678901234",
-          "PhotoURL": "https://storage.example.com/photos/john.jpg",
+          "PhotoURL": "https://storage.example.com/photos/yousseff.jpg",
           "IsActive": true,
           "CreatedAt": "2025-02-01T10:00:00.000Z",
           "UpdatedAt": "2025-02-03T15:30:00.000Z"
@@ -780,7 +780,7 @@
             "type": "string",
             "maxLength": 100,
             "nullable": false,
-            "example": "Jane Doe"
+            "example": "Jane besso"
           },
           "Relation": {
             "type": "string",
@@ -809,7 +809,7 @@
             "maxLength": 100,
             "nullable": true,
             "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-            "example": "jane.doe@example.com"
+            "example": "jane.besso@example.com"
           },
           "IsPrimary": {
             "type": "boolean",
@@ -866,11 +866,11 @@
         "example_document": {
           "ID": 1,
           "UserID": 1,
-          "ContactName": "Jane Doe",
+          "ContactName": "Jane besso",
           "Relation": "Spouse",
           "PhoneNumber": "+20123456789",
           "SecondaryPhone": "+20198765432",
-          "Email": "jane.doe@example.com",
+          "Email": "jane.besso@example.com",
           "IsPrimary": true,
           "Priority": 1,
           "Notes": "Available 24/7",
@@ -881,11 +881,11 @@
           {
             "ID": 1,
             "UserID": 1,
-            "ContactName": "Jane Doe",
+            "ContactName": "Jane besso",
             "Relation": "Spouse",
             "PhoneNumber": "+20123456789",
             "SecondaryPhone": "+20198765432",
-            "Email": "jane.doe@example.com",
+            "Email": "jane.besso@example.com",
             "IsPrimary": true,
             "Priority": 1,
             "Notes": "Available 24/7",

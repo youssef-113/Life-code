@@ -256,6 +256,7 @@ class SocialAuthService {
    */
   async _loginUser({ userId, userData, provider, providerId, deviceInfo }) {
     const db = getFirestore();
+    const { trackFailedAttempt, clearFailedAttempts } = require('../middleware/accountLockMiddleware');
     
     // Update last login
     await db.collection('Users').doc(userId).update({
@@ -272,13 +273,17 @@ class SocialAuthService {
       ipAddress: deviceInfo.ipAddress
     });
 
+    // Check for suspicious login (new device or location)
+    const suspiciousLoginCheck = await this._detectSuspiciousLogin(userId, deviceInfo);
+
     // Log security event
     await authService.logSecurityEvent(userId, 'LOGIN_SUCCESS', {
       method: provider,
       providerId,
       sessionId: session.id,
       deviceName: session.DeviceName,
-      ipAddress: deviceInfo.ipAddress
+      ipAddress: deviceInfo.ipAddress,
+      suspicious: suspiciousLoginCheck.suspicious
     });
 
     return {
@@ -288,14 +293,20 @@ class SocialAuthService {
         userID: userId,
         username: userData.Username,
         email: userData.Email,
+        photoURL: userData.PhotoURL || '',
         providers: userData.Providers || [],
         primaryProvider: userData.PrimaryProvider || provider,
         sessionToken: accessToken,
         refreshToken,
         expiresAt,
+        sessionID: session.id,
         deviceName: session.DeviceName,
         isNewUser: false,
-        accountLinked: false
+        accountLinked: false,
+        suspiciousLogin: suspiciousLoginCheck.suspicious ? {
+          detected: true,
+          reason: suspiciousLoginCheck.reason
+        } : null
       }
     };
   }
@@ -369,6 +380,9 @@ class SocialAuthService {
     const updatedDoc = await db.collection('Users').doc(userId).get();
     const updatedData = updatedDoc.data();
 
+    // Check for suspicious login
+    const suspiciousLoginCheck = await this._detectSuspiciousLogin(userId, deviceInfo);
+
     return {
       success: true,
       message: `${provider} account linked successfully. You can now sign in with ${currentProviders.map(p => p.provider).join(', ')} or ${provider}.`,
@@ -376,15 +390,21 @@ class SocialAuthService {
         userID: userId,
         username: updatedData.Username,
         email: updatedData.Email,
+        photoURL: updatedData.PhotoURL || '',
         providers: updatedProviders,
         primaryProvider: updatedData.PrimaryProvider || currentProviders[0]?.provider || provider,
         sessionToken: accessToken,
         refreshToken,
         expiresAt,
+        sessionID: session.id,
         deviceName: session.DeviceName,
         isNewUser: false,
         accountLinked: true,
-        linkedMethod: provider
+        linkedMethod: provider,
+        suspiciousLogin: suspiciousLoginCheck.suspicious ? {
+          detected: true,
+          reason: suspiciousLoginCheck.reason
+        } : null
       }
     };
   }
@@ -433,6 +453,9 @@ class SocialAuthService {
       ipAddress: deviceInfo.ipAddress
     });
 
+    // Check for suspicious login
+    const suspiciousLoginCheck = await this._detectSuspiciousLogin(userId, deviceInfo);
+
     return {
       success: true,
       message: `User registered with ${provider} successfully`,
@@ -440,14 +463,20 @@ class SocialAuthService {
         userID: userId,
         username: name,
         email: email || null,
+        photoURL: photoURL || '',
         providers: newUserDoc.Providers,
         primaryProvider: provider,
         sessionToken: accessToken,
         refreshToken,
         expiresAt,
+        sessionID: session.id,
         deviceName: session.DeviceName,
         isNewUser: true,
-        accountLinked: false
+        accountLinked: false,
+        suspiciousLogin: suspiciousLoginCheck.suspicious ? {
+          detected: true,
+          reason: suspiciousLoginCheck.reason
+        } : null
       }
     };
   }
@@ -483,6 +512,103 @@ class SocialAuthService {
       message: error.message,
       code: 500
     };
+  }
+
+  /**
+   * Detect suspicious login patterns (new device or location)
+   * @param {string} userId - User ID
+   * @param {Object} deviceInfo - Device information
+   * @returns {Object} - { suspicious: boolean, reason: string }
+   */
+  async _detectSuspiciousLogin(userId, deviceInfo) {
+    const db = getFirestore();
+    
+    try {
+      // Get recent sessions for this user
+      const sessionsRef = db.collection('UserSessions');
+      const userSessions = await sessionsRef
+        .where('UserID', '==', userId)
+        .where('IsActive', '==', true)
+        .get();
+
+      // Sort in memory to avoid composite index requirement
+      const recentSessions = userSessions.docs
+        .sort((a, b) => {
+          const aTime = a.data().CreatedAt?.toDate?.() || new Date(a.data().CreatedAt);
+          const bTime = b.data().CreatedAt?.toDate?.() || new Date(b.data().CreatedAt);
+          return bTime - aTime;
+        })
+        .slice(0, 10);
+
+      // First login from this user - not suspicious
+      if (recentSessions.length === 0) {
+        return { suspicious: false, reason: null };
+      }
+
+      // Parse device info
+      const userAgent = deviceInfo.userAgent || 'Unknown';
+      const currentDevice = this._parseDeviceName(userAgent);
+      const currentIP = deviceInfo.ipAddress || 'unknown';
+
+      // Check for known devices and IPs
+      const knownDevices = new Set();
+      const knownIPs = new Set();
+
+      recentSessions.forEach(doc => {
+        const data = doc.data();
+        if (data.DeviceName) knownDevices.add(data.DeviceName);
+        if (data.IPAddress) knownIPs.add(data.IPAddress);
+      });
+
+      // New device detected
+      if (!knownDevices.has(currentDevice)) {
+        return { 
+          suspicious: true, 
+          reason: `New device detected: ${currentDevice}` 
+        };
+      }
+
+      // New location/IP detected
+      if (currentIP && !knownIPs.has(currentIP)) {
+        return { 
+          suspicious: true, 
+          reason: `New location detected: ${currentIP}` 
+        };
+      }
+
+      // Check for rapid successive logins from different devices
+      const lastSession = recentSessions[0].data();
+      const lastLoginTime = lastSession.CreatedAt?.toDate?.() || new Date(lastSession.CreatedAt);
+      const timeSinceLastLogin = Date.now() - lastLoginTime.getTime();
+      const lastDevice = lastSession.DeviceName;
+
+      // If less than 5 minutes and different device
+      if (timeSinceLastLogin < 5 * 60 * 1000 && lastDevice !== currentDevice) {
+        return { 
+          suspicious: true, 
+          reason: 'Rapid login from different device - possible account takeover' 
+        };
+      }
+
+      return { suspicious: false, reason: null };
+    } catch (error) {
+      console.error('Suspicious login detection error:', error);
+      return { suspicious: false, reason: null };
+    }
+  }
+
+  /**
+   * Parse device name from user agent
+   */
+  _parseDeviceName(userAgent) {
+    if (!userAgent) return 'Unknown Device';
+    if (userAgent.includes('iPhone')) return 'iPhone';
+    if (userAgent.includes('iPad')) return 'iPad';
+    if (userAgent.includes('Android')) return 'Android Device';
+    if (userAgent.includes('Windows')) return 'Windows PC';
+    if (userAgent.includes('Mac')) return 'Mac';
+    if (userAgent.includes('Linux')) return 'Linux';
+    return 'Unknown Device';
   }
 
   /**

@@ -125,82 +125,102 @@ app.get('/', (req, res) => {
     success: true,
     message: 'Welcome to LifeCode API',
     version: '1.0.0',
+    profileCompletion: {
+      description: 'Profile completion percentage (0-100%) is returned in GET and update responses',
+      sections: {
+        personalInfo: '15% - name, gender, address',
+        photo: '10% - profile photo',
+        emergencyContact: '15% - primary/secondary contacts',
+        medicalProfile: '15% - blood type, medical conditions',
+        allergies: '15% - hasAllergies flag + items',
+        medications: '15% - hasMedications flag + items',
+        surgeries: '15% - hasSurgeries flag + items'
+      },
+      levels: {
+        low: '0-19% - Just started',
+        partial: '20-49% - Some sections completed',
+        medium: '50-79% - Most sections completed',
+        complete: '80-100% - Profile nearly/fully complete'
+      }
+    },
     endpoints: {
       auth: {
-        register: 'POST /api/app/register (email/password)',
-        authGoogle: 'POST /api/app/auth/google (login OR register)',
-        authApple: 'POST /api/app/auth/apple (login OR register)',
-        getProviders: 'GET /api/app/auth/providers (linked auth methods)',
-        unlinkProvider: 'DELETE /api/app/auth/providers/:provider',
-        login: 'POST /api/app/login',
-        logout: 'POST /api/app/logout',
-        logoutAll: 'POST /api/app/logout-all',
-        refreshToken: 'POST /api/app/refresh',
-        sessions: 'GET /api/app/sessions',
-        revokeSession: 'DELETE /api/app/sessions/:sessionId'
+        register: 'POST /api/app/register (email/password, public)',
+        login: 'POST /api/app/login (email/password, public)',
+        logout: 'POST /api/app/logout (private)',
+        logoutAll: 'POST /api/app/logout-all (private)',
+        refreshToken: 'POST /api/app/refresh (public, requires refresh token)',
+        sessions: 'GET /api/app/sessions (private - list active sessions)',
+        revokeSession: 'DELETE /api/app/sessions/:sessionId (private)',
+        authGoogle: 'POST /api/app/auth/google (login OR register, public)',
+        authApple: 'POST /api/app/auth/apple (login OR register, public)',
+        getProviders: 'GET /api/app/auth/providers (private - linked auth methods)',
+        unlinkProvider: 'DELETE /api/app/auth/providers/:provider (private)'
       },
       profile: {
-        getPersonalInfo: 'GET /api/app/profile/personal-info',
-        updatePersonalInfo: 'PUT /api/app/profile/personal-info',
-        getEmergencyContacts: 'GET /api/app/profile/emergency-contacts',
-        updateEmergencyContacts: 'PUT /api/app/profile/emergency-contacts'
+        getPersonalInfo: 'GET /api/app/profile/personal-info (private)',
+        updatePersonalInfo: 'PUT /api/app/profile/personal-info (private)',
+        getEmergencyContacts: 'GET /api/app/profile/emergency-contacts (private)',
+        updateEmergencyContacts: 'PUT /api/app/profile/emergency-contacts (private)'
       },
       medical: {
-        createMedicalInfo: 'POST /api/app/medical',
-        updateMedicalInfo: 'PUT /api/app/medical',
-        getMedicalInfo: 'GET /api/app/medical'
+        createMedicalInfo: 'POST /api/app/medical (private - create full medical profile)',
+        updateMedicalInfo: 'PUT /api/app/medical (private - update full medical profile)',
+        getMedicalInfo: 'GET /api/app/medical (private - get medical info)'
       },
       medicalProfile: {
-        getDashboard: 'GET /api/app/medical/profile',
-        updateConditions: 'PUT /api/app/medical/conditions',
-        updateAllergies: 'PUT /api/app/medical/allergies',
-        updateMedications: 'PUT /api/app/medical/medications',
-        updateSurgeries: 'PUT /api/app/medical/surgeries',
-        updateEmergencyInstructions: 'PUT /api/app/medical/emergency-instructions'
+        getDashboard: 'GET /api/app/medical/profile (private, includes profileCompletion%)',
+        updatePersonalInfo: 'PUT /api/app/medical/personal-info (private, returns profileCompletion%)',
+        updateEmergencyContact: 'PUT /api/app/medical/emergency-contact (private, returns profileCompletion%)',
+        updateMedicalProfile: 'PUT /api/app/medical/medical-profile (private, returns profileCompletion%)',
+        updateAllergies: 'PUT /api/app/medical/allergies (private, hasAllergies flag, returns profileCompletion%)',
+        updateMedications: 'PUT /api/app/medical/medications (private, hasMedications flag, returns profileCompletion%)',
+        updateSurgeries: 'PUT /api/app/medical/surgeries (private, hasSurgeries flag, returns profileCompletion%)'
       },
       emergencyContacts: {
-        addContact: 'POST /api/app/emergency/contact',
-        addMultipleContacts: 'POST /api/app/emergency/contacts/bulk',
-        getContacts: 'GET /api/app/emergency/contacts',
-        getContact: 'GET /api/app/emergency/contact/:id',
-        updateContact: 'PUT /api/app/emergency/contact/:id',
-        deleteContact: 'DELETE /api/app/emergency/contact/:id',
-        setPrimary: 'PUT /api/app/emergency/contact/:id/primary'
-      },
-      wristband: {
-        register: 'POST /api/app/wristband/register (one active band per user)',
-        activate: 'POST /api/app/wristband/activate',
-        revoke: 'POST /api/app/wristband/revoke',
-        list: 'GET /api/app/wristband/list',
-        getPrimary: 'GET /api/app/wristband/primary',
-        setPrimary: 'PUT /api/app/wristband/:wristbandId/primary',
-        getFull: 'GET /api/app/wristband/:wristbandId/full',
-        resolveUser: 'POST /api/app/wristband/resolve-user'
-      },
-      scan: {
-        scanQR: 'POST /api/app/scan/qr (public)',
-        scanNFC: 'POST /api/app/scan/nfc (public)',
-        history: 'GET /api/app/scan/history'
+        addContact: 'POST /api/app/emergency/contact (private, returns profileCompletion%)',
+        addMultipleContacts: 'POST /api/app/emergency/contacts/bulk (private, returns profileCompletion%)',
+        getContacts: 'GET /api/app/emergency/contacts (private, includes profileCompletion%)',
+        getContact: 'GET /api/app/emergency/contact/:id (private)',
+        updateContact: 'PUT /api/app/emergency/contact/:id (private, returns profileCompletion%)',
+        deleteContact: 'DELETE /api/app/emergency/contact/:id (private, returns profileCompletion%)',
+        setPrimary: 'PUT /api/app/emergency/contact/:id/primary (private)'
       },
       userAccount: {
-        changePassword: 'POST /api/app/user/password',
-        uploadPhoto: 'POST /api/app/user/photo',
-        getPhoto: 'GET /api/app/user/photo',
-        getPhotoByUserId: 'GET /api/app/user/:userId/photo',
-        deletePhoto: 'DELETE /api/app/user/photo',
-        deleteAccount: 'DELETE /api/app/user/account',
-        updatePreferences: 'PUT /api/app/user/preferences',
-        getPreferences: 'GET /api/app/user/preferences',
-        getCompleteProfile: 'GET /api/app/user/complete'
+        changePassword: 'POST /api/app/user/password (private)',
+        uploadPhoto: 'POST /api/app/user/photo (private, returns profileCompletion%)',
+        getPhoto: 'GET /api/app/user/photo (private)',
+        getPhotoByUserId: 'GET /api/app/user/:userId/photo (private, respects privacy)',
+        deletePhoto: 'DELETE /api/app/user/photo (private, returns profileCompletion%)',
+        deleteAccount: 'DELETE /api/app/user/account (private, soft delete)',
+        updatePreferences: 'PUT /api/app/user/preferences (private)',
+        getPreferences: 'GET /api/app/user/preferences (private)',
+        getCompleteProfile: 'GET /api/app/user/complete (private, includes profileCompletion%)'
       },
       family: {
-        listFamilyMembers: 'GET /api/app/family',
-        addDependent: 'POST /api/app/family',
-        updateDependent: 'PUT /api/app/family/:id',
-        deleteDependent: 'DELETE /api/app/family/:id'
+        listFamilyMembers: 'GET /api/app/family (private, includes self)',
+        addDependent: 'POST /api/app/family (private)',
+        updateDependent: 'PUT /api/app/family/:id (private)',
+        deleteDependent: 'DELETE /api/app/family/:id (private, cascade delete)'
       },
-      health: 'GET /health'
-    }
+      wristband: {
+        register: 'POST /api/app/wristband/register (private, upsert)',
+        activate: 'POST /api/app/wristband/activate (private)',
+        revoke: 'POST /api/app/wristband/revoke (private)',
+        list: 'GET /api/app/wristband/list (private)',
+        getPrimary: 'GET /api/app/wristband/primary (private)',
+        setPrimary: 'PUT /api/app/wristband/:wristbandId/primary (private)',
+        getFull: 'GET /api/app/wristband/:wristbandId/full (private)',
+        resolveUser: 'POST /api/app/wristband/resolve-user (private, QR/NFC to userID)'
+      },
+      scan: {
+        scanQR: 'POST /api/app/scan/qr (public - get emergency info from QR)',
+        scanNFC: 'POST /api/app/scan/nfc (public - get emergency info from NFC)',
+        history: 'GET /api/app/scan/history (private, paginated)'
+      },
+      health: 'GET /health (public - server status)'
+    },
+    totalEndpoints: 47
   });
 });
 

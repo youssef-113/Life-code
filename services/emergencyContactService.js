@@ -1,5 +1,6 @@
 const { getFirestore } = require('../config/firebase');
 const authService = require('./authService');
+const profileCompletionService = require('./profileCompletionService');
 
 /**
  * Emergency Contact Service - Handles emergency contacts database operations
@@ -87,13 +88,19 @@ class EmergencyContactService {
         contactName: ContactName
       });
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: 'Emergency contact added successfully',
         data: {
           id: docRef.id,
           ...contactDoc
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Add emergency contact error:', error);
@@ -249,12 +256,18 @@ class EmergencyContactService {
         contactName: contactDoc.data().ContactName
       });
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: 'Contact deleted successfully',
         data: {
           deletedId: contactId
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Delete emergency contact error:', error);
@@ -285,10 +298,16 @@ class EmergencyContactService {
         ...doc.data()
       })).sort((a, b) => (a.Priority || 999) - (b.Priority || 999));
 
+      // Calculate profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         data: contacts,
-        count: contacts.length
+        count: contacts.length,
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Get emergency contacts error:', error);
@@ -452,6 +471,9 @@ class EmergencyContactService {
         contactNames: createdContacts.map(c => c.ContactName)
       });
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: `${createdContacts.length} emergency contact(s) added successfully`,
@@ -459,7 +481,10 @@ class EmergencyContactService {
           contacts: createdContacts,
           count: createdContacts.length,
           errors: errors.length > 0 ? errors : undefined
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Add multiple emergency contacts error:', error);

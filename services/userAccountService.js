@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { getFirestore, getAuth } = require('../config/firebase');
 const authService = require('./authService');
+const profileCompletionService = require('./profileCompletionService');
 
 /**
  * User Account Service - Handles password, photo, account deletion, preferences
@@ -130,6 +131,9 @@ class UserAccountService {
         UpdatedAt: uploadedAt
       });
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: 'Photo uploaded successfully',
@@ -138,7 +142,10 @@ class UserAccountService {
           photoURL: photoURL,
           photoType: photoType,
           uploadedAt: uploadedAt
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Upload photo error:', error);
@@ -318,12 +325,18 @@ class UserAccountService {
         deletedAt: new Date().toISOString()
       });
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: 'Photo deleted successfully',
         data: {
           deletedAt: new Date()
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Delete photo error:', error);

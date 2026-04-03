@@ -1,5 +1,6 @@
 const { getFirestore } = require('../config/firebase');
 const authService = require('./authService');
+const profileCompletionService = require('./profileCompletionService');
 
 /**
  * Medical Profile Service - Handles the Medical Profile screen
@@ -148,11 +149,16 @@ class MedicalProfileService {
       const filledCount = completionFields.filter(f => f !== null && f !== undefined && f !== '' && f !== false).length;
       const profileCompletion = Math.round((filledCount / completionFields.length) * 100);
 
+      // Calculate profile completion percentage
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         data: {
           userHeader,
-          profileCompletion,
+          profileCompletion: completionResult.completionPercentage,
+          completionLevel: completionResult.completionLevel,
+          nextRecommendedStep: completionResult.nextRecommendedStep,
           quickStats,
           sections
         }
@@ -232,6 +238,9 @@ class MedicalProfileService {
       // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: 'Personal information updated successfully',
@@ -240,7 +249,10 @@ class MedicalProfileService {
           gender: updatedDoc.data().PersonalInfo?.Gender || '',
           address: updatedDoc.data().PersonalInfo?.Address || '',
           updatedAt: updatedDoc.data().UpdatedAt
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Update personal info error:', error);
@@ -325,6 +337,9 @@ class MedicalProfileService {
       // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: 'Emergency contact updated successfully',
@@ -342,7 +357,10 @@ class MedicalProfileService {
               }))
             : [],
           updatedAt: updatedDoc.data().UpdatedAt
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Update emergency contact error:', error);
@@ -411,6 +429,9 @@ class MedicalProfileService {
       // Get updated data
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: 'Medical profile updated successfully',
@@ -418,7 +439,10 @@ class MedicalProfileService {
           bloodType: updatedDoc.data().MedicalProfile?.BloodType || null,
           medicalConditions: updatedDoc.data().MedicalProfile?.MedicalConditions || [],
           updatedAt: updatedDoc.data().UpdatedAt
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Update medical profile error:', error);
@@ -499,6 +523,9 @@ class MedicalProfileService {
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
       const updatedData = updatedDoc.data();
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: hasAllergies === false 
@@ -515,7 +542,10 @@ class MedicalProfileService {
             : [],
           count: updatedData.Allergies ? updatedData.Allergies.length : 0,
           updatedAt: updatedData.UpdatedAt
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Update allergies error:', error);
@@ -597,6 +627,9 @@ class MedicalProfileService {
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
       const updatedData = updatedDoc.data();
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: hasMedications === false 
@@ -614,7 +647,10 @@ class MedicalProfileService {
             : [],
           count: updatedData.Medications ? updatedData.Medications.length : 0,
           updatedAt: updatedData.UpdatedAt
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Update medications error:', error);
@@ -695,6 +731,9 @@ class MedicalProfileService {
       const updatedDoc = await db.collection('MedicalInfo').doc(userID).get();
       const updatedData = updatedDoc.data();
 
+      // Calculate updated profile completion
+      const completionResult = await profileCompletionService.calculateCompletion(userID);
+
       return {
         success: true,
         message: hasSurgeries === false 
@@ -711,7 +750,10 @@ class MedicalProfileService {
             : [],
           count: updatedData.Surgeries ? updatedData.Surgeries.length : 0,
           updatedAt: updatedData.UpdatedAt
-        }
+        },
+        profileCompletion: completionResult.completionPercentage,
+        completionLevel: completionResult.completionLevel,
+        nextRecommendedStep: completionResult.nextRecommendedStep
       };
     } catch (error) {
       console.error('Update surgeries error:', error);

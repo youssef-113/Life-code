@@ -33,7 +33,7 @@ Authorization: Bearer <sessionToken> (for protected routes)
   "message": "Login successful",
   "data": {
     "userID": "abc123",
-    "username": "johndoe",
+    "username": "yousseffbesso",
     "email": "user@example.com",
     "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "550e8400-e29b-41d4-a716-446655440000",
@@ -111,7 +111,7 @@ Authorization: Bearer <sessionToken> (for protected routes)
 ### Request Body
 ```json
 {
-  "name": "John Doe",
+  "name": "yousseff besso",
   "email": "newuser@example.com",
   "password": "Password123!",
   "confirmPassword": "Password123!"
@@ -125,7 +125,7 @@ Authorization: Bearer <sessionToken> (for protected routes)
   "message": "User registered successfully",
   "data": {
     "userID": "newUid123",
-    "username": "John Doe",
+    "username": "yousseff besso",
     "email": "newuser@example.com",
     "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "550e8400-e29b-41d4-a716-446655440000",

@@ -20,20 +20,20 @@
         "description": "Register new user account",
         "authentication": "Not required",
         "request": {
-          "username": "john_doe",
-          "email": "john.doe@example.com",
+          "username": "yousseff_besso",
+          "email": "yousseff.besso@example.com",
           "password": "SecurePass123!",
           "gender": "male",
           "nationalID": "12345678901234",
-          "photoURL": "https://storage.example.com/photos/john.jpg"
+          "photoURL": "https://storage.example.com/photos/yousseff.jpg"
         },
         "response_success": {
           "success": true,
           "message": "User registered successfully",
           "data": {
             "userID": 1,
-            "username": "john_doe",
-            "email": "john.doe@example.com",
+            "username": "yousseff_besso",
+            "email": "yousseff.besso@example.com",
             "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjEsImlhdCI6MTcwNjg2MDgwMCwiZXhwIjoxNzA2ODY0NDAwfQ.abc123",
             "refreshToken": "refresh_abc123xyz789",
             "expiresAt": "2025-02-03T18:00:00Z",
@@ -54,8 +54,8 @@
         "authentication": "Not required",
         "request": {
           "googleID": "1234567890abcdef",
-          "email": "john.doe@gmail.com",
-          "username": "john_doe_google",
+          "email": "yousseff.besso@gmail.com",
+          "username": "yousseff_besso_google",
           "photoURL": "https://lh3.googleusercontent.com/a/photo.jpg",
           "gender": "male"
         },
@@ -64,8 +64,8 @@
           "message": "User registered with Google successfully",
           "data": {
             "userID": 2,
-            "username": "john_doe_google",
-            "email": "john.doe@gmail.com",
+            "username": "yousseff_besso_google",
+            "email": "yousseff.besso@gmail.com",
             "googleID": "1234567890abcdef",
             "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
             "refreshToken": "refresh_xyz456...",
@@ -79,7 +79,7 @@
         "description": "User login and create session",
         "authentication": "Not required",
         "request": {
-          "email": "john.doe@example.com",
+          "email": "yousseff.besso@example.com",
           "password": "SecurePass123!",
           "deviceName": "iPhone 15 Pro",
           "deviceType": "ios",
@@ -92,8 +92,8 @@
           "message": "Login successful",
           "data": {
             "userID": 1,
-            "username": "john_doe",
-            "email": "john.doe@example.com",
+            "username": "yousseff_besso",
+            "email": "yousseff.besso@example.com",
             "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
             "refreshToken": "refresh_abc123xyz789",
             "expiresAt": "2025-02-03T18:00:00Z",
@@ -245,11 +245,11 @@
         "description": "Add emergency contact",
         "authentication": "Required",
         "request": {
-          "contactName": "Jane Doe",
+          "contactName": "Jane besso",
           "relation": "Spouse",
           "phoneNumber": "+20123456789",
           "secondaryPhone": "+20198765432",
-          "email": "jane.doe@example.com",
+          "email": "jane.besso@example.com",
           "isPrimary": true,
           "priority": 1,
           "notes": "Available 24/7"
@@ -260,7 +260,7 @@
           "data": {
             "contactID": 1,
             "userID": 1,
-            "contactName": "Jane Doe",
+            "contactName": "Jane besso",
             "relation": "Spouse",
             "phoneNumber": "+20123456789",
             "isPrimary": true,
@@ -338,8 +338,8 @@
             "scanID": 1,
             "timestamp": "2025-02-03T17:00:00Z",
             "user": {
-              "username": "john_doe",
-              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "username": "yousseff_besso",
+              "photoURL": "https://storage.example.com/photos/yousseff.jpg",
               "gender": "male",
               "nationalID": "12345678901234"
             },
@@ -355,7 +355,7 @@
             "emergencyContacts": [
               {
                 "contactID": 1,
-                "contactName": "Jane Doe",
+                "contactName": "Jane besso",
                 "relation": "Spouse",
                 "phoneNumber": "+20123456789",
                 "secondaryPhone": "+20198765432",
@@ -391,8 +391,8 @@
             "scanID": 2,
             "timestamp": "2025-02-03T17:05:00Z",
             "user": {
-              "username": "john_doe",
-              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "username": "yousseff_besso",
+              "photoURL": "https://storage.example.com/photos/yousseff.jpg",
               "gender": "male"
             },
             "medical": {
@@ -404,7 +404,7 @@
             },
             "emergencyContacts": [
               {
-                "contactName": "Jane Doe",
+                "contactName": "Jane besso",
                 "relation": "Spouse",
                 "phoneNumber": "+20123456789",
                 "isPrimary": true
@@ -455,11 +455,11 @@
           "data": {
             "user": {
               "id": 1,
-              "username": "john_doe",
-              "email": "john.doe@example.com",
+              "username": "yousseff_besso",
+              "email": "yousseff.besso@example.com",
               "gender": "male",
               "nationalID": "12345678901234",
-              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "photoURL": "https://storage.example.com/photos/yousseff.jpg",
               "isActive": true,
               "createdAt": "2025-02-01T10:00:00Z",
               "updatedAt": "2025-02-03T17:00:00Z"
@@ -480,11 +480,11 @@
             "emergencyContacts": [
               {
                 "id": 1,
-                "contactName": "Jane Doe",
+                "contactName": "Jane besso",
                 "relation": "Spouse",
                 "phoneNumber": "+20123456789",
                 "secondaryPhone": "+20198765432",
-                "email": "jane.doe@example.com",
+                "email": "jane.besso@example.com",
                 "isPrimary": true,
                 "priority": 1,
                 "notes": "Available 24/7",
@@ -772,8 +772,8 @@
           "success": true,
           "data": {
             "user": {
-              "username": "john_doe",
-              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "username": "yousseff_besso",
+              "photoURL": "https://storage.example.com/photos/yousseff.jpg",
               "gender": "male",
               "nationalID": "12345678901234"
             },
@@ -789,7 +789,7 @@
             },
             "emergencyContacts": [
               {
-                "contactName": "Jane Doe",
+                "contactName": "Jane besso",
                 "relation": "Spouse",
                 "phoneNumber": "+20123456789",
                 "secondaryPhone": "+20198765432",
@@ -824,8 +824,8 @@
           "success": true,
           "data": {
             "user": {
-              "username": "john_doe",
-              "photoURL": "https://storage.example.com/photos/john.jpg",
+              "username": "yousseff_besso",
+              "photoURL": "https://storage.example.com/photos/yousseff.jpg",
               "gender": "male"
             },
             "medical": {
@@ -837,7 +837,7 @@
             },
             "emergencyContacts": [
               {
-                "contactName": "Jane Doe",
+                "contactName": "Jane besso",
                 "relation": "Spouse",
                 "phoneNumber": "+20123456789",
                 "isPrimary": true
@@ -862,8 +862,8 @@
             "users": [
               {
                 "userID": 1,
-                "username": "john_doe",
-                "email": "john.doe@example.com",
+                "username": "yousseff_besso",
+                "email": "yousseff.besso@example.com",
                 "wristbandCount": 1,
                 "deviceCount": 2,
                 "lastActivity": "2025-02-03T17:00:00Z",
