@@ -156,12 +156,11 @@ class UserProfileService {
         };
       }
 
-      // Transform contacts to Firestore format with IDs
+      // Transform contacts to Firestore format with IDs and phoneNumbers array
       const contactsArray = contacts.map((contact, index) => ({
         id: contact.id || `contact_${index}`,
-        FullName: contact.fullName,
-        PhoneNumber: contact.phoneNumber,
-        SecondaryPhone: contact.secondaryPhone || '',
+        ContactName: contact.ContactName,
+        PhoneNumbers: contact.phoneNumbers || [contact.phoneNumber].filter(Boolean), // Support both formats
         Relationship: contact.relationship,
         IsPrimary: contact.isPrimary || index === 0, // First contact is primary by default
         UpdatedAt: new Date()
@@ -183,12 +182,11 @@ class UserProfileService {
         primaryContactName: contactsArray.find(c => c.IsPrimary)?.FullName
       });
 
-      // Prepare response data - return all contacts
+      // Prepare response data - return all contacts with phoneNumbers array
       const responseContacts = contactsArray.map(contact => ({
         id: contact.id,
-        fullName: contact.FullName,
-        phoneNumber: contact.PhoneNumber,
-        secondaryPhone: contact.SecondaryPhone,
+        ContactName: contact.ContactName,
+        phoneNumbers: contact.PhoneNumbers,
         relationship: contact.Relationship,
         isPrimary: contact.IsPrimary,
         updatedAt: contact.UpdatedAt
@@ -248,9 +246,8 @@ class UserProfileService {
         // New format - contacts array
         contactsArray = emergencyContacts.contacts.map(contact => ({
           id: contact.id,
-          fullName: contact.FullName,
-          phoneNumber: contact.PhoneNumber,
-          secondaryPhone: contact.SecondaryPhone || '',
+          ContactName: contact.ContactName,
+          phoneNumbers: contact.PhoneNumbers || [contact.PhoneNumber, contact.SecondaryPhone].filter(Boolean),
           relationship: contact.Relationship,
           isPrimary: contact.IsPrimary,
           updatedAt: contact.UpdatedAt
@@ -259,9 +256,8 @@ class UserProfileService {
         // Old format - convert to array
         contactsArray.push({
           id: 'contact_0',
-          fullName: emergencyContacts.PrimaryContact.FullName,
-          phoneNumber: emergencyContacts.PrimaryContact.PhoneNumber,
-          secondaryPhone: emergencyContacts.PrimaryContact.SecondaryPhone || '',
+          ContactName: emergencyContacts.PrimaryContact.ContactName,
+          phoneNumbers: [emergencyContacts.PrimaryContact.PhoneNumber, emergencyContacts.PrimaryContact.SecondaryPhone].filter(Boolean),
           relationship: emergencyContacts.PrimaryContact.Relationship,
           isPrimary: true,
           updatedAt: emergencyContacts.PrimaryContact.UpdatedAt
@@ -270,9 +266,8 @@ class UserProfileService {
         if (emergencyContacts.SecondaryContact) {
           contactsArray.push({
             id: 'contact_1',
-            fullName: emergencyContacts.SecondaryContact.FullName,
-            phoneNumber: emergencyContacts.SecondaryContact.PhoneNumber,
-            secondaryPhone: emergencyContacts.SecondaryContact.SecondaryPhone || '',
+            ContactName: emergencyContacts.SecondaryContact.ContactName,
+            phoneNumbers: [emergencyContacts.SecondaryContact.PhoneNumber, emergencyContacts.SecondaryContact.SecondaryPhone].filter(Boolean),
             relationship: emergencyContacts.SecondaryContact.Relationship,
             isPrimary: false,
             updatedAt: emergencyContacts.SecondaryContact.UpdatedAt

@@ -34,33 +34,27 @@ const addContact = async (req, res) => {
 
     const {
       ContactName,
-      Relation,
-      PhoneNumber,
-      SecondaryPhone,
-      Email,
-      IsPrimary,
-      Priority,
-      Notes
+      phoneNumbers,
+      relationship,
+      isPrimary,
+      notes
     } = req.body;
 
-    if (!ContactName || !PhoneNumber) {
+    if (!ContactName || !phoneNumbers || !Array.isArray(phoneNumbers)) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
-        message: 'ContactName and PhoneNumber are required',
+        message: 'fullName and phoneNumbers array are required',
         code: 400
       });
     }
 
     const result = await emergencyContactService.addContact(userID, {
       ContactName,
-      Relation,
-      PhoneNumber,
-      SecondaryPhone,
-      Email,
-      IsPrimary,
-      Priority,
-      Notes
+      phoneNumbers,
+      relationship,
+      isPrimary,
+      notes
     });
 
     const statusCode = result.success ? 201 : result.code || 500;

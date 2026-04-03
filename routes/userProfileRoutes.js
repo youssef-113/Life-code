@@ -55,11 +55,20 @@ router.put('/profile/emergency-contacts', [
     .optional()
     .isArray({ min: 1, max: 10 })
     .withMessage('Contacts must be an array with 1-10 items'),
-  body('contacts.*.fullName')
+  body('contacts.*.ContactName')
     .optional()
     .trim()
     .isLength({ min: 2, max: 100 })
     .withMessage('Contact full name must be between 2 and 100 characters'),
+  body('contacts.*.phoneNumbers')
+    .optional()
+    .isArray({ min: 1, max: 10 })
+    .withMessage('Contact phone numbers must be an array with 1-10 items'),
+  body('contacts.*.phoneNumbers.*')
+    .optional()
+    .trim()
+    .matches(/^\+?[0-9]{10,15}$/)
+    .withMessage('Contact phone number must be valid (10-15 digits)'),
   body('contacts.*.phoneNumber')
     .optional()
     .trim()

@@ -27,35 +27,23 @@ router.post('/emergency/contact', [
   body('ContactName')
     .trim()
     .isLength({ min: 2, max: 100 })
-    .withMessage('Contact name must be between 2 and 100 characters'),
-  body('Relation')
-    .optional()
+    .withMessage('Full name must be between 2 and 100 characters'),
+  body('phoneNumbers')
+    .isArray({ min: 1, max: 5 })
+    .withMessage('phoneNumbers must be an array with 1-5 items'),
+  body('phoneNumbers.*')
     .trim()
-    .isLength({ max: 50 })
-    .withMessage('Relation must not exceed 50 characters'),
-  body('PhoneNumber')
-    .trim()
-    .matches(/^\+?[0-9]{10,15}$/)
-    .withMessage('Phone number must be valid E.164 format (10-15 digits)'),
-  body('SecondaryPhone')
+    .matches(/^[+]?[0-9]{10,15}$/)
+    .withMessage('Each phone number must be valid (10-15 digits)'),
+  body('relationship')
     .optional()
-    .trim()
-    .matches(/^\+?[0-9]{10,15}$/)
-    .withMessage('Secondary phone must be valid E.164 format (10-15 digits)'),
-  body('Email')
-    .optional()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Must be a valid email address'),
-  body('IsPrimary')
+    .isIn(['Father', 'Mother', 'Friend', 'Sister', 'Brother', 'Spouse', 'Other'])
+    .withMessage('Invalid relationship type'),
+  body('isPrimary')
     .optional()
     .isBoolean()
-    .withMessage('IsPrimary must be a boolean'),
-  body('Priority')
-    .optional()
-    .isInt({ min: 1, max: 10 })
-    .withMessage('Priority must be an integer between 1 and 10'),
-  body('Notes')
+    .withMessage('isPrimary must be a boolean'),
+  body('notes')
     .optional()
     .trim()
     .isLength({ max: 255 })
@@ -70,40 +58,28 @@ router.post('/emergency/contact', [
 router.post('/emergency/contacts/bulk', [
   authenticateToken,
   body('contacts')
-    .isArray({ min: 1 })
-    .withMessage('contacts must be a non-empty array'),
+    .isArray({ min: 1, max: 10 })
+    .withMessage('contacts must be an array with 1-10 items'),
   body('contacts.*.ContactName')
     .trim()
     .isLength({ min: 2, max: 100 })
-    .withMessage('Contact name must be between 2 and 100 characters'),
-  body('contacts.*.PhoneNumber')
+    .withMessage('Contact full name must be between 2 and 100 characters'),
+  body('contacts.*.phoneNumbers')
+    .isArray({ min: 1, max: 5 })
+    .withMessage('phoneNumbers must be an array with 1-5 items'),
+  body('contacts.*.phoneNumbers.*')
     .trim()
-    .matches(/^\+?[0-9]{10,15}$/)
-    .withMessage('Phone number must be valid E.164 format (10-15 digits)'),
-  body('contacts.*.Relation')
+    .matches(/^[+]?[0-9]{10,15}$/)
+    .withMessage('Each phone number must be valid (10-15 digits)'),
+  body('contacts.*.relationship')
     .optional()
-    .trim()
-    .isLength({ max: 50 })
-    .withMessage('Relation must not exceed 50 characters'),
-  body('contacts.*.SecondaryPhone')
-    .optional()
-    .trim()
-    .matches(/^\+?[0-9]{10,15}$/)
-    .withMessage('Secondary phone must be valid E.164 format (10-15 digits)'),
-  body('contacts.*.Email')
-    .optional()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Must be a valid email address'),
-  body('contacts.*.IsPrimary')
+    .isIn(['Father', 'Mother', 'Friend', 'Sister', 'Brother', 'Spouse', 'Other'])
+    .withMessage('Invalid relationship type'),
+  body('contacts.*.isPrimary')
     .optional()
     .isBoolean()
-    .withMessage('IsPrimary must be a boolean'),
-  body('contacts.*.Priority')
-    .optional()
-    .isInt({ min: 1, max: 10 })
-    .withMessage('Priority must be an integer between 1 and 10'),
-  body('contacts.*.Notes')
+    .withMessage('isPrimary must be a boolean'),
+  body('contacts.*.notes')
     .optional()
     .trim()
     .isLength({ max: 255 })
@@ -135,36 +111,25 @@ router.put('/emergency/contact/:id', [
     .optional()
     .trim()
     .isLength({ min: 2, max: 100 })
-    .withMessage('Contact name must be between 2 and 100 characters'),
-  body('Relation')
+    .withMessage('Full name must be between 2 and 100 characters'),
+  body('phoneNumbers')
+    .optional()
+    .isArray({ min: 1, max: 5 })
+    .withMessage('phoneNumbers must be an array with 1-5 items'),
+  body('phoneNumbers.*')
     .optional()
     .trim()
-    .isLength({ max: 50 })
-    .withMessage('Relation must not exceed 50 characters'),
-  body('PhoneNumber')
+    .matches(/^[+]?[0-9]{10,15}$/)
+    .withMessage('Each phone number must be valid (10-15 digits)'),
+  body('relationship')
     .optional()
-    .trim()
-    .matches(/^\+?[0-9]{10,15}$/)
-    .withMessage('Phone number must be valid E.164 format (10-15 digits)'),
-  body('SecondaryPhone')
-    .optional()
-    .trim()
-    .matches(/^\+?[0-9]{10,15}$/)
-    .withMessage('Secondary phone must be valid E.164 format (10-15 digits)'),
-  body('Email')
-    .optional()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Must be a valid email address'),
-  body('IsPrimary')
+    .isIn(['Father', 'Mother', 'Friend', 'Sister', 'Brother', 'Spouse', 'Other'])
+    .withMessage('Invalid relationship type'),
+  body('isPrimary')
     .optional()
     .isBoolean()
-    .withMessage('IsPrimary must be a boolean'),
-  body('Priority')
-    .optional()
-    .isInt({ min: 1, max: 10 })
-    .withMessage('Priority must be an integer between 1 and 10'),
-  body('Notes')
+    .withMessage('isPrimary must be a boolean'),
+  body('notes')
     .optional()
     .trim()
     .isLength({ max: 255 })

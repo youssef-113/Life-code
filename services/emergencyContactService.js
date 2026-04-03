@@ -31,17 +31,24 @@ class EmergencyContactService {
 
       const {
         ContactName,
-        Relation,
-        PhoneNumber,
-        SecondaryPhone,
-        Email,
-        IsPrimary,
-        Priority,
-        Notes
+        phoneNumbers,
+        relationship,
+        isPrimary,
+        notes
       } = contactData;
 
+      // Validate required fields
+      if (!ContactName || !phoneNumbers || !Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
+        return {
+          success: false,
+          error: 'Validation Error',
+          message: 'fullName and phoneNumbers array are required',
+          code: 400
+        };
+      }
+
       // If this contact is set as primary, unset all other primary contacts
-      if (IsPrimary === true) {
+      if (isPrimary === true) {
         const existingPrimary = await db.collection('EmergencyContacts')
           .where('UserID', '==', userID)
           .where('IsPrimary', '==', true)
@@ -57,25 +64,20 @@ class EmergencyContactService {
       }
 
       // Determine priority if not provided
-      let contactPriority = Priority;
-      if (contactPriority === undefined || contactPriority === null) {
-        const existingContacts = await db.collection('EmergencyContacts')
-          .where('UserID', '==', userID)
-          .get();
-        contactPriority = existingContacts.size + 1;
-      }
+      const existingContacts = await db.collection('EmergencyContacts')
+        .where('UserID', '==', userID)
+        .get();
+      const contactPriority = existingContacts.size + 1;
 
-      // Create contact document
+      // Create contact document with standardized format
       const contactDoc = {
         UserID: userID,
         ContactName: ContactName,
-        Relation: Relation || '',
-        PhoneNumber: PhoneNumber,
-        SecondaryPhone: SecondaryPhone || null,
-        Email: Email || null,
-        IsPrimary: IsPrimary || false,
+        PhoneNumbers: phoneNumbers, // Array of phone numbers
+        Relationship: relationship || 'Other',
+        IsPrimary: isPrimary || false,
         Priority: contactPriority,
-        Notes: Notes || '',
+        Notes: notes || '',
         CreatedAt: new Date(),
         UpdatedAt: new Date()
       };
@@ -91,12 +93,19 @@ class EmergencyContactService {
       // Calculate updated profile completion
       const completionResult = await profileCompletionService.calculateCompletion(userID);
 
+      // Return standardized format matching /profile/emergency-contacts
       return {
         success: true,
         message: 'Emergency contact added successfully',
         data: {
           id: docRef.id,
-          ...contactDoc
+          ContactName: contactDoc.ContactName,
+          phoneNumbers: contactDoc.PhoneNumbers,
+          relationship: contactDoc.Relationship,
+          isPrimary: contactDoc.IsPrimary,
+          notes: contactDoc.Notes,
+          priority: contactDoc.Priority,
+          updatedAt: contactDoc.UpdatedAt
         },
         profileCompletion: completionResult.completionPercentage,
         completionLevel: completionResult.completionLevel,
@@ -151,17 +160,14 @@ class EmergencyContactService {
 
       const {
         ContactName,
-        Relation,
-        PhoneNumber,
-        SecondaryPhone,
-        Email,
-        IsPrimary,
-        Priority,
-        Notes
+        phoneNumbers,
+        relationship,
+        isPrimary,
+        notes
       } = contactData;
 
       // If setting as primary, unset all others
-      if (IsPrimary === true) {
+      if (isPrimary === true) {
         const existingPrimary = await db.collection('EmergencyContacts')
           .where('UserID', '==', userID)
           .where('IsPrimary', '==', true)
@@ -181,13 +187,10 @@ class EmergencyContactService {
       // Build update data (only include provided fields)
       const updateData = { UpdatedAt: new Date() };
       if (ContactName !== undefined) updateData.ContactName = ContactName;
-      if (Relation !== undefined) updateData.Relation = Relation;
-      if (PhoneNumber !== undefined) updateData.PhoneNumber = PhoneNumber;
-      if (SecondaryPhone !== undefined) updateData.SecondaryPhone = SecondaryPhone;
-      if (Email !== undefined) updateData.Email = Email;
-      if (IsPrimary !== undefined) updateData.IsPrimary = IsPrimary;
-      if (Priority !== undefined) updateData.Priority = Priority;
-      if (Notes !== undefined) updateData.Notes = Notes;
+      if (phoneNumbers !== undefined) updateData.PhoneNumbers = phoneNumbers;
+      if (relationship !== undefined) updateData.Relationship = relationship;
+      if (isPrimary !== undefined) updateData.IsPrimary = isPrimary;
+      if (notes !== undefined) updateData.Notes = notes;
 
       await db.collection('EmergencyContacts').doc(contactId).update(updateData);
 
@@ -195,12 +198,19 @@ class EmergencyContactService {
       const updatedDoc = await db.collection('EmergencyContacts').doc(contactId).get();
       const updatedData = updatedDoc.data();
 
+      // Return standardized format
       return {
         success: true,
         message: 'Contact updated successfully',
         data: {
           id: contactId,
-          ...updatedData
+          ContactName: updatedData.ContactName,
+          phoneNumbers: updatedData.PhoneNumbers,
+          relationship: updatedData.Relationship,
+          isPrimary: updatedData.IsPrimary,
+          notes: updatedData.Notes,
+          priority: updatedData.Priority,
+          updatedAt: updatedData.UpdatedAt
         }
       };
     } catch (error) {
@@ -283,7 +293,7 @@ class EmergencyContactService {
   /**
    * Get all emergency contacts for a user
    * @param {string} userID - User ID
-   * @returns {Object} - List of contacts
+   * @returns {Object} - List of contacts in standardized format
    */
   async getContacts(userID) {
     const db = getFirestore();
@@ -293,18 +303,31 @@ class EmergencyContactService {
         .where('UserID', '==', userID)
         .get();
 
-      const contacts = contactsQuery.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })).sort((a, b) => (a.Priority || 999) - (b.Priority || 999));
+      // Transform to standardized format matching /profile/emergency-contacts
+      const contacts = contactsQuery.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ContactName: data.ContactName,
+          phoneNumbers: data.PhoneNumbers || [],
+          relationship: data.Relationship,
+          isPrimary: data.IsPrimary,
+          notes: data.Notes,
+          priority: data.Priority,
+          updatedAt: data.UpdatedAt
+        };
+      }).sort((a, b) => (a.priority || 999) - (b.priority || 999));
 
       // Calculate profile completion
       const completionResult = await profileCompletionService.calculateCompletion(userID);
 
       return {
         success: true,
-        data: contacts,
-        count: contacts.length,
+        data: {
+          userID,
+          contacts,
+          count: contacts.length
+        },
         profileCompletion: completionResult.completionPercentage,
         completionLevel: completionResult.completionLevel,
         nextRecommendedStep: completionResult.nextRecommendedStep
@@ -324,7 +347,7 @@ class EmergencyContactService {
    * Get a single emergency contact
    * @param {string} userID - User ID
    * @param {string} contactId - Contact document ID
-   * @returns {Object} - Contact data
+   * @returns {Object} - Contact data in standardized format
    */
   async getContact(userID, contactId) {
     const db = getFirestore();
@@ -351,11 +374,20 @@ class EmergencyContactService {
         };
       }
 
+      const data = contactDoc.data();
+
+      // Return standardized format
       return {
         success: true,
         data: {
           id: contactId,
-          ...contactDoc.data()
+          ContactName: data.ContactName,
+          phoneNumbers: data.PhoneNumbers || [],
+          relationship: data.Relationship,
+          isPrimary: data.IsPrimary,
+          notes: data.Notes,
+          priority: data.Priority,
+          updatedAt: data.UpdatedAt
         }
       };
     } catch (error) {
@@ -373,7 +405,7 @@ class EmergencyContactService {
    * Add multiple emergency contacts at once
    * @param {string} userID - User ID
    * @param {Array} contacts - Array of contact objects
-   * @returns {Object} - Created contacts data
+   * @returns {Object} - Created contacts data in standardized format
    */
   async addMultipleContacts(userID, contacts) {
     const db = getFirestore();
@@ -415,35 +447,33 @@ class EmergencyContactService {
 
       for (let i = 0; i < contacts.length; i++) {
         const contact = contacts[i];
-        const { ContactName, Relation, PhoneNumber, SecondaryPhone, Email, IsPrimary, Priority, Notes } = contact;
+        const { ContactName, phoneNumbers, relationship, isPrimary, notes } = contact;
 
         // Validate required fields
-        if (!ContactName || !PhoneNumber) {
+        if (!ContactName || !phoneNumbers || !Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
           errors.push({
             index: i,
-            error: 'ContactName and PhoneNumber are required'
+            error: 'fullName and phoneNumbers array are required'
           });
           continue;
         }
 
         // Determine if this should be primary
         // First contact is primary if no existing primary, unless explicitly set
-        let shouldBePrimary = IsPrimary === true;
-        if (!hasExistingPrimary && i === 0 && IsPrimary !== false) {
+        let shouldBePrimary = isPrimary === true;
+        if (!hasExistingPrimary && i === 0 && isPrimary !== false) {
           shouldBePrimary = true;
         }
 
-        // Create contact document
+        // Create contact document with standardized format
         const contactDoc = {
           UserID: userID,
           ContactName: ContactName,
-          Relation: Relation || '',
-          PhoneNumber: PhoneNumber,
-          SecondaryPhone: SecondaryPhone || null,
-          Email: Email || null,
+          PhoneNumbers: phoneNumbers,
+          Relationship: relationship || 'Other',
           IsPrimary: shouldBePrimary,
-          Priority: Priority !== undefined ? Priority : basePriority + i,
-          Notes: Notes || '',
+          Priority: basePriority + i,
+          Notes: notes || '',
           CreatedAt: new Date(),
           UpdatedAt: new Date()
         };
@@ -451,14 +481,21 @@ class EmergencyContactService {
         const docRef = db.collection('EmergencyContacts').doc();
         batch.set(docRef, contactDoc);
 
+        // Add to created contacts in standardized format
         createdContacts.push({
           id: docRef.id,
-          ...contactDoc
+          ContactName: contactDoc.ContactName,
+          phoneNumbers: contactDoc.PhoneNumbers,
+          relationship: contactDoc.Relationship,
+          isPrimary: contactDoc.IsPrimary,
+          notes: contactDoc.Notes,
+          priority: contactDoc.Priority,
+          updatedAt: contactDoc.UpdatedAt
         });
       }
 
       // If any new contact is primary, unset existing primary
-      const hasNewPrimary = createdContacts.some(c => c.IsPrimary === true);
+      const hasNewPrimary = createdContacts.some(c => c.isPrimary === true);
       if (hasNewPrimary && existingPrimary) {
         batch.update(existingPrimary.ref, { IsPrimary: false, UpdatedAt: new Date() });
       }
@@ -478,6 +515,7 @@ class EmergencyContactService {
         success: true,
         message: `${createdContacts.length} emergency contact(s) added successfully`,
         data: {
+          userID,
           contacts: createdContacts,
           count: createdContacts.length,
           errors: errors.length > 0 ? errors : undefined
