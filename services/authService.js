@@ -5,8 +5,8 @@ const { getFirestore, getAuth, createUserInFirebase, getUserByEmail, getUserByUi
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '15m'; // Short-lived access tokens (15 minutes)
-const REFRESH_TOKEN_EXPIRES_IN = '7d'; // Refresh tokens valid for 7 days
+const JWT_EXPIRES_IN = '15d'; // Access tokens valid for 15 days
+const REFRESH_TOKEN_EXPIRES_IN = '15d'; // Refresh tokens valid for 15 days
 
 /**
  * Auth Service - Handles all authentication operations
@@ -423,7 +423,7 @@ class AuthService {
     );
 
     const refreshToken = uuidv4();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const expiresAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000); // 15 days
 
     return { accessToken, refreshToken, expiresAt };
   }
@@ -450,7 +450,7 @@ class AuthService {
       DeviceType: this.parseDeviceType(requestOptions.userAgent),
       IsActive: true,
       CreatedAt: new Date(),
-      ExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days (matches refresh token)
+      ExpiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days (matches refresh token)
       LastUsed: new Date(),
       RefreshTokenRotatedAt: new Date() // Track when refresh token was last rotated
     };
