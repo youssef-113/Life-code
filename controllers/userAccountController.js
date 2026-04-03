@@ -246,11 +246,123 @@ const getCompleteProfile = async (req, res) => {
   }
 };
 
+/**
+ * Get user's own photo
+ * @route GET /api/app/user/photo
+ * @access Private
+ */
+const getPhoto = async (req, res) => {
+  try {
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const result = await userAccountService.getPhoto(userID);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Get photo controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
+/**
+ * Get another user's photo by userID
+ * @route GET /api/app/user/:userId/photo
+ * @access Private
+ */
+const getPhotoByUserId = async (req, res) => {
+  try {
+    const requestingUserID = req.user?.userID;
+    if (!requestingUserID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'userId is required',
+        code: 400
+      });
+    }
+
+    const result = await userAccountService.getPhotoByUserId(userId, requestingUserID);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Get photo by user ID controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
+/**
+ * Delete user photo
+ * @route DELETE /api/app/user/photo
+ * @access Private
+ */
+const deletePhoto = async (req, res) => {
+  try {
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const result = await userAccountService.deletePhoto(userID);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Delete photo controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
 module.exports = {
   changePassword,
   uploadPhoto,
   deleteAccount,
   updatePreferences,
   getPreferences,
-  getCompleteProfile
+  getCompleteProfile,
+  getPhoto,
+  getPhotoByUserId,
+  deletePhoto
 };

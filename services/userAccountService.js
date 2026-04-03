@@ -112,28 +112,221 @@ class UserAccountService {
       // Store the photo URL/data directly in the user document
       // In production, you'd upload to Firebase Storage first
       let photoURL = photoData;
+      let photoType = 'url';
 
       // If it's base64 data, store as a data URL 
       // (In production, upload to Firebase Storage and get download URL)
       if (photoData && photoData.startsWith('data:image')) {
         photoURL = photoData; // Store base64 directly for now
+        photoType = 'base64';
       }
+
+      const uploadedAt = new Date();
 
       await db.collection('Users').doc(userID).update({
         PhotoURL: photoURL,
-        UpdatedAt: new Date()
+        PhotoType: photoType,
+        PhotoUploadedAt: uploadedAt,
+        UpdatedAt: uploadedAt
       });
 
       return {
         success: true,
         message: 'Photo uploaded successfully',
         data: {
+          userID: userID,
           photoURL: photoURL,
-          uploadedAt: new Date()
+          photoType: photoType,
+          uploadedAt: uploadedAt
         }
       };
     } catch (error) {
       console.error('Upload photo error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
+   * Get user photo by userID
+   * @param {string} userID - User ID
+   * @returns {Object} - Photo data
+   */
+  async getPhoto(userID) {
+    const db = getFirestore();
+
+    try {
+      const userDoc = await db.collection('Users').doc(userID).get();
+
+      if (!userDoc.exists) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'User not found',
+          code: 404
+        };
+      }
+
+      const userData = userDoc.data();
+
+      if (!userData.PhotoURL) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'No photo found for this user',
+          code: 404
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          userID: userID,
+          photoURL: userData.PhotoURL,
+          photoType: userData.PhotoType || 'url',
+          uploadedAt: userData.PhotoUploadedAt || null
+        }
+      };
+    } catch (error) {
+      console.error('Get photo error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
+   * Get photo by userID (public/other user access)
+   * @param {string} targetUserID - Target user ID
+   * @param {string} requestingUserID - Requesting user ID (for logging)
+   * @returns {Object} - Photo data
+   */
+  async getPhotoByUserId(targetUserID, requestingUserID = null) {
+    const db = getFirestore();
+
+    try {
+      const userDoc = await db.collection('Users').doc(targetUserID).get();
+
+      if (!userDoc.exists) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'User not found',
+          code: 404
+        };
+      }
+
+      const userData = userDoc.data();
+
+      // Check privacy settings for photo visibility
+      const profileDoc = await db.collection('UserProfiles').doc(targetUserID).get();
+      const preferences = profileDoc.exists ? profileDoc.data().Preferences : null;
+
+      // If showPhotoOnScan is explicitly false, don't return photo
+      if (preferences && preferences.ShowPhotoOnScan === false) {
+        return {
+          success: false,
+          error: 'Forbidden',
+          message: 'Photo is not public for this user',
+          code: 403
+        };
+      }
+
+      if (!userData.PhotoURL) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'No photo found for this user',
+          code: 404
+        };
+      }
+
+      // Log access if requesting user is different from target
+      if (requestingUserID && requestingUserID !== targetUserID) {
+        await authService.logSecurityEvent(requestingUserID, 'PHOTO_ACCESSED', {
+          targetUserID
+        });
+      }
+
+      return {
+        success: true,
+        data: {
+          userID: targetUserID,
+          photoURL: userData.PhotoURL,
+          photoType: userData.PhotoType || 'url',
+          uploadedAt: userData.PhotoUploadedAt || null
+        }
+      };
+    } catch (error) {
+      console.error('Get photo by user ID error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
+   * Delete user photo
+   * @param {string} userID - User ID
+   * @returns {Object} - Result
+   */
+  async deletePhoto(userID) {
+    const db = getFirestore();
+
+    try {
+      const userDoc = await db.collection('Users').doc(userID).get();
+
+      if (!userDoc.exists) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'User not found',
+          code: 404
+        };
+      }
+
+      const userData = userDoc.data();
+
+      if (!userData.PhotoURL) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'No photo to delete',
+          code: 404
+        };
+      }
+
+      await db.collection('Users').doc(userID).update({
+        PhotoURL: null,
+        PhotoType: null,
+        PhotoUploadedAt: null,
+        UpdatedAt: new Date()
+      });
+
+      // Log security event
+      await authService.logSecurityEvent(userID, 'PHOTO_DELETED', {
+        deletedAt: new Date().toISOString()
+      });
+
+      return {
+        success: true,
+        message: 'Photo deleted successfully',
+        data: {
+          deletedAt: new Date()
+        }
+      };
+    } catch (error) {
+      console.error('Delete photo error:', error);
       return {
         success: false,
         error: 'Server Error',

@@ -89,10 +89,37 @@ class WristbandService {
         }
       }
 
+      // Check if user already has an active wristband (enforce one band per user)
+      const existingUserBand = await db.collection('Wristbands')
+        .where('UserID', '==', userID)
+        .where('IsActive', '==', true)
+        .where('IsRevoked', '==', false)
+        .limit(1)
+        .get();
+
+      if (!existingUserBand.empty) {
+        return {
+          success: false,
+          error: 'Conflict',
+          message: 'User already has an active wristband. Each user can only have one active band. Please revoke the existing band first.',
+          code: 409,
+          data: {
+            existingBandId: existingUserBand.docs[0].id,
+            existingBand: existingUserBand.docs[0].data()
+          }
+        };
+      }
+
       // Generate serial number
       const year = new Date().getFullYear();
       const allWristbands = await db.collection('Wristbands').get();
       const serialNumber = `SN-${year}-${String(allWristbands.size + 1).padStart(5, '0')}`;
+
+      // Check if user has any previous bands (to determine if this should be primary)
+      const allUserBands = await db.collection('Wristbands')
+        .where('UserID', '==', userID)
+        .get();
+      const isPrimary = allUserBands.empty; // First band is automatically primary
 
       // Create wristband document
       const wristbandDoc = {
@@ -102,6 +129,7 @@ class WristbandService {
         SerialNumber: serialNumber,
         IsActive: true,
         IsRevoked: false,
+        IsPrimary: isPrimary,
         ActivatedAt: new Date(),
         RevokedAt: null,
         RevokeReason: null,
@@ -290,6 +318,239 @@ class WristbandService {
       };
     } catch (error) {
       console.error('Get wristbands error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
+   * Get primary wristband for a user
+   * @param {string} userID - User ID
+   * @returns {Object} - Primary wristband data
+   */
+  async getPrimaryWristband(userID) {
+    const db = getFirestore();
+
+    try {
+      const wristbandQuery = await db.collection('Wristbands')
+        .where('UserID', '==', userID)
+        .where('IsPrimary', '==', true)
+        .where('IsActive', '==', true)
+        .limit(1)
+        .get();
+
+      if (wristbandQuery.empty) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'No primary wristband found for this user',
+          code: 404
+        };
+      }
+
+      const wristbandData = wristbandQuery.docs[0].data();
+
+      return {
+        success: true,
+        data: {
+          id: wristbandQuery.docs[0].id,
+          ...wristbandData
+        }
+      };
+    } catch (error) {
+      console.error('Get primary wristband error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
+   * Set a wristband as primary (unsets any other primary)
+   * @param {string} userID - User ID
+   * @param {string} wristbandId - Wristband document ID
+   * @returns {Object} - Result
+   */
+  async setPrimaryWristband(userID, wristbandId) {
+    const db = getFirestore();
+
+    try {
+      // Verify wristband exists and belongs to user
+      const wristbandDoc = await db.collection('Wristbands').doc(wristbandId).get();
+
+      if (!wristbandDoc.exists) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'Wristband not found',
+          code: 404
+        };
+      }
+
+      if (wristbandDoc.data().UserID !== userID) {
+        return {
+          success: false,
+          error: 'Forbidden',
+          message: 'You do not have permission to modify this wristband',
+          code: 403
+        };
+      }
+
+      if (!wristbandDoc.data().IsActive) {
+        return {
+          success: false,
+          error: 'Bad Request',
+          message: 'Cannot set an inactive wristband as primary',
+          code: 400
+        };
+      }
+
+      // Unset all other primary wristbands for this user
+      const userWristbands = await db.collection('Wristbands')
+        .where('UserID', '==', userID)
+        .where('IsPrimary', '==', true)
+        .get();
+
+      const batch = db.batch();
+      userWristbands.docs.forEach(doc => {
+        batch.update(doc.ref, { IsPrimary: false, UpdatedAt: new Date() });
+      });
+
+      // Set the new primary
+      batch.update(db.collection('Wristbands').doc(wristbandId), {
+        IsPrimary: true,
+        UpdatedAt: new Date()
+      });
+
+      await batch.commit();
+
+      // Log security event
+      await authService.logSecurityEvent(userID, 'WRISTBAND_SET_PRIMARY', {
+        wristbandId
+      });
+
+      return {
+        success: true,
+        message: 'Wristband set as primary successfully',
+        data: {
+          id: wristbandId,
+          IsPrimary: true
+        }
+      };
+    } catch (error) {
+      console.error('Set primary wristband error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
+   * Get wristband with full user info (for admin/internal use)
+   * @param {string} wristbandId - Wristband document ID
+   * @returns {Object} - Wristband with user data
+   */
+  async getWristbandWithUser(wristbandId) {
+    const db = getFirestore();
+
+    try {
+      const wristbandDoc = await db.collection('Wristbands').doc(wristbandId).get();
+
+      if (!wristbandDoc.exists) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'Wristband not found',
+          code: 404
+        };
+      }
+
+      const wristbandData = wristbandDoc.data();
+      const userID = wristbandData.UserID;
+
+      // Fetch all related user data in parallel
+      const [userDoc, medicalDoc, emergencyContacts] = await Promise.all([
+        db.collection('Users').doc(userID).get(),
+        db.collection('MedicalInfo').doc(userID).get(),
+        db.collection('EmergencyContacts').where('UserID', '==', userID).get()
+      ]);
+
+      const userData = userDoc.exists ? userDoc.data() : null;
+      const medicalData = medicalDoc.exists ? medicalDoc.data() : null;
+      const contacts = emergencyContacts.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      return {
+        success: true,
+        data: {
+          wristband: {
+            id: wristbandId,
+            ...wristbandData
+          },
+          user: userData ? { id: userID, ...userData } : null,
+          medical: medicalData ? { id: userID, ...medicalData } : null,
+          emergencyContacts: contacts
+        }
+      };
+    } catch (error) {
+      console.error('Get wristband with user error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
+   * Get user ID from QR code or NFC tag
+   * @param {string} identifier - QR code or NFC tag
+   * @param {string} type - 'qr' or 'nfc'
+   * @returns {Object} - User ID and wristband info
+   */
+  async getUserIdFromBand(identifier, type = 'qr') {
+    const db = getFirestore();
+
+    try {
+      const field = type === 'qr' ? 'QRCode' : 'NFCTag';
+      const wristbandQuery = await db.collection('Wristbands')
+        .where(field, '==', identifier)
+        .where('IsActive', '==', true)
+        .limit(1)
+        .get();
+
+      if (wristbandQuery.empty) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: `No active wristband found with this ${type.toUpperCase()} code`,
+          code: 404
+        };
+      }
+
+      const wristbandData = wristbandQuery.docs[0].data();
+
+      return {
+        success: true,
+        data: {
+          userID: wristbandData.UserID,
+          wristbandId: wristbandQuery.docs[0].id,
+          isPrimary: wristbandData.IsPrimary || false,
+          serialNumber: wristbandData.SerialNumber
+        }
+      };
+    } catch (error) {
+      console.error('Get user ID from band error:', error);
       return {
         success: false,
         error: 'Server Error',

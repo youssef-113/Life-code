@@ -7,7 +7,8 @@ const {
   deleteContact,
   getContacts,
   getContact,
-  setPrimary
+  setPrimary,
+  addMultipleContacts
 } = require('../controllers/emergencyContactController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
@@ -60,6 +61,54 @@ router.post('/emergency/contact', [
     .isLength({ max: 255 })
     .withMessage('Notes must not exceed 255 characters')
 ], addContact);
+
+/**
+ * @route POST /api/app/emergency/contacts/bulk
+ * @description Add multiple emergency contacts at once
+ * @access Private
+ */
+router.post('/emergency/contacts/bulk', [
+  authenticateToken,
+  body('contacts')
+    .isArray({ min: 1 })
+    .withMessage('contacts must be a non-empty array'),
+  body('contacts.*.ContactName')
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Contact name must be between 2 and 100 characters'),
+  body('contacts.*.PhoneNumber')
+    .trim()
+    .matches(/^\+?[0-9]{10,15}$/)
+    .withMessage('Phone number must be valid E.164 format (10-15 digits)'),
+  body('contacts.*.Relation')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Relation must not exceed 50 characters'),
+  body('contacts.*.SecondaryPhone')
+    .optional()
+    .trim()
+    .matches(/^\+?[0-9]{10,15}$/)
+    .withMessage('Secondary phone must be valid E.164 format (10-15 digits)'),
+  body('contacts.*.Email')
+    .optional()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Must be a valid email address'),
+  body('contacts.*.IsPrimary')
+    .optional()
+    .isBoolean()
+    .withMessage('IsPrimary must be a boolean'),
+  body('contacts.*.Priority')
+    .optional()
+    .isInt({ min: 1, max: 10 })
+    .withMessage('Priority must be an integer between 1 and 10'),
+  body('contacts.*.Notes')
+    .optional()
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage('Notes must not exceed 255 characters')
+], addMultipleContacts);
 
 /**
  * @route GET /api/app/emergency/contacts

@@ -5,7 +5,11 @@ const {
   registerWristband,
   activateWristband,
   revokeWristband,
-  getWristbands
+  getWristbands,
+  getPrimaryWristband,
+  setPrimaryWristband,
+  getWristbandWithUser,
+  getUserIdFromBand
 } = require('../controllers/wristbandController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
@@ -68,5 +72,42 @@ router.post('/wristband/revoke', [
  * @access Private
  */
 router.get('/wristband/list', authenticateToken, getWristbands);
+
+/**
+ * @route GET /api/app/wristband/primary
+ * @description Get the primary wristband for authenticated user
+ * @access Private
+ */
+router.get('/wristband/primary', authenticateToken, getPrimaryWristband);
+
+/**
+ * @route PUT /api/app/wristband/:wristbandId/primary
+ * @description Set a wristband as primary
+ * @access Private
+ */
+router.put('/wristband/:wristbandId/primary', authenticateToken, setPrimaryWristband);
+
+/**
+ * @route GET /api/app/wristband/:wristbandId/full
+ * @description Get wristband with full user info
+ * @access Private
+ */
+router.get('/wristband/:wristbandId/full', authenticateToken, getWristbandWithUser);
+
+/**
+ * @route POST /api/app/wristband/resolve-user
+ * @description Resolve user ID from QR code or NFC tag
+ * @access Private
+ */
+router.post('/wristband/resolve-user', [
+  authenticateToken,
+  body('identifier')
+    .trim()
+    .notEmpty()
+    .withMessage('identifier is required'),
+  body('type')
+    .isIn(['qr', 'nfc'])
+    .withMessage('type must be either "qr" or "nfc"')
+], getUserIdFromBand);
 
 module.exports = router;

@@ -292,11 +292,66 @@ const setPrimary = async (req, res) => {
   }
 };
 
+/**
+ * Add multiple emergency contacts at once
+ * @route POST /api/app/emergency/contacts/bulk
+ * @access Private
+ */
+const addMultipleContacts = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: errors.array()[0].msg,
+        code: 400
+      });
+    }
+
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const { contacts } = req.body;
+
+    if (!contacts || !Array.isArray(contacts)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'contacts must be an array of contact objects',
+        code: 400
+      });
+    }
+
+    const result = await emergencyContactService.addMultipleContacts(userID, contacts);
+
+    const statusCode = result.success ? 201 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Add multiple contacts controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
 module.exports = {
   addContact,
   updateContact,
   deleteContact,
   getContacts,
   getContact,
-  setPrimary
+  setPrimary,
+  addMultipleContacts
 };

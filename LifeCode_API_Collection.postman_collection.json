@@ -1,0 +1,908 @@
+{
+  "info": {
+    "_postman_id": "lifecode-api-collection-v1",
+    "name": "LifeCode API - Complete Collection",
+    "description": "Complete Postman collection for the LifeCode Emergency Health Platform API.\n\n**Base URL:** https://life-code--yossfabdla311.replit.app/api/app\n\n**How to use:**\n1. Set the `baseUrl` and `token` collection variables before running.\n2. Run **Register** or **Login** first — the token is auto-saved to `{{token}}`.\n3. All authenticated requests will use `{{token}}` automatically.\n\n**Variables:**\n- `baseUrl` — API base URL (pre-filled)\n- `token` — Session token (auto-set after login/register)\n- `refreshToken` — Refresh token (auto-set after login/register)\n- `contactId` — Emergency contact ID (set manually after creating one)\n- `familyMemberId` — Family member ID (set manually after creating one)\n- `wristbandId` — Wristband ID (set manually after registering one)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://life-code--yossfabdla311.replit.app/api/app",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "PASTE_YOUR_SESSION_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "PASTE_YOUR_REFRESH_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "contactId",
+      "value": "CONTACT_ID_HERE",
+      "type": "string"
+    },
+    {
+      "key": "familyMemberId",
+      "value": "FAMILY_MEMBER_ID_HERE",
+      "type": "string"
+    },
+    {
+      "key": "wristbandId",
+      "value": "WRISTBAND_ID_HERE",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register (Email/Password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('token', res.data.sessionToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "  pm.test('Registration successful', () => pm.expect(res.success).to.be.true);",
+                  "  pm.test('Token received', () => pm.expect(res.data.sessionToken).to.be.a('string'));",
+                  "  console.log('✅ Token saved:', res.data.sessionToken.substring(0, 20) + '...');",
+                  "} else {",
+                  "  pm.test('Registration failed - check body', () => pm.expect(pm.response.code).to.equal(201));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123\",\n  \"confirmPassword\": \"SecurePass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["register"]
+            },
+            "description": "Create a new user account with email and password.\n\n**Returns:** sessionToken + refreshToken (auto-saved to collection variables)"
+          }
+        },
+        {
+          "name": "Login (Email/Password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('token', res.data.sessionToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "  pm.test('Login successful', () => pm.expect(res.success).to.be.true);",
+                  "  pm.test('Token received', () => pm.expect(res.data.sessionToken).to.be.a('string'));",
+                  "  console.log('✅ Token saved:', res.data.sessionToken.substring(0, 20) + '...');",
+                  "} else {",
+                  "  pm.test('Login failed - check credentials', () => pm.expect(pm.response.code).to.equal(200));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticate existing user with email and password.\n\n**Returns:** sessionToken + refreshToken (auto-saved to collection variables)"
+          }
+        },
+        {
+          "name": "Google Sign-In",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"GOOGLE_ID_TOKEN_FROM_SDK\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google"]
+            },
+            "description": "Authenticate with Google OAuth (Auto Login OR Register).\n\n**Note:** Replace `idToken` with a real token obtained from the Google Sign-In SDK."
+          }
+        },
+        {
+          "name": "Apple Sign-In",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"APPLE_ID_TOKEN_FROM_SDK\",\n  \"authorizationCode\": \"OPTIONAL_AUTH_CODE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/apple",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "apple"]
+            },
+            "description": "Authenticate with Apple Sign-In (Auto Login OR Register).\n\n**Note:** Replace `idToken` with a real token obtained from the Apple Sign-In SDK."
+          }
+        },
+        {
+          "name": "Get Linked Providers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "providers"]
+            },
+            "description": "Get all authentication methods (email, google, apple) linked to the user's account."
+          }
+        },
+        {
+          "name": "Unlink Provider",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/providers/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "providers", "google"]
+            },
+            "description": "Remove an authentication provider from the account.\n\n**URL Param:** Replace `google` with `apple` or `email` as needed.\n\n**Warning:** You must have at least one other provider linked before unlinking."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('token', res.data.sessionToken);",
+                  "  pm.test('Token refreshed', () => pm.expect(res.success).to.be.true);",
+                  "  console.log('✅ New token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["refresh"]
+            },
+            "description": "Get a new session token using the refresh token.\n\n**Auto-saves** the new token to the `token` collection variable."
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('token', '');",
+                  "  pm.test('Logged out successfully', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "  console.log('✅ Token cleared from collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["logout"]
+            },
+            "description": "Logout from the current session and invalidate the session token."
+          }
+        },
+        {
+          "name": "Logout All Devices",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('token', '');",
+                  "  pm.collectionVariables.set('refreshToken', '');",
+                  "  pm.test('Logged out from all devices', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logout-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["logout-all"]
+            },
+            "description": "Logout from ALL active sessions across all devices. Revokes all session tokens."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Profile",
+      "item": [
+        {
+          "name": "Get Personal Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/profile/personal-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile", "personal-info"]
+            },
+            "description": "Get the authenticated user's personal information (name, email, gender, address, photo)."
+          }
+        },
+        {
+          "name": "Update Personal Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"gender\": \"male\",\n  \"address\": \"123 Main St, Cairo, Egypt\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/profile/personal-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile", "personal-info"]
+            },
+            "description": "Update personal information.\n\n**gender values:** `male` | `female` | `other`\n\n**fullName:** 2–100 characters (required)\n\n**address:** Max 500 characters (optional)"
+          }
+        },
+        {
+          "name": "Get Emergency Contacts (Profile)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/profile/emergency-contacts",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile", "emergency-contacts"]
+            },
+            "description": "Get the primary and secondary emergency contacts stored in the user profile."
+          }
+        },
+        {
+          "name": "Update Emergency Contacts (Profile)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primaryContact\": {\n    \"fullName\": \"Jane Doe\",\n    \"phoneNumber\": \"+201234567890\",\n    \"relationship\": \"Spouse\"\n  },\n  \"secondaryContact\": {\n    \"fullName\": \"Bob Smith\",\n    \"phoneNumber\": \"+201234567891\",\n    \"relationship\": \"Friend\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/profile/emergency-contacts",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile", "emergency-contacts"]
+            },
+            "description": "Update emergency contacts in the user profile.\n\n**relationship values:** `Father` | `Mother` | `Friend` | `Sister` | `Brother` | `Spouse` | `Other`\n\n**secondaryContact** is optional."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏥 Medical Information",
+      "item": [
+        {
+          "name": "Create Medical Info",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"personalInfo\": {\n    \"name\": \"John Doe\",\n    \"gender\": \"male\",\n    \"address\": \"123 Main St, Cairo\"\n  },\n  \"emergencyContact\": {\n    \"primary\": {\n      \"fullName\": \"Jane Doe\",\n      \"phoneNumber\": \"+201234567890\",\n      \"relationship\": \"Spouse\"\n    },\n    \"secondary\": [\n      {\n        \"fullName\": \"Bob Smith\",\n        \"phoneNumber\": \"+201234567891\",\n        \"relationship\": \"Friend\"\n      }\n    ]\n  },\n  \"medicalProfile\": {\n    \"bloodType\": \"A+\",\n    \"medicalConditions\": [\"Diabetes\", \"Hypertension\"]\n  },\n  \"allergies\": [\n    {\n      \"allergyType\": \"Peanuts\",\n      \"severity\": \"High\",\n      \"notes\": \"Anaphylaxis risk\"\n    }\n  ],\n  \"medications\": [\n    {\n      \"medicationName\": \"Insulin\",\n      \"dosage\": \"10 units\",\n      \"schedule\": \"Daily\",\n      \"notes\": \"Before meals\"\n    }\n  ],\n  \"surgeries\": [\n    {\n      \"surgeryName\": \"Appendectomy\",\n      \"surgeryDate\": \"2020-01-15\",\n      \"notes\": \"No complications\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical"]
+            },
+            "description": "Create the user's full medical information record.\n\n**bloodType values:** `A+` `A-` `B+` `B-` `AB+` `AB-` `O+` `O-`\n\n**severity values:** `Low` | `Medium` | `High`\n\n**Returns 201** on successful creation."
+          }
+        },
+        {
+          "name": "Get Medical Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/medical",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical"]
+            },
+            "description": "Get the user's complete medical information record."
+          }
+        },
+        {
+          "name": "Update Medical Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"personalInfo\": {\n    \"name\": \"John Doe\",\n    \"gender\": \"male\",\n    \"address\": \"456 New Street, Cairo\"\n  },\n  \"medicalProfile\": {\n    \"bloodType\": \"O+\",\n    \"medicalConditions\": [\"Diabetes\"]\n  },\n  \"allergies\": [\n    {\n      \"allergyType\": \"Shellfish\",\n      \"severity\": \"Medium\",\n      \"notes\": \"Mild reaction\"\n    }\n  ],\n  \"medications\": [\n    {\n      \"medicationName\": \"Metformin\",\n      \"dosage\": \"500mg\",\n      \"schedule\": \"Twice daily\",\n      \"notes\": \"With food\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical"]
+            },
+            "description": "Update the user's medical information. All fields are optional — only send what needs to be updated."
+          }
+        },
+        {
+          "name": "Get Medical Profile Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/medical/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical", "profile"]
+            },
+            "description": "Get the complete medical profile for dashboard display including quick stats, section completion status, and profile completion percentage."
+          }
+        },
+        {
+          "name": "Update General Info Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"gender\": \"male\",\n  \"address\": \"123 Main St, Cairo\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical/profile/general-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical", "profile", "general-info"]
+            },
+            "description": "Update only the general info section of the medical profile."
+          }
+        },
+        {
+          "name": "Update Emergency Contact Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primary\": {\n    \"fullName\": \"Jane Doe\",\n    \"phoneNumber\": \"+201234567890\",\n    \"relationship\": \"Spouse\"\n  },\n  \"secondary\": [\n    {\n      \"fullName\": \"Bob Smith\",\n      \"phoneNumber\": \"+201234567891\",\n      \"relationship\": \"Friend\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical/profile/emergency-contact",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical", "profile", "emergency-contact"]
+            },
+            "description": "Update only the emergency contact section of the medical profile."
+          }
+        },
+        {
+          "name": "Update Medical Profile Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bloodType\": \"A+\",\n  \"medicalConditions\": [\"Diabetes\", \"Hypertension\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical/profile/medical-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical", "profile", "medical-profile"]
+            },
+            "description": "Update only the medical profile section (blood type, conditions)."
+          }
+        },
+        {
+          "name": "Update Allergies Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allergies\": [\n    {\n      \"allergyType\": \"Peanuts\",\n      \"severity\": \"High\",\n      \"notes\": \"Anaphylaxis risk\"\n    },\n    {\n      \"allergyType\": \"Shellfish\",\n      \"severity\": \"Medium\",\n      \"notes\": \"Mild reaction\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical/profile/allergies",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical", "profile", "allergies"]
+            },
+            "description": "Update only the allergies section of the medical profile.\n\n**severity:** `Low` | `Medium` | `High`"
+          }
+        },
+        {
+          "name": "Update Medications Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medications\": [\n    {\n      \"medicationName\": \"Insulin\",\n      \"dosage\": \"10 units\",\n      \"schedule\": \"Daily\",\n      \"notes\": \"Before meals\"\n    },\n    {\n      \"medicationName\": \"Metformin\",\n      \"dosage\": \"500mg\",\n      \"schedule\": \"Twice daily\",\n      \"notes\": \"With food\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical/profile/medications",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical", "profile", "medications"]
+            },
+            "description": "Update only the medications section of the medical profile."
+          }
+        },
+        {
+          "name": "Update Surgeries Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"surgeries\": [\n    {\n      \"surgeryName\": \"Appendectomy\",\n      \"surgeryDate\": \"2020-01-15\",\n      \"notes\": \"No complications\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical/profile/surgeries",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical", "profile", "surgeries"]
+            },
+            "description": "Update only the surgeries section of the medical profile."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚨 Emergency Contacts",
+      "item": [
+        {
+          "name": "Add Emergency Contact",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  if (res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('contactId', res.data.id);",
+                  "    console.log('✅ contactId saved:', res.data.id);",
+                  "  }",
+                  "  pm.test('Contact created', () => pm.expect(res.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ContactName\": \"Jane Doe\",\n  \"Relation\": \"Spouse\",\n  \"PhoneNumber\": \"+201234567890\",\n  \"SecondaryPhone\": \"+201234567891\",\n  \"Email\": \"jane@example.com\",\n  \"IsPrimary\": true,\n  \"Priority\": 1,\n  \"Notes\": \"Primary emergency contact\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/emergency/contact",
+              "host": ["{{baseUrl}}"],
+              "path": ["emergency", "contact"]
+            },
+            "description": "Add a new emergency contact.\n\n**ContactName:** 2–100 chars (required)\n\n**PhoneNumber:** E.164 format, 10–15 digits (required)\n\n**Relation:** Max 50 chars (optional)\n\n**IsPrimary:** true/false (optional)\n\n**Auto-saves** the contact ID to `{{contactId}}`."
+          }
+        },
+        {
+          "name": "Get All Emergency Contacts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/emergency/contacts",
+              "host": ["{{baseUrl}}"],
+              "path": ["emergency", "contacts"]
+            },
+            "description": "Get all emergency contacts for the authenticated user."
+          }
+        },
+        {
+          "name": "Update Emergency Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ContactName\": \"Jane Doe Updated\",\n  \"Relation\": \"Wife\",\n  \"PhoneNumber\": \"+201234567890\",\n  \"SecondaryPhone\": \"+201234567899\",\n  \"Email\": \"jane.updated@example.com\",\n  \"IsPrimary\": true,\n  \"Priority\": 1,\n  \"Notes\": \"Updated contact info\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/emergency/contact/{{contactId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["emergency", "contact", "{{contactId}}"]
+            },
+            "description": "Update an existing emergency contact by ID.\n\nMake sure `{{contactId}}` is set (auto-set when creating a contact, or manually set it)."
+          }
+        },
+        {
+          "name": "Delete Emergency Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/emergency/contact/{{contactId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["emergency", "contact", "{{contactId}}"]
+            },
+            "description": "Delete an emergency contact by ID.\n\nMake sure `{{contactId}}` is set (auto-set when creating a contact, or manually set it)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👨‍👩‍👧 Family Management",
+      "item": [
+        {
+          "name": "Get Family Profiles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/family",
+              "host": ["{{baseUrl}}"],
+              "path": ["family"]
+            },
+            "description": "Get all family members including the user's own profile (Main profile + Dependent profiles)."
+          }
+        },
+        {
+          "name": "Add Family Member",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  if (res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('familyMemberId', res.data.id);",
+                  "    console.log('✅ familyMemberId saved:', res.data.id);",
+                  "  }",
+                  "  pm.test('Family member added', () => pm.expect(res.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Name\": \"Child Name\",\n  \"Relation\": \"Son\",\n  \"DateOfBirth\": \"2020-01-15\",\n  \"IsChild\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/family",
+              "host": ["{{baseUrl}}"],
+              "path": ["family"]
+            },
+            "description": "Add a new dependent family member.\n\n**Relation values:** `Spouse` | `Son` | `Daughter` | `Parent` | `Sibling` | `Other`\n\n**DateOfBirth:** ISO 8601 format (YYYY-MM-DD)\n\n**Auto-saves** the member ID to `{{familyMemberId}}`."
+          }
+        },
+        {
+          "name": "Update Family Member",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Name\": \"Updated Child Name\",\n  \"Relation\": \"Daughter\",\n  \"DateOfBirth\": \"2020-03-20\",\n  \"IsChild\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/family/{{familyMemberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["family", "{{familyMemberId}}"]
+            },
+            "description": "Update a family member's information by ID.\n\nMake sure `{{familyMemberId}}` is set (auto-set when adding a member, or manually set it)."
+          }
+        },
+        {
+          "name": "Delete Family Member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/family/{{familyMemberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["family", "{{familyMemberId}}"]
+            },
+            "description": "Delete a family member by ID.\n\nMake sure `{{familyMemberId}}` is set (auto-set when adding a member, or manually set it)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "⌚ Wristband Management",
+      "item": [
+        {
+          "name": "Register Wristband",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  if (res.data && res.data.id) {",
+                  "    pm.collectionVariables.set('wristbandId', res.data.id);",
+                  "    console.log('✅ wristbandId saved:', res.data.id);",
+                  "  }",
+                  "  pm.test('Wristband registered', () => pm.expect(res.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrCode\": \"QR123456789\",\n  \"nfcTag\": \"NFC-ABC-123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wristband/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["wristband", "register"]
+            },
+            "description": "Register a new wristband to the user's account.\n\n**Note:** Provide at least one of `qrCode` or `nfcTag` (both are optional but at least one is required).\n\n**Auto-saves** the wristband ID to `{{wristbandId}}`."
+          }
+        },
+        {
+          "name": "Get All Wristbands",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wristband/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["wristband", "list"]
+            },
+            "description": "Get all wristbands registered to the authenticated user, including their status and activation date."
+          }
+        },
+        {
+          "name": "Activate Wristband",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wristbandId\": \"{{wristbandId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wristband/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["wristband", "activate"]
+            },
+            "description": "Activate a registered wristband.\n\nUses `{{wristbandId}}` from collection variables (auto-set on registration)."
+          }
+        },
+        {
+          "name": "Revoke Wristband",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wristbandId\": \"{{wristbandId}}\",\n  \"reason\": \"Lost wristband\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wristband/revoke",
+              "host": ["{{baseUrl}}"],
+              "path": ["wristband", "revoke"]
+            },
+            "description": "Revoke (deactivate) a wristband.\n\nUses `{{wristbandId}}` from collection variables.\n\n**reason:** Free text explaining why the wristband is being revoked."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📷 Scan Operations",
+      "item": [
+        {
+          "name": "Scan QR Code (Public - No Auth)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrCode\": \"QR123456789\",\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357,\n  \"location\": \"Cairo, Egypt\",\n  \"scannerType\": \"emergency\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/scan/qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["scan", "qr"]
+            },
+            "description": "Scan a QR code to get emergency medical information. **No authentication required** — this endpoint is public for emergency responders.\n\n**scannerType values:** `emergency` | `hospital` | `public` | `personal`\n\n**Returns:** User info, blood type, allergies, medications, and emergency contacts."
+          }
+        },
+        {
+          "name": "Scan NFC Tag (Public - No Auth)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nfcTag\": \"NFC-ABC-123\",\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357,\n  \"scannerType\": \"hospital\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/scan/nfc",
+              "host": ["{{baseUrl}}"],
+              "path": ["scan", "nfc"]
+            },
+            "description": "Scan an NFC tag to get emergency medical information. **No authentication required** — this endpoint is public for emergency responders.\n\n**scannerType values:** `emergency` | `hospital` | `public` | `personal`"
+          }
+        },
+        {
+          "name": "Get Scan History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/scan/history?limit=50&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["scan", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of results per page (default: 50)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                }
+              ]
+            },
+            "description": "Get the scan history for the authenticated user (when their wristband was scanned).\n\n**Requires authentication.**\n\n**Query params:**\n- `limit` — results per page (default: 50)\n- `page` — page number (default: 1)"
+          }
+        }
+      ]
+    }
+  ]
+}

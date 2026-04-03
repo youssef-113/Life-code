@@ -152,7 +152,6 @@ app.get('/', (req, res) => {
       },
       medicalProfile: {
         getDashboard: 'GET /api/app/medical/profile',
-        updateGeneralInfo: 'PUT /api/app/medical/general-info',
         updateConditions: 'PUT /api/app/medical/conditions',
         updateAllergies: 'PUT /api/app/medical/allergies',
         updateMedications: 'PUT /api/app/medical/medications',
@@ -161,6 +160,7 @@ app.get('/', (req, res) => {
       },
       emergencyContacts: {
         addContact: 'POST /api/app/emergency/contact',
+        addMultipleContacts: 'POST /api/app/emergency/contacts/bulk',
         getContacts: 'GET /api/app/emergency/contacts',
         getContact: 'GET /api/app/emergency/contact/:id',
         updateContact: 'PUT /api/app/emergency/contact/:id',
@@ -168,10 +168,14 @@ app.get('/', (req, res) => {
         setPrimary: 'PUT /api/app/emergency/contact/:id/primary'
       },
       wristband: {
-        register: 'POST /api/app/wristband/register',
+        register: 'POST /api/app/wristband/register (one active band per user)',
         activate: 'POST /api/app/wristband/activate',
         revoke: 'POST /api/app/wristband/revoke',
-        list: 'GET /api/app/wristband/list'
+        list: 'GET /api/app/wristband/list',
+        getPrimary: 'GET /api/app/wristband/primary',
+        setPrimary: 'PUT /api/app/wristband/:wristbandId/primary',
+        getFull: 'GET /api/app/wristband/:wristbandId/full',
+        resolveUser: 'POST /api/app/wristband/resolve-user'
       },
       scan: {
         scanQR: 'POST /api/app/scan/qr (public)',
@@ -181,6 +185,9 @@ app.get('/', (req, res) => {
       userAccount: {
         changePassword: 'POST /api/app/user/password',
         uploadPhoto: 'POST /api/app/user/photo',
+        getPhoto: 'GET /api/app/user/photo',
+        getPhotoByUserId: 'GET /api/app/user/:userId/photo',
+        deletePhoto: 'DELETE /api/app/user/photo',
         deleteAccount: 'DELETE /api/app/user/account',
         updatePreferences: 'PUT /api/app/user/preferences',
         getPreferences: 'GET /api/app/user/preferences',

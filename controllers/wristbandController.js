@@ -198,9 +198,185 @@ const getWristbands = async (req, res) => {
   }
 };
 
+/**
+ * Get primary wristband for user
+ * @route GET /api/app/wristband/primary
+ * @access Private
+ */
+const getPrimaryWristband = async (req, res) => {
+  try {
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const result = await wristbandService.getPrimaryWristband(userID);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Get primary wristband controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
+/**
+ * Set a wristband as primary
+ * @route PUT /api/app/wristband/:wristbandId/primary
+ * @access Private
+ */
+const setPrimaryWristband = async (req, res) => {
+  try {
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const { wristbandId } = req.params;
+    if (!wristbandId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'wristbandId is required',
+        code: 400
+      });
+    }
+
+    const result = await wristbandService.setPrimaryWristband(userID, wristbandId);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Set primary wristband controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
+/**
+ * Get wristband by ID with user info
+ * @route GET /api/app/wristband/:wristbandId/full
+ * @access Private
+ */
+const getWristbandWithUser = async (req, res) => {
+  try {
+    const userID = req.user?.userID;
+    if (!userID) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+        code: 401
+      });
+    }
+
+    const { wristbandId } = req.params;
+    if (!wristbandId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'wristbandId is required',
+        code: 400
+      });
+    }
+
+    const result = await wristbandService.getWristbandWithUser(wristbandId);
+
+    // Verify ownership
+    if (result.success && result.data?.wristband?.UserID !== userID) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'You do not have permission to access this wristband',
+        code: 403
+      });
+    }
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Get wristband with user controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
+/**
+ * Get user ID from QR/NFC identifier
+ * @route POST /api/app/wristband/resolve-user
+ * @access Private
+ */
+const getUserIdFromBand = async (req, res) => {
+  try {
+    const { identifier, type } = req.body;
+
+    if (!identifier) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'identifier is required',
+        code: 400
+      });
+    }
+
+    if (!type || !['qr', 'nfc'].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'type must be either "qr" or "nfc"',
+        code: 400
+      });
+    }
+
+    const result = await wristbandService.getUserIdFromBand(identifier, type);
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Get user ID from band controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
 module.exports = {
   registerWristband,
   activateWristband,
   revokeWristband,
-  getWristbands
+  getWristbands,
+  getPrimaryWristband,
+  setPrimaryWristband,
+  getWristbandWithUser,
+  getUserIdFromBand
 };

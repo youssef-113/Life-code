@@ -90,6 +90,12 @@ class ScanService {
         success: true,
         message: 'Scan successful',
         data: {
+          userID: userID,
+          wristband: {
+            id: wristbandData.id,
+            serialNumber: wristbandData.SerialNumber,
+            isPrimary: wristbandData.IsPrimary || false
+          },
           user,
           medical,
           emergencyContacts,
@@ -193,6 +199,12 @@ class ScanService {
         success: true,
         message: 'Scan successful',
         data: {
+          userID: userID,
+          wristband: {
+            id: wristbandData.id,
+            serialNumber: wristbandData.SerialNumber,
+            isPrimary: wristbandData.IsPrimary || false
+          },
           user,
           medical,
           emergencyContacts,

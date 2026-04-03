@@ -351,6 +351,128 @@ class EmergencyContactService {
   }
 
   /**
+   * Add multiple emergency contacts at once
+   * @param {string} userID - User ID
+   * @param {Array} contacts - Array of contact objects
+   * @returns {Object} - Created contacts data
+   */
+  async addMultipleContacts(userID, contacts) {
+    const db = getFirestore();
+
+    try {
+      // Verify user exists
+      const userResult = await authService.getUserById(userID);
+      if (!userResult.exists) {
+        return {
+          success: false,
+          error: 'Not Found',
+          message: 'User not found',
+          code: 404
+        };
+      }
+
+      if (!Array.isArray(contacts) || contacts.length === 0) {
+        return {
+          success: false,
+          error: 'Validation Error',
+          message: 'Contacts must be a non-empty array',
+          code: 400
+        };
+      }
+
+      // Get existing contacts to determine priority
+      const existingContacts = await db.collection('EmergencyContacts')
+        .where('UserID', '==', userID)
+        .get();
+      let basePriority = existingContacts.size + 1;
+
+      // Check if any existing primary contact exists
+      const existingPrimary = existingContacts.docs.find(doc => doc.data().IsPrimary === true);
+      const hasExistingPrimary = !!existingPrimary;
+
+      const batch = db.batch();
+      const createdContacts = [];
+      const errors = [];
+
+      for (let i = 0; i < contacts.length; i++) {
+        const contact = contacts[i];
+        const { ContactName, Relation, PhoneNumber, SecondaryPhone, Email, IsPrimary, Priority, Notes } = contact;
+
+        // Validate required fields
+        if (!ContactName || !PhoneNumber) {
+          errors.push({
+            index: i,
+            error: 'ContactName and PhoneNumber are required'
+          });
+          continue;
+        }
+
+        // Determine if this should be primary
+        // First contact is primary if no existing primary, unless explicitly set
+        let shouldBePrimary = IsPrimary === true;
+        if (!hasExistingPrimary && i === 0 && IsPrimary !== false) {
+          shouldBePrimary = true;
+        }
+
+        // Create contact document
+        const contactDoc = {
+          UserID: userID,
+          ContactName: ContactName,
+          Relation: Relation || '',
+          PhoneNumber: PhoneNumber,
+          SecondaryPhone: SecondaryPhone || null,
+          Email: Email || null,
+          IsPrimary: shouldBePrimary,
+          Priority: Priority !== undefined ? Priority : basePriority + i,
+          Notes: Notes || '',
+          CreatedAt: new Date(),
+          UpdatedAt: new Date()
+        };
+
+        const docRef = db.collection('EmergencyContacts').doc();
+        batch.set(docRef, contactDoc);
+
+        createdContacts.push({
+          id: docRef.id,
+          ...contactDoc
+        });
+      }
+
+      // If any new contact is primary, unset existing primary
+      const hasNewPrimary = createdContacts.some(c => c.IsPrimary === true);
+      if (hasNewPrimary && existingPrimary) {
+        batch.update(existingPrimary.ref, { IsPrimary: false, UpdatedAt: new Date() });
+      }
+
+      await batch.commit();
+
+      // Log security event
+      await authService.logSecurityEvent(userID, 'EMERGENCY_CONTACTS_ADDED_BULK', {
+        count: createdContacts.length,
+        contactNames: createdContacts.map(c => c.ContactName)
+      });
+
+      return {
+        success: true,
+        message: `${createdContacts.length} emergency contact(s) added successfully`,
+        data: {
+          contacts: createdContacts,
+          count: createdContacts.length,
+          errors: errors.length > 0 ? errors : undefined
+        }
+      };
+    } catch (error) {
+      console.error('Add multiple emergency contacts error:', error);
+      return {
+        success: false,
+        error: 'Server Error',
+        message: error.message,
+        code: 500
+      };
+    }
+  }
+
+  /**
    * Set a contact as the primary emergency contact
    * @param {string} userID - User ID
    * @param {string} contactId - Contact document ID

@@ -7,7 +7,10 @@ const {
   deleteAccount,
   updatePreferences,
   getPreferences,
-  getCompleteProfile
+  getCompleteProfile,
+  getPhoto,
+  getPhotoByUserId,
+  deletePhoto
 } = require('../controllers/userAccountController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
@@ -47,6 +50,27 @@ router.post('/user/photo', [
     .isURL()
     .withMessage('Photo URL must be a valid URL')
 ], uploadPhoto);
+
+/**
+ * @route GET /api/app/user/photo
+ * @description Get authenticated user's photo
+ * @access Private
+ */
+router.get('/user/photo', authenticateToken, getPhoto);
+
+/**
+ * @route GET /api/app/user/:userId/photo
+ * @description Get another user's photo by userID
+ * @access Private
+ */
+router.get('/user/:userId/photo', authenticateToken, getPhotoByUserId);
+
+/**
+ * @route DELETE /api/app/user/photo
+ * @description Delete user's photo
+ * @access Private
+ */
+router.delete('/user/photo', authenticateToken, deletePhoto);
 
 /**
  * @route DELETE /api/app/user/account
