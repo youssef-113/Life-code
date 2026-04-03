@@ -232,18 +232,25 @@ const getActiveSessions = async (req, res) => {
     const db = require('../config/firebase').getFirestore();
     
     const sessionsRef = db.collection('UserSessions');
+    // Remove orderBy to avoid composite index requirement, sort in memory instead
     const sessionsQuery = await sessionsRef
       .where('UserID', '==', userID)
       .where('IsActive', '==', true)
-      .orderBy('LastUsed', 'desc')
       .get();
 
-    const sessions = sessionsQuery.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      SessionToken: undefined, // Don't expose tokens
-      RefreshToken: undefined
-    }));
+    // Sort in memory to avoid composite index requirement
+    const sessions = sessionsQuery.docs
+      .sort((a, b) => {
+        const aTime = a.data().LastUsed?.toDate?.() || new Date(a.data().LastUsed || 0);
+        const bTime = b.data().LastUsed?.toDate?.() || new Date(b.data().LastUsed || 0);
+        return bTime - aTime; // Descending order
+      })
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        SessionToken: undefined, // Don't expose tokens
+        RefreshToken: undefined
+      }));
 
     return res.status(200).json({
       success: true,

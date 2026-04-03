@@ -127,22 +127,57 @@ const updateEmergencyContacts = async (req, res) => {
       });
     }
 
-    const { primaryContact, secondaryContact } = req.body;
+    // Support both old format (primaryContact, secondaryContact) and new format (contacts array)
+    const { primaryContact, secondaryContact, contacts } = req.body;
 
-    // Validate primary contact
-    if (!primaryContact || !primaryContact.fullName || !primaryContact.phoneNumber || !primaryContact.relationship) {
+    // Validate that we have at least one contact
+    if (!contacts && !primaryContact) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
-        message: 'Primary contact full name, phone number, and relationship are required',
+        message: 'At least one emergency contact is required',
         code: 400
       });
     }
 
+    // If contacts array is provided, use it (new format)
+    // Otherwise, convert primary/secondary to array (backward compatibility)
+    let contactsArray = contacts;
+    if (!contactsArray && (primaryContact || secondaryContact)) {
+      contactsArray = [];
+      if (primaryContact) {
+        contactsArray.push({ ...primaryContact, isPrimary: true });
+      }
+      if (secondaryContact) {
+        contactsArray.push({ ...secondaryContact, isPrimary: false });
+      }
+    }
+
+    // Validate contacts array
+    if (!Array.isArray(contactsArray) || contactsArray.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Contacts must be a non-empty array',
+        code: 400
+      });
+    }
+
+    // Validate each contact has required fields
+    for (const contact of contactsArray) {
+      if (!contact.fullName || !contact.phoneNumber || !contact.relationship) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation Error',
+          message: 'Each contact must have fullName, phoneNumber, and relationship',
+          code: 400
+        });
+      }
+    }
+
     // Update emergency contacts
     const result = await userProfileService.updateEmergencyContacts(userID, {
-      primaryContact,
-      secondaryContact
+      contacts: contactsArray
     });
 
     const statusCode = result.success ? 200 : result.code || 500;

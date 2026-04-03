@@ -126,10 +126,10 @@ class UserProfileService {
   /**
    * Update user emergency contacts
    * @param {string} userID - User ID
-   * @param {Object} contacts - Emergency contacts data
+   * @param {Object} data - Emergency contacts data with contacts array
    * @returns {Object} - Update result
    */
-  async updateEmergencyContacts(userID, contacts) {
+  async updateEmergencyContacts(userID, data) {
     const db = getFirestore();
     
     try {
@@ -144,62 +144,65 @@ class UserProfileService {
         };
       }
 
-      const { primaryContact, secondaryContact } = contacts;
+      const { contacts } = data;
 
-      // Prepare emergency contacts data
-      const emergencyContactsData = {
-        PrimaryContact: {
-          FullName: primaryContact.fullName,
-          PhoneNumber: primaryContact.phoneNumber,
-          Relationship: primaryContact.relationship,
-          UpdatedAt: new Date()
-        }
-      };
-
-      // Add secondary contact if provided
-      if (secondaryContact && secondaryContact.fullName && secondaryContact.phoneNumber) {
-        emergencyContactsData.SecondaryContact = {
-          FullName: secondaryContact.fullName,
-          PhoneNumber: secondaryContact.phoneNumber,
-          Relationship: secondaryContact.relationship || 'Other',
-          UpdatedAt: new Date()
+      // Validate contacts array
+      if (!Array.isArray(contacts) || contacts.length === 0) {
+        return {
+          success: false,
+          error: 'Validation Error',
+          message: 'Contacts must be a non-empty array',
+          code: 400
         };
       }
 
-      // Store in separate collection for better structure
+      // Transform contacts to Firestore format with IDs
+      const contactsArray = contacts.map((contact, index) => ({
+        id: contact.id || `contact_${index}`,
+        FullName: contact.fullName,
+        PhoneNumber: contact.phoneNumber,
+        SecondaryPhone: contact.secondaryPhone || '',
+        Relationship: contact.relationship,
+        IsPrimary: contact.isPrimary || index === 0, // First contact is primary by default
+        UpdatedAt: new Date()
+      }));
+
+      // Store in UserProfiles collection
       await db.collection('UserProfiles').doc(userID).set({
         UserID: userID,
-        EmergencyContacts: emergencyContactsData,
+        EmergencyContacts: {
+          contacts: contactsArray,
+          count: contactsArray.length
+        },
         UpdatedAt: new Date()
       }, { merge: true });
 
       // Log security event for profile update
       await authService.logSecurityEvent(userID, 'EMERGENCY_CONTACTS_UPDATED', {
-        hasSecondaryContact: !!secondaryContact
+        contactCount: contactsArray.length,
+        primaryContactName: contactsArray.find(c => c.IsPrimary)?.FullName
       });
 
-      // Prepare response data
-      const responseData = {
-        userID,
-        primaryContact: {
-          fullName: emergencyContactsData.PrimaryContact.FullName,
-          phoneNumber: emergencyContactsData.PrimaryContact.PhoneNumber,
-          relationship: emergencyContactsData.PrimaryContact.Relationship,
-          updatedAt: emergencyContactsData.PrimaryContact.UpdatedAt
-        },
-        secondaryContact: emergencyContactsData.SecondaryContact ? {
-          fullName: emergencyContactsData.SecondaryContact.FullName,
-          phoneNumber: emergencyContactsData.SecondaryContact.PhoneNumber,
-          relationship: emergencyContactsData.SecondaryContact.Relationship,
-          updatedAt: emergencyContactsData.SecondaryContact.UpdatedAt
-        } : null,
-        updatedAt: new Date()
-      };
+      // Prepare response data - return all contacts
+      const responseContacts = contactsArray.map(contact => ({
+        id: contact.id,
+        fullName: contact.FullName,
+        phoneNumber: contact.PhoneNumber,
+        secondaryPhone: contact.SecondaryPhone,
+        relationship: contact.Relationship,
+        isPrimary: contact.IsPrimary,
+        updatedAt: contact.UpdatedAt
+      }));
 
       return {
         success: true,
         message: 'Emergency contacts updated successfully',
-        data: responseData
+        data: {
+          userID,
+          contacts: responseContacts,
+          count: responseContacts.length,
+          updatedAt: new Date()
+        }
       };
     } catch (error) {
       console.error('Update emergency contacts error:', error);
@@ -229,34 +232,60 @@ class UserProfileService {
           success: true,
           data: {
             userID,
-            primaryContact: null,
-            secondaryContact: null
+            contacts: [],
+            count: 0
           }
         };
       }
 
       const profileData = profileDoc.data();
-      const contacts = profileData.EmergencyContacts || {};
-
-      // Transform to camelCase format (same as input)
-      const primaryContact = contacts.PrimaryContact ? {
-        fullName: contacts.PrimaryContact.FullName,
-        phoneNumber: contacts.PrimaryContact.PhoneNumber,
-        relationship: contacts.PrimaryContact.Relationship
-      } : null;
-
-      const secondaryContact = contacts.SecondaryContact ? {
-        fullName: contacts.SecondaryContact.FullName,
-        phoneNumber: contacts.SecondaryContact.PhoneNumber,
-        relationship: contacts.SecondaryContact.Relationship
-      } : null;
+      const emergencyContacts = profileData.EmergencyContacts || {};
+      
+      // Support new format (contacts array) and old format (primary/secondary)
+      let contactsArray = [];
+      
+      if (emergencyContacts.contacts && Array.isArray(emergencyContacts.contacts)) {
+        // New format - contacts array
+        contactsArray = emergencyContacts.contacts.map(contact => ({
+          id: contact.id,
+          fullName: contact.FullName,
+          phoneNumber: contact.PhoneNumber,
+          secondaryPhone: contact.SecondaryPhone || '',
+          relationship: contact.Relationship,
+          isPrimary: contact.IsPrimary,
+          updatedAt: contact.UpdatedAt
+        }));
+      } else if (emergencyContacts.PrimaryContact) {
+        // Old format - convert to array
+        contactsArray.push({
+          id: 'contact_0',
+          fullName: emergencyContacts.PrimaryContact.FullName,
+          phoneNumber: emergencyContacts.PrimaryContact.PhoneNumber,
+          secondaryPhone: emergencyContacts.PrimaryContact.SecondaryPhone || '',
+          relationship: emergencyContacts.PrimaryContact.Relationship,
+          isPrimary: true,
+          updatedAt: emergencyContacts.PrimaryContact.UpdatedAt
+        });
+        
+        if (emergencyContacts.SecondaryContact) {
+          contactsArray.push({
+            id: 'contact_1',
+            fullName: emergencyContacts.SecondaryContact.FullName,
+            phoneNumber: emergencyContacts.SecondaryContact.PhoneNumber,
+            secondaryPhone: emergencyContacts.SecondaryContact.SecondaryPhone || '',
+            relationship: emergencyContacts.SecondaryContact.Relationship,
+            isPrimary: false,
+            updatedAt: emergencyContacts.SecondaryContact.UpdatedAt
+          });
+        }
+      }
 
       return {
         success: true,
         data: {
           userID,
-          primaryContact,
-          secondaryContact
+          contacts: contactsArray,
+          count: contactsArray.length
         }
       };
     } catch (error) {
