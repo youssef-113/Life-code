@@ -54,6 +54,12 @@ const getFirestore = () => {
   return admin.firestore();
 };
 
+// Get Firebase Storage instance
+const getStorage = () => {
+  initializeFirebase();
+  return admin.storage();
+};
+
 // Get Firebase Auth instance
 const getAuth = () => {
   initializeFirebase();
@@ -123,6 +129,7 @@ const getUserByUid = async (uid) => {
 module.exports = {
   initializeFirebase,
   getFirestore,
+  getStorage,
   getAuth,
   verifyIdToken,
   createCustomToken,

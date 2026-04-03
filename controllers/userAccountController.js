@@ -76,19 +76,33 @@ const uploadPhoto = async (req, res) => {
       });
     }
 
-    const { photo, photoURL } = req.body;
-    const photoData = photo || photoURL;
+    // Handle file upload from multipart/form-data (multer)
+    if (req.file) {
+      // File uploaded via multer middleware
+      const result = await userAccountService.uploadPhoto(
+        userID,
+        req.file.buffer,
+        req.file.mimetype,
+        null
+      );
 
-    if (!photoData) {
+      const statusCode = result.success ? 200 : result.code || 500;
+      return res.status(statusCode).json(result);
+    }
+
+    // Handle photoURL from JSON body (client pre-uploaded to Storage)
+    const { photoURL } = req.body;
+
+    if (!photoURL) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
-        message: 'Photo data (base64 or URL) is required',
+        message: 'Photo file or photoURL is required',
         code: 400
       });
     }
 
-    const result = await userAccountService.uploadPhoto(userID, photoData);
+    const result = await userAccountService.uploadPhoto(userID, null, null, photoURL);
 
     const statusCode = result.success ? 200 : result.code || 500;
     return res.status(statusCode).json(result);

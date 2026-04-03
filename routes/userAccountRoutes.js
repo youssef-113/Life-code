@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
+const multer = require('multer');
 const {
   changePassword,
   uploadPhoto,
@@ -13,6 +14,22 @@ const {
   deletePhoto
 } = require('../controllers/userAccountController');
 const { authenticateToken } = require('../middleware/authMiddleware');
+
+// Configure multer for memory storage (files stored in buffer)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max file size
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
 
 /**
  * User Account Routes - Password, Photo, Account, Preferences
@@ -36,15 +53,12 @@ router.post('/user/password', [
 
 /**
  * @route POST /api/app/user/photo
- * @description Upload/update profile photo
+ * @description Upload/update profile photo (multipart/form-data with 'photo' field OR JSON with photoURL)
  * @access Private
  */
 router.post('/user/photo', [
   authenticateToken,
-  body('photo')
-    .optional()
-    .notEmpty()
-    .withMessage('Photo data must not be empty'),
+  upload.single('photo'), // Handle file upload from multipart/form-data
   body('photoURL')
     .optional()
     .isURL()

@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { getFirestore, getAuth } = require('../config/firebase');
+const { getFirestore, getAuth, getStorage } = require('../config/firebase');
 const authService = require('./authService');
 const profileCompletionService = require('./profileCompletionService');
 
@@ -90,13 +90,16 @@ class UserAccountService {
   }
 
   /**
-   * Upload/update profile photo
+   * Upload/update profile photo to Firebase Storage
    * @param {string} userID - User ID
-   * @param {string} photoData - Base64 encoded photo or URL
+   * @param {Buffer} fileBuffer - File buffer from multer
+   * @param {string} mimetype - File mime type (e.g., 'image/jpeg')
+   * @param {string} photoURL - Optional: Direct URL if already uploaded
    * @returns {Object} - Result with photo URL
    */
-  async uploadPhoto(userID, photoData) {
+  async uploadPhoto(userID, fileBuffer, mimetype, photoURL = null) {
     const db = getFirestore();
+    const storage = getStorage();
 
     try {
       // Verify user exists
@@ -110,22 +113,50 @@ class UserAccountService {
         };
       }
 
-      // Store the photo URL/data directly in the user document
-      // In production, you'd upload to Firebase Storage first
-      let photoURL = photoData;
+      let finalPhotoURL = photoURL;
       let photoType = 'url';
 
-      // If it's base64 data, store as a data URL 
-      // (In production, upload to Firebase Storage and get download URL)
-      if (photoData && photoData.startsWith('data:image')) {
-        photoURL = photoData; // Store base64 directly for now
-        photoType = 'base64';
+      // If file buffer provided, upload to Firebase Storage
+      if (fileBuffer && mimetype) {
+        const bucket = storage.bucket();
+        const filename = `users/${userID}/profile_${Date.now()}.jpg`;
+        const file = bucket.file(filename);
+
+        // Upload file to Firebase Storage
+        await file.save(fileBuffer, {
+          metadata: {
+            contentType: mimetype,
+            metadata: {
+              userID: userID,
+              uploadedAt: new Date().toISOString()
+            }
+          }
+        });
+
+        // Make file publicly accessible
+        await file.makePublic();
+
+        // Get public URL
+        finalPhotoURL = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+        photoType = 'storage';
+      } else if (photoURL) {
+        // Use provided URL directly
+        finalPhotoURL = photoURL;
+        photoType = 'url';
+      } else {
+        return {
+          success: false,
+          error: 'Validation Error',
+          message: 'Either file buffer or photoURL is required',
+          code: 400
+        };
       }
 
       const uploadedAt = new Date();
 
+      // Update user document with photo URL
       await db.collection('Users').doc(userID).update({
-        PhotoURL: photoURL,
+        PhotoURL: finalPhotoURL,
         PhotoType: photoType,
         PhotoUploadedAt: uploadedAt,
         UpdatedAt: uploadedAt
@@ -139,7 +170,7 @@ class UserAccountService {
         message: 'Photo uploaded successfully',
         data: {
           userID: userID,
-          photoURL: photoURL,
+          photoURL: finalPhotoURL,
           photoType: photoType,
           uploadedAt: uploadedAt
         },
