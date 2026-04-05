@@ -1,5 +1,7 @@
 const bcrypt = require('bcryptjs');
-const { getFirestore, getAuth, getStorage } = require('../config/firebase');
+const { getFirestore, getAuth } = require('../config/firebase');
+const cloudinary = require('../cloudinary');
+const streamifier = require('streamifier');
 const authService = require('./authService');
 const profileCompletionService = require('./profileCompletionService');
 
@@ -90,7 +92,7 @@ class UserAccountService {
   }
 
   /**
-   * Upload/update profile photo to Firebase Storage
+   * Upload/update profile photo to Cloudinary
    * @param {string} userID - User ID
    * @param {Buffer} fileBuffer - File buffer from multer
    * @param {string} mimetype - File mime type (e.g., 'image/jpeg')
@@ -99,7 +101,6 @@ class UserAccountService {
    */
   async uploadPhoto(userID, fileBuffer, mimetype, photoURL = null) {
     const db = getFirestore();
-    const storage = getStorage();
 
     try {
       // Verify user exists
@@ -116,29 +117,29 @@ class UserAccountService {
       let finalPhotoURL = photoURL;
       let photoType = 'url';
 
-      // If file buffer provided, upload to Firebase Storage
+      // If file buffer provided, upload to Cloudinary
       if (fileBuffer && mimetype) {
-        const bucket = storage.bucket();
-        const filename = `users/${userID}/profile_${Date.now()}.jpg`;
-        const file = bucket.file(filename);
+        const streamUpload = () => {
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: `lifecode/users/${userID}`,
+                public_id: `profile_${Date.now()}`,
+                resource_type: 'image',
+                overwrite: true
+              },
+              (error, result) => {
+                if (result) resolve(result);
+                else reject(error);
+              }
+            );
+            streamifier.createReadStream(fileBuffer).pipe(stream);
+          });
+        };
 
-        // Upload file to Firebase Storage
-        await file.save(fileBuffer, {
-          metadata: {
-            contentType: mimetype,
-            metadata: {
-              userID: userID,
-              uploadedAt: new Date().toISOString()
-            }
-          }
-        });
-
-        // Make file publicly accessible
-        await file.makePublic();
-
-        // Get public URL
-        finalPhotoURL = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-        photoType = 'storage';
+        const result = await streamUpload();
+        finalPhotoURL = result.secure_url;
+        photoType = 'cloudinary';
       } else if (photoURL) {
         // Use provided URL directly
         finalPhotoURL = photoURL;
