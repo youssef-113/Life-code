@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { scanQR, scanNFC, getScanHistory } = require('../controllers/scanController');
+const { scanQR, scanNFC, getScanHistory, scanByBandId } = require('../controllers/scanController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
 /**
@@ -74,5 +74,36 @@ router.post('/scan/nfc', [
  * @query {number} page - Page number (default: 1)
  */
 router.get('/scan/history', authenticateToken, getScanHistory);
+
+/**
+ * @route POST /api/app/scan/band
+ * @description Public: Scan using the Band ID (Firestore document ID).
+ *              NFC chips can store this ID directly.
+ *              Returns the same emergency data as QR/NFC scan.
+ * @access Public (no auth required)
+ */
+router.post('/scan/band', [
+  body('bandId')
+    .trim()
+    .notEmpty()
+    .withMessage('bandId is required'),
+  body('latitude')
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be between -90 and 90'),
+  body('longitude')
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be between -180 and 180'),
+  body('location')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Location must not exceed 500 characters'),
+  body('scannerType')
+    .optional()
+    .isIn(['emergency', 'hospital', 'public', 'personal'])
+    .withMessage('Scanner type must be one of: emergency, hospital, public, personal')
+], scanByBandId);
 
 module.exports = router;

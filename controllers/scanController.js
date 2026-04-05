@@ -162,8 +162,60 @@ const getScanHistory = async (req, res) => {
   }
 };
 
+/**
+ * Scan by Band ID (Firestore document ID stored on NFC chip)
+ * @route POST /api/app/scan/band
+ * @access Public
+ */
+const scanByBandId = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: errors.array()[0].msg,
+        code: 400
+      });
+    }
+
+    const { bandId, latitude, longitude, location, scannerType } = req.body;
+
+    if (!bandId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'bandId is required',
+        code: 400
+      });
+    }
+
+    const result = await scanService.scanByBandId(bandId, {
+      latitude,
+      longitude,
+      location,
+      scannerType,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    const statusCode = result.success ? 200 : result.code || 500;
+    return res.status(statusCode).json(result);
+
+  } catch (error) {
+    console.error('Scan by band ID controller error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: 'An unexpected error occurred',
+      code: 500
+    });
+  }
+};
+
 module.exports = {
   scanQR,
   scanNFC,
-  getScanHistory
+  getScanHistory,
+  scanByBandId
 };

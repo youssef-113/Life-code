@@ -9,7 +9,9 @@ const {
   getPrimaryWristband,
   setPrimaryWristband,
   getWristbandWithUser,
-  getUserIdFromBand
+  getUserIdFromBand,
+  getBandIdentity,
+  getWristbandByBandId
 } = require('../controllers/wristbandController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
@@ -109,5 +111,22 @@ router.post('/wristband/resolve-user', [
     .isIn(['qr', 'nfc'])
     .withMessage('type must be either "qr" or "nfc"')
 ], getUserIdFromBand);
+
+/**
+ * @route GET /api/app/wristband/my-band
+ * @description Get the BandID, QRCode, and NFCTag that are stored directly
+ *              on the authenticated user's record (the user side of the
+ *              two-way identity link)
+ * @access Private
+ */
+router.get('/wristband/my-band', authenticateToken, getBandIdentity);
+
+/**
+ * @route GET /api/app/wristband/:bandId/info
+ * @description Get a wristband document by its Firestore Band ID
+ *              (direct lookup — ownership is enforced)
+ * @access Private
+ */
+router.get('/wristband/:bandId/info', authenticateToken, getWristbandByBandId);
 
 module.exports = router;

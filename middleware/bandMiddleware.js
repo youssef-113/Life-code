@@ -216,5 +216,37 @@ module.exports = {
   verifyBandOwnership,
   requirePrimaryBand,
   verifyBandIdentifier,
-  canRegisterBand
+  canRegisterBand,
+  /**
+   * Attaches the band identity (BandID, QRCode, NFCTag) stored on the
+   * authenticated user's Users document to req.bandIdentity.
+   * Does NOT block the request if the user has no band — use requirePrimaryBand for that.
+   */
+  resolveBandFromUser: async (req, res, next) => {
+    try {
+      const userID = req.user?.userID;
+      if (!userID) {
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'User not authenticated',
+          code: 401
+        });
+      }
+
+      const result = await wristbandService.getBandIdFromUser(userID);
+
+      // Attach band identity regardless of whether one is found
+      req.bandIdentity = result.success ? result.data : { userID, bandId: null, qrCode: null, nfcTag: null, hasBand: false };
+      next();
+    } catch (error) {
+      console.error('Resolve band from user error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Server Error',
+        message: 'Failed to resolve band identity',
+        code: 500
+      });
+    }
+  }
 };

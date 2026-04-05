@@ -3,7 +3,11 @@ const authService = require('./authService');
 
 /**
  * Wristband Service - Handles wristband registration and management
- * Firestore Collection: Wristbands
+ * Firestore Collections: Wristbands, Users
+ *
+ * Two-way identity link:
+ *   Wristbands doc  →  UserID  (band knows its owner)
+ *   Users doc       →  BandID, QRCode, NFCTag  (user knows their active band)
  */
 class WristbandService {
 
@@ -60,12 +64,20 @@ class WristbandService {
 
           await existingQR.docs[0].ref.update(updateData);
 
+          // ── Sync back to Users doc ────────────────────────────────────────
+          await db.collection('Users').doc(userID).update({
+            BandID: existingQR.docs[0].id,
+            QRCode: qrCode || '',
+            NFCTag: nfcTag || updateData.NFCTag || '',
+            UpdatedAt: new Date()
+          });
+
           const updatedDoc = await existingQR.docs[0].ref.get();
           return {
             success: true,
             message: 'Wristband re-activated successfully',
             data: {
-              id: existingQR.docs[0].id,
+              BandID: existingQR.docs[0].id,
               ...updatedDoc.data()
             }
           };
@@ -104,7 +116,7 @@ class WristbandService {
           message: 'User already has an active wristband. Each user can only have one active band. Please revoke the existing band first.',
           code: 409,
           data: {
-            existingBandId: existingUserBand.docs[0].id,
+            BandID: existingUserBand.docs[0].id,
             existingBand: existingUserBand.docs[0].data()
           }
         };
@@ -139,6 +151,14 @@ class WristbandService {
 
       const docRef = await db.collection('Wristbands').add(wristbandDoc);
 
+      // ── Two-way link: store BandID + identifiers on the Users doc ──────────
+      await db.collection('Users').doc(userID).update({
+        BandID:   docRef.id,
+        QRCode:   qrCode  || '',
+        NFCTag:   nfcTag  || '',
+        UpdatedAt: new Date()
+      });
+
       // Log security event
       await authService.logSecurityEvent(userID, 'WRISTBAND_REGISTERED', {
         wristbandId: docRef.id,
@@ -150,7 +170,7 @@ class WristbandService {
         success: true,
         message: 'Wristband registered successfully',
         data: {
-          id: docRef.id,
+          BandID: docRef.id,
           ...wristbandDoc
         }
       };
@@ -208,7 +228,7 @@ class WristbandService {
         success: true,
         message: 'Wristband activated successfully',
         data: {
-          id: wristbandId,
+          BandID: wristbandId,
           IsActive: true,
           ActivatedAt: new Date()
         }
@@ -264,6 +284,14 @@ class WristbandService {
         UpdatedAt: new Date()
       });
 
+      // ── Clear the identifying fields from the Users doc ──────────────────
+      await db.collection('Users').doc(userID).update({
+        BandID:    null,
+        QRCode:    null,
+        NFCTag:    null,
+        UpdatedAt: new Date()
+      });
+
       // Log security event
       await authService.logSecurityEvent(userID, 'WRISTBAND_REVOKED', {
         wristbandId,
@@ -274,7 +302,7 @@ class WristbandService {
         success: true,
         message: 'Wristband revoked successfully',
         data: {
-          id: wristbandId,
+          BandID: wristbandId,
           IsActive: false,
           IsRevoked: true,
           RevokedAt: revokedAt,
@@ -307,7 +335,7 @@ class WristbandService {
         .get();
 
       const wristbands = wristbandsQuery.docs.map(doc => ({
-        id: doc.id,
+        BandID: doc.id,
         ...doc.data()
       }));
 
@@ -357,7 +385,7 @@ class WristbandService {
       return {
         success: true,
         data: {
-          id: wristbandQuery.docs[0].id,
+          BandID: wristbandQuery.docs[0].id,
           ...wristbandData
         }
       };
@@ -440,7 +468,7 @@ class WristbandService {
         success: true,
         message: 'Wristband set as primary successfully',
         data: {
-          id: wristbandId,
+          BandID: wristbandId,
           IsPrimary: true
         }
       };
@@ -493,11 +521,11 @@ class WristbandService {
         success: true,
         data: {
           wristband: {
-            id: wristbandId,
+            BandID: wristbandId,
             ...wristbandData
           },
-          user: userData ? { id: userID, ...userData } : null,
-          medical: medicalData ? { id: userID, ...medicalData } : null,
+          user: userData ? { UserID: userID, ...userData } : null,
+          medical: medicalData ? { UserID: userID, ...medicalData } : null,
           emergencyContacts: contacts
         }
       };
@@ -543,10 +571,10 @@ class WristbandService {
       return {
         success: true,
         data: {
-          userID: wristbandData.UserID,
-          wristbandId: wristbandQuery.docs[0].id,
-          isPrimary: wristbandData.IsPrimary || false,
-          serialNumber: wristbandData.SerialNumber
+          UserID:       wristbandData.UserID,
+          BandID:       wristbandQuery.docs[0].id,
+          IsPrimary:    wristbandData.IsPrimary || false,
+          SerialNumber: wristbandData.SerialNumber
         }
       };
     } catch (error) {
@@ -610,7 +638,7 @@ class WristbandService {
       return {
         success: true,
         data: {
-          id: wristbandQuery.docs[0].id,
+          BandID: wristbandQuery.docs[0].id,
           ...wristbandData
         }
       };
@@ -673,7 +701,7 @@ class WristbandService {
       return {
         success: true,
         data: {
-          id: wristbandQuery.docs[0].id,
+          BandID: wristbandQuery.docs[0].id,
           ...wristbandData
         }
       };
@@ -685,6 +713,72 @@ class WristbandService {
         message: error.message,
         code: 500
       };
+    }
+  }
+
+  /**
+   * Get the wristband document ID stored on the user's profile
+   * @param {string} userID - User ID
+   * @returns {Object} - { success, data: { bandId, qrCode, nfcTag } }
+   */
+  async getBandIdFromUser(userID) {
+    const db = getFirestore();
+    try {
+      const userDoc = await db.collection('Users').doc(userID).get();
+      if (!userDoc.exists) {
+        return { success: false, error: 'Not Found', message: 'User not found', code: 404 };
+      }
+      const userData = userDoc.data();
+      const BandID = userData.BandID || null;
+      return {
+        success: true,
+        data: {
+          userID,
+          BandID,
+          qrCode:  userData.QRCode  || null,
+          nfcTag:  userData.NFCTag  || null,
+          hasBand: !!BandID
+        }
+      };
+    } catch (error) {
+      console.error('Get band ID from user error:', error);
+      return { success: false, error: 'Server Error', message: error.message, code: 500 };
+    }
+  }
+
+  /**
+   * Get wristband document by its Firestore ID (direct band-id lookup)
+   * @param {string} bandId - Wristband document ID
+   * @returns {Object} - Wristband data
+   */
+  async getWristbandByBandId(bandId) {
+    const db = getFirestore();
+    try {
+      const doc = await db.collection('Wristbands').doc(bandId).get();
+      if (!doc.exists) {
+        return { success: false, error: 'Not Found', message: 'Wristband not found', code: 404 };
+      }
+      const data = doc.data();
+      if (data.IsRevoked) {
+        return {
+          success: false,
+          error: 'Forbidden',
+          message: 'This wristband has been revoked',
+          code: 403
+        };
+      }
+      if (!data.IsActive) {
+        return {
+          success: false,
+          error: 'Forbidden',
+          message: 'This wristband is not currently active',
+          code: 403
+        };
+      }
+      return { success: true, data: { BandID: doc.id, ...data } };
+    } catch (error) {
+      console.error('Get wristband by band ID error:', error);
+      return { success: false, error: 'Server Error', message: error.message, code: 500 };
     }
   }
 }

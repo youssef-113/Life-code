@@ -204,23 +204,26 @@ app.get('/', (req, res) => {
         deleteDependent: 'DELETE /api/app/family/:id (private, cascade delete)'
       },
       wristband: {
-        register: 'POST /api/app/wristband/register (private, upsert)',
-        activate: 'POST /api/app/wristband/activate (private)',
-        revoke: 'POST /api/app/wristband/revoke (private)',
-        list: 'GET /api/app/wristband/list (private)',
-        getPrimary: 'GET /api/app/wristband/primary (private)',
-        setPrimary: 'PUT /api/app/wristband/:wristbandId/primary (private)',
-        getFull: 'GET /api/app/wristband/:wristbandId/full (private)',
-        resolveUser: 'POST /api/app/wristband/resolve-user (private, QR/NFC to userID)'
+        register:    'POST /api/app/wristband/register (private, upsert — syncs BandID/QRCode/NFCTag to Users doc)',
+        activate:    'POST /api/app/wristband/activate (private)',
+        revoke:      'POST /api/app/wristband/revoke (private — clears BandID/QRCode/NFCTag from Users doc)',
+        list:        'GET /api/app/wristband/list (private)',
+        getPrimary:  'GET /api/app/wristband/primary (private)',
+        setPrimary:  'PUT /api/app/wristband/:wristbandId/primary (private)',
+        getFull:     'GET /api/app/wristband/:wristbandId/full (private)',
+        resolveUser: 'POST /api/app/wristband/resolve-user (private, QR/NFC → userID)',
+        myBand:      'GET /api/app/wristband/my-band (private — BandID+QRCode+NFCTag from Users doc)',
+        bandInfo:    'GET /api/app/wristband/:bandId/info (private — wristband doc by Firestore ID)'
       },
       scan: {
-        scanQR: 'POST /api/app/scan/qr (public - get emergency info from QR)',
-        scanNFC: 'POST /api/app/scan/nfc (public - get emergency info from NFC)',
-        history: 'GET /api/app/scan/history (private, paginated)'
+        scanQR:      'POST /api/app/scan/qr   (public — emergency info from QR code)',
+        scanNFC:     'POST /api/app/scan/nfc  (public — emergency info from NFC tag)',
+        scanBandId:  'POST /api/app/scan/band (public — emergency info from Band ID / NFC chip)',
+        history:     'GET /api/app/scan/history (private, paginated)'
       },
       health: 'GET /health (public - server status)'
     },
-    totalEndpoints: 47
+    totalEndpoints: 50
   });
 });
 
