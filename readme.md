@@ -4,11 +4,12 @@
 
 # 🏥 LifeCode — Backend, AI & Integration
 
-### *Your Vital Information, Always Within Reach.*
+### *Your Vital Information, Always Within Reach*
 
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-life--code--yossfabdla311.replit.app-00b4d8?style=flat-square)](https://life-code--yossfabdla311.replit.app)
 [![GitHub](https://img.shields.io/badge/GitHub-youssef--113%2FLife--code-181717?style=flat-square&logo=github)](https://github.com/youssef-113/Life-code)
-[![Backend](https://img.shields.io/badge/Role-Backend%20%7C%20AI%20%7C%20DB%20%7C%20Web-1a56db?style=flat-square)]()
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=nodedotjs)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express)](https://expressjs.com/)
 [![Status](https://img.shields.io/badge/Status-Active%20Development-22c55e?style=flat-square)]()
 
 ---
@@ -19,355 +20,913 @@
 
 </div>
 
+---
+
 ## 📋 Table of Contents
 
-- [System Architecture](#-system-architecture)
-- [Tech Stack](#-tech-stack)
-- [API & Database Design](#-api--database-design)
-- [AI Features](#-ai-features)
-- [Security Model](#-security-model)
-- [Data Flow](#-data-flow)
-- [Future Integrations](#-future-integrations)
-- [Environment Setup](#-environment-setup)
-- [Team](#-team)
+1. [📄 Description](#-description)
+2. [✨ Features](#-features)
+3. [🛠️ Tech Stack](#%EF%B8%8F-tech-stack)
+4. [📁 Project Structure](#-project-structure)
+5. [⚙️ Installation](#%EF%B8%8F-installation)
+6. [🔐 Environment Variables](#-environment-variables)
+7. [▶️ Running the Project](#%EF%B8%8F-running-the-project)
+8. [📡 API Documentation](#-api-documentation)
+9. [🔗 API Endpoints](#-api-endpoints)
+10. [🗄️ Database](#%EF%B8%8F-database)
+11. [🔒 Security](#-security)
+12. [🧪 Testing](#-testing)
+13. [🚀 Deployment](#-deployment)
+14. [🚧 Future Improvements](#-future-improvements)
+15. [👨‍💻 Author](#-author)
 
 ---
 
-## 🏗 System Architecture
+## 📄 Description
 
-LifeCode operates on a **distributed, zero-latency architecture** composed of three nodes:
+LifeCode API is a comprehensive backend service for the LifeCode health platform. It provides:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    LIFECODE ECOSYSTEM                   │
-│                                                         │
-│  [LifeBand]  ──scan──▶  [Client Apps]  ──API──▶[Cloud] │
-│  NFC / QR               Flutter Mobile        Firebase  │
-│  (Passive HW)           Flutter Web           Firestore │
-│                                               Auth      │
-└─────────────────────────────────────────────────────────┘
-```
+- **Emergency Health Data Access**: Instant retrieval of critical medical information via QR/NFC scan
+- **Multi-Provider Authentication**: Email, Google, and Apple sign-in with account linking
+- **Complete Medical Profiles**: Blood type, allergies, medications, surgeries, and emergency contacts
+- **Wristband Management**: LifeBand registration, activation, and management
+- **Family/Dependent Support**: Manage profiles for children and dependents
+- **Profile Completion Tracking**: Gamified onboarding with progress indicators
 
-The LifeBand stores **no raw medical data** — only a cryptographically signed Unique Identifier (UID) and a dynamic URL. All sensitive health data lives encrypted in the cloud.
+The system is designed for **zero-latency emergency access** — first responders can scan a LifeBand and get life-saving information in seconds.
 
 ---
 
-## 🛠 Tech Stack
+## ✨ Features
+
+### 🔐 Authentication & Security
+- **Multi-Provider Auth**: Email/password, Google Sign-In, Apple Sign-In
+- **Account Linking**: Link multiple providers to one account
+- **JWT Tokens**: 15-day session expiration with refresh token support
+- **Suspicious Login Detection**: Flags unusual access patterns
+- **Session Management**: View and revoke active sessions across devices
+
+### 👤 User Management
+- **Profile Management**: Personal info, photo upload to Firebase Storage
+- **Preferences**: Notification settings, privacy controls
+- **Complete Profile**: Aggregate view of user + medical + wristbands + contacts
+
+### 🏥 Medical Information
+- **Medical Profile**: Blood type, height, weight, chronic conditions
+- **Allergies**: With severity levels and yes/no confirmation
+- **Medications**: Dosage, schedule, and notes
+- **Surgeries**: History with dates and complications
+- **Emergency Instructions**: Critical notes for first responders
+
+### 📞 Emergency Contacts
+- **Multiple Contacts**: Up to 10 contacts per user
+- **Multiple Phone Numbers**: Up to 5 numbers per contact
+- **Primary Contact Designation**: Mark most important contact
+- **Relationship Types**: Father, Mother, Friend, Sister, Brother, Spouse, Other
+
+### ⌚ Wristband (LifeBand) Management
+- **Registration**: Pair wristband via QR code or NFC tag
+- **Activation/Revocation**: Control wristband status
+- **Primary Wristband**: Designate main wearable
+- **User Resolution**: Lookup users by QR/NFC for scanning
+
+### 📱 Scan Operations
+- **QR Code Scan**: Public access to emergency info
+- **NFC Tag Scan**: Alternative scan method
+- **Scan History**: Track who accessed your information
+- **Privacy Controls**: Choose what data appears on scan
+
+### 👨‍👩‍👧 Family Management
+- **Dependent Profiles**: Manage profiles for children/elderly
+- **Lost Child Mode**: Special emergency flag for minors
+- **Relationship Tracking**: Spouse, Son, Daughter, Parent, Sibling
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer | Technology | Purpose |
-|---|---|---|
-| **API** | Express.js REST API | Efficient medical data querying |
-| **Database** | Firebase Firestore (NoSQL) | Flexible medical record document storage with real-time sync |
-| **Auth** | Firebase Auth + JWT | Secure authentication with Google/Apple sign-in support |
-| **Frontend** | Flutter Web / React.js | Responsive hospital & admin portal |
-| **Security** | Helmet + Rate Limiting | DDoS protection, XSS prevention, CORS policies |
-| **Encryption (Transit)** | TLS 1.3 / HTTPS | All API traffic |
-| **Encryption (Rest)** | Firebase Security Rules | Database-level access control |
-| **Hosting** | Replit (MVP) | Live deployment |
-| **AI / OCR** | Python + NLP pipeline | Document parsing & medical term normalization |
+|-------|------------|---------|
+| **Runtime** | Node.js 18+ | JavaScript runtime environment |
+| **Framework** | Express.js 4.x | RESTful API framework |
+| **Database** | Firebase Firestore | NoSQL document database |
+| **Authentication** | Firebase Auth + JWT | Secure user authentication |
+| **Storage** | Firebase Storage | Profile photo storage |
+| **Validation** | express-validator | Input validation & sanitization |
+| **Security** | Helmet + express-rate-limit | Security headers & rate limiting |
+| **File Upload** | Multer | Multipart form data handling |
+| **Testing** | Jest | Unit testing framework |
+| **Process Manager** | Nodemon | Development auto-restart |
+
+### Key Dependencies
+```json
+{
+  "express": "^4.18.2",
+  "firebase-admin": "^12.0.0",
+  "express-validator": "^7.0.1",
+  "jsonwebtoken": "^9.0.2",
+  "bcryptjs": "^2.4.3",
+  "multer": "^1.4.5-lts.1",
+  "helmet": "^7.1.0",
+  "express-rate-limit": "^7.1.5",
+  "cors": "^2.8.5",
+  "dotenv": "^16.3.1"
+}
+```
 
 ---
 
-## 🗄 API & Database Design
-
-### Core API Architecture
+## 📁 Project Structure
 
 ```
-/api/app
-    │
-    ├── /register           → User registration (email, Google, Apple)
-    │       ├── POST   /register
-    │       ├── POST   /register/google
-    │       └── POST   /register/apple
-    │
-    ├── /login              → Authentication & session management
-    │       ├── POST   /login
-    │       ├── POST   /logout
-    │       ├── POST   /logout-all
-    │       ├── POST   /refresh
-    │       └── GET    /sessions
-    │
-    ├── /profile            → User profile management
-    │       ├── GET    /profile/personal-info
-    │       └── PUT    /profile/personal-info
-    │
-    ├── /medical            → Medical information CRUD
-    │       ├── POST   /medical
-    │       ├── GET    /medical
-    │       └── PUT    /medical
-    │
-    ├── /medical/profile    → Detailed medical profile
-    │       ├── GET    /medical/profile
-    │       ├── PUT    /medical/general-info
-    │       ├── PUT    /medical/conditions
-    │       ├── PUT    /medical/allergies
-    │       ├── PUT    /medical/medications
-    │       ├── PUT    /medical/surgeries
-    │       └── PUT    /medical/emergency-instructions
-    │
-    ├── /emergency/contact  → Emergency contacts management
-    │       ├── POST   /emergency/contact
-    │       ├── GET    /emergency/contacts
-    │       ├── PUT    /emergency/contact/:id
-    │       ├── DELETE /emergency/contact/:id
-    │       └── PUT    /emergency/contact/:id/primary
-    │
-    ├── /wristband          → LifeBand pairing & management
-    │       ├── POST   /wristband/register
-    │       ├── POST   /wristband/activate
-    │       ├── POST   /wristband/revoke
-    │       └── GET    /wristband/list
-    │
-    ├── /scan               → QR/NFC scanning (public access)
-    │       ├── POST   /scan/qr
-    │       ├── POST   /scan/nfc
-    │       └── GET    /scan/history
-    │
-    ├── /user               → Account management
-    │       ├── POST   /user/password
-    │       ├── POST   /user/photo
-    │       ├── DELETE /user/account
-    │       ├── GET    /user/preferences
-    │       ├── PUT    /user/preferences
-    │       └── GET    /user/complete
-    │
-    └── /family             → Family/dependent management
-            ├── GET    /family
-            ├── POST   /family
-            ├── PUT    /family/:id
-            └── DELETE /family/:id
+Life-code/
+├── 📁 config/              # Configuration files
+│   └── firebase.js        # Firebase Admin SDK initialization
+│
+├── 📁 controllers/        # Route controllers (request handlers)
+│   ├── emergencyContactController.js
+│   ├── familyController.js
+│   ├── loginController.js
+│   ├── medicalController.js
+│   ├── medicalProfileController.js
+│   ├── registerController.js
+│   ├── scanController.js
+│   ├── socialAuthController.js
+│   ├── userAccountController.js
+│   ├── userProfileController.js
+│   └── wristbandController.js
+│
+├── 📁 middleware/          # Express middleware
+│   ├── authMiddleware.js         # JWT verification
+│   ├── errorHandler.js           # Global error handling
+│   ├── rateLimitMiddleware.js  # Rate limiting
+│   └── validationMiddleware.js # Validation helpers
+│
+├── 📁 routes/              # API route definitions
+│   ├── emergencyContactRoutes.js
+│   ├── familyRoutes.js
+│   ├── loginRoutes.js
+│   ├── medicalProfileRoutes.js
+│   ├── medicalRoutes.js
+│   ├── registerRoutes.js
+│   ├── scanRoutes.js
+│   ├── socialAuthRoutes.js
+│   ├── userAccountRoutes.js
+│   ├── userProfileRoutes.js
+│   └── wristbandRoutes.js
+│
+├── 📁 services/            # Business logic layer
+│   ├── authService.js
+│   ├── emergencyContactService.js
+│   ├── familyService.js
+│   ├── medicalProfileService.js
+│   ├── medicalService.js
+│   ├── profileCompletionService.js
+│   ├── scanService.js
+│   ├── socialAuthService.js
+│   ├── userAccountService.js
+│   ├── userProfileService.js
+│   └── wristbandService.js
+│
+├── 📁 src/
+│   └── index.js            # Application entry point
+│
+├── 📁 utils/               # Utility functions
+│
+├── 📁 assist/              # Documentation & assets
+│
+├── .env.example            # Environment variable template
+├── .env                    # Environment variables (not in git)
+├── package.json            # Dependencies & scripts
+├── API_DOCUMENTATION.md    # Complete API reference
+├── firebase.json           # Firebase configuration
+├── firestore.rules         # Firestore security rules
+└── readme.md               # This file
 ```
 
-### Firebase Firestore Collections
+---
 
-#### `users` Collection
+## ⚙️ Installation
+
+### Prerequisites
+- **Node.js**: Version 18 or higher
+- **npm**: Comes with Node.js
+- **Firebase Project**: Create at [Firebase Console](https://console.firebase.google.com/)
+- **Google Cloud**: For OAuth credentials (optional)
+
+### Step-by-Step Setup
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/youssef-113/Life-code.git
+cd Life-code
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Set up Firebase**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project (or use existing)
+   - Enable **Authentication** (Email/Password, Google, Apple)
+   - Enable **Firestore Database** (start in test mode for development)
+   - Enable **Firebase Storage**
+   - Go to Project Settings → Service Accounts
+   - Click "Generate new private key"
+   - Download the JSON file and save as `firebase-service-account.json` in project root
+
+4. **Configure environment variables**
+```bash
+cp .env.example .env
+```
+
+   Edit `.env` with your values (see [Environment Variables](#-environment-variables) section)
+
+5. **Set up Firestore indexes** (if needed)
+   - The app will run without custom indexes
+   - Check Firestore console for index suggestions if you see query errors
+
+---
+
+## 🔐 Environment Variables
+
+Create a `.env` file in the project root with the following variables:
+
+### Required Variables
+
+```bash
+# Server Configuration
+PORT=3000                          # Server port (default: 3000)
+NODE_ENV=development               # Environment: development, production
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+
+# CORS Configuration
+CORS_ORIGIN=*                      # Allowed origins (* for all, or specific domains)
+```
+
+### Firebase Configuration
+
+You can use either the service account JSON file OR environment variables:
+
+**Option 1: Service Account JSON (Recommended)**
+- Download from Firebase Console → Project Settings → Service Accounts
+- Save as `firebase-service-account.json` in project root
+
+**Option 2: Environment Variables**
+```bash
+FIREBASE_TYPE=service_account
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_PRIVATE_KEY_ID=your-private-key-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour-Key-Here\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+FIREBASE_CLIENT_ID=your-client-id
+FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
+FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
+FIREBASE_AUTH_PROVIDER_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
+FIREBASE_CLIENT_X509_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/...
+FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
+```
+
+### Optional: OAuth Providers
+
+```bash
+# Google Sign-In (get from Google Cloud Console)
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+
+# Apple Sign-In (get from Apple Developer Portal)
+APPLE_CLIENT_ID=com.yourcompany.lifecode
+```
+
+### Production Checklist
+
+- [ ] Change `JWT_SECRET` to a strong random string (min 32 chars)
+- [ ] Set `NODE_ENV=production`
+- [ ] Configure `CORS_ORIGIN` with your frontend domain(s)
+- [ ] Use production Firebase project
+- [ ] Enable Firebase App Check
+- [ ] Set up Firebase Security Rules
+
+---
+
+## Running the Project
+
+### Development Mode (with auto-restart)
+```bash
+npm run dev
+```
+Server runs at `http://localhost:3000` with nodemon watching for changes.
+
+### Production Mode
+```bash
+npm start
+```
+
+### Verify Installation
+Once running, test the health endpoint:
+```bash
+curl http://localhost:3000/health
+```
+
+Expected response:
 ```json
 {
-  "userID": "auto-generated-uid",
+  "status": "healthy",
+  "timestamp": "2026-04-05T12:00:00.000Z",
+  "version": "1.0.0"
+}
+```
+
+### Base URL
+```
+Development: http://localhost:3000/api/app
+Production:  https://your-domain.com/api/app
+```
+
+---
+
+## API Documentation
+
+### Complete Documentation
+📄 **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - Complete API reference with:
+- Detailed request/response examples
+- Field validation rules
+- Flutter integration code snippets
+- Error handling guides
+- Data models
+
+### Postman Collection
+🚀 **[LifeCode_API_Collection.postman_collection.json](./LifeCode_API_Collection.postman_collection.json)** - Import into Postman for testing
+
+### Interactive API Explorer
+The API does not include Swagger UI, but you can use:
+- **Postman** (recommended)
+- **Insomnia**
+- **curl** commands
+- Flutter app for end-to-end testing
+
+---
+
+## API Endpoints
+
+### Authentication
+
+#### Register a new user
+
+```bash
+POST /api/auth/register HTTP/1.1
+Content-Type: application/json
+
+{
   "email": "user@example.com",
-  "displayName": "yousseff besso",
-  "phoneNumber": "+20xxxxxxxxxx",
-  "photoURL": "https://...",
-  "authProvider": "email | google | apple",
-  "emailVerified": false,
-  "createdAt": "timestamp",
-  "updatedAt": "timestamp",
-  "preferences": {
-    "language": "en",
-    "notifications": true,
-    "emergencyAlerts": true
+  "password": "password123"
+}
+```
+
+#### Login an existing user
+
+```bash
+POST /api/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+#### Logout the current user
+
+```bash
+POST /api/auth/logout HTTP/1.1
+Content-Type: application/json
+```
+
+### User Management
+
+#### Get the current user's profile
+
+```bash
+GET /api/users/me HTTP/1.1
+Content-Type: application/json
+```
+
+#### Update the current user's profile
+
+```bash
+PUT /api/users/me HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "user@example.com"
+}
+```
+
+#### Delete the current user's account
+
+```bash
+DELETE /api/users/me HTTP/1.1
+Content-Type: application/json
+```
+
+### Medical Information
+
+#### Get the current user's medical profile
+
+```bash
+GET /api/medical/me HTTP/1.1
+Content-Type: application/json
+```
+
+#### Update the current user's medical profile
+
+```bash
+PUT /api/medical/me HTTP/1.1
+Content-Type: application/json
+
+{
+  "bloodType": "A+",
+  "allergies": ["Penicillin"]
+}
+```
+
+#### Delete the current user's medical profile
+
+```bash
+DELETE /api/medical/me HTTP/1.1
+Content-Type: application/json
+```
+
+### Emergency Contacts
+
+#### Get the current user's emergency contacts
+
+```bash
+GET /api/contacts/me HTTP/1.1
+Content-Type: application/json
+```
+
+#### Add a new emergency contact
+
+```bash
+POST /api/contacts/me HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "phone": "+1234567890"
+}
+```
+
+#### Update an existing emergency contact
+
+```bash
+PUT /api/contacts/me/:id HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "phone": "+1234567890"
+}
+```
+
+#### Delete an emergency contact
+
+```bash
+DELETE /api/contacts/me/:id HTTP/1.1
+Content-Type: application/json
+```
+
+### Wristband Management
+
+#### Get the current user's wristbands
+
+```bash
+GET /api/wristbands/me HTTP/1.1
+Content-Type: application/json
+```
+
+#### Register a new wristband
+
+```bash
+POST /api/wristbands/me HTTP/1.1
+Content-Type: application/json
+
+{
+  "wristbandId": "1234567890"
+}
+```
+
+#### Update an existing wristband
+
+```bash
+PUT /api/wristbands/me/:id HTTP/1.1
+Content-Type: application/json
+
+{
+  "wristbandId": "1234567890"
+}
+```
+
+#### Delete a wristband
+
+```bash
+DELETE /api/wristbands/me/:id HTTP/1.1
+Content-Type: application/json
+```
+
+### Scan Operations
+
+#### Get the current user's scan history
+
+```bash
+GET /api/scan/me HTTP/1.1
+Content-Type: application/json
+```
+
+#### Scan a new QR code or NFC tag
+
+```bash
+POST /api/scan/me HTTP/1.1
+Content-Type: application/json
+
+{
+  "qrCode": "https://example.com/qr-code"
+}
+```
+
+---
+
+## 🗄️ Database
+
+### Firebase Firestore
+
+LifeCode uses **Firebase Firestore** (NoSQL document database) for flexible, scalable data storage.
+
+### Collections
+
+#### `Users` - Core user accounts
+```javascript
+{
+  UserID: "auto-generated-uid",
+  Username: "yousseff besso",
+  Email: "user@example.com",
+  PhoneNumber: "+20xxxxxxxxxx",
+  PhotoURL: "https://storage.googleapis.com/...",
+  PhotoType: "storage",
+  Providers: ["email", "google"],
+  PrimaryProvider: "email",
+  IsActive: true,
+  CreatedAt: Timestamp,
+  UpdatedAt: Timestamp
+}
+```
+
+#### `MedicalInfo` - Medical profiles
+```javascript
+{
+  UserID: "reference-to-users",
+  BloodType: "A+",
+  Height: "180cm",
+  Weight: "75kg",
+  MedicalConditions: ["Diabetes", "Hypertension"],
+  HasAllergies: true,
+  Allergies: [
+    { AllergyType: "Peanuts", Severity: "Severe", Notes: "Anaphylaxis risk" }
+  ],
+  HasMedications: true,
+  Medications: [
+    { MedicationName: "Insulin", Dosage: "10 units", Schedule: "Daily", Notes: "" }
+  ],
+  HasSurgeries: true,
+  Surgeries: [
+    { SurgeryName: "Appendectomy", SurgeryDate: "2020-01-15", Notes: "" }
+  ],
+  EmergencyInstructions: "Check blood sugar immediately"
+}
+```
+
+#### `EmergencyContacts` - Emergency contacts
+```javascript
+{
+  UserID: "reference-to-users",
+  ContactName: "Jane besso",
+  PhoneNumbers: ["+201234567890", "+201234567891"],
+  Relationship: "Spouse",
+  IsPrimary: true,
+  Notes: "Primary emergency contact",
+  CreatedAt: Timestamp
+}
+```
+
+#### `Wristbands` - LifeBand devices
+```javascript
+{
+  UserID: "reference-to-users",
+  SerialNumber: "SN-2026-00001",
+  QRCode: "QR123456",
+  NFCTag: "NFC-ABC-123",
+  Status: "active", // active, revoked, pending
+  IsActive: true,
+  IsPrimary: true,
+  ActivatedAt: Timestamp,
+  CreatedAt: Timestamp
+}
+```
+
+#### `UserProfiles` - Extended profile data
+```javascript
+{
+  UserID: "reference-to-users",
+  EmergencyContacts: [...], // Array format
+  MedicalInfoID: "reference",
+  Preferences: {
+    PushNotifications: true,
+    EmailNotifications: true,
+    ShowMedicalOnScan: true,
+    ShowContactsOnScan: true,
+    ShowPhotoOnScan: true
   }
 }
 ```
 
-#### `medical_profiles` Collection
-```json
+#### `FamilyMembers` - Dependent profiles
+```javascript
 {
-  "profileID": "auto-generated-id",
-  "userID": "reference-to-users",
-  "generalInfo": {
-    "bloodType": "A+",
-    "organDonor": false,
-    "height": "180cm",
-    "weight": "75kg"
-  },
-  "conditions": ["Type 2 Diabetes", "Hypertension"],
-  "allergies": ["Penicillin", "Peanuts"],
-  "medications": [
-    { "name": "Metformin", "dosage": "500mg", "frequency": "daily" }
-  ],
-  "surgeries": [
-    { "procedure": "Appendectomy", "year": "2019", "hospital": "City Hospital" }
-  ],
-  "emergencyInstructions": "Insulin dependent diabetic",
-  "createdAt": "timestamp",
-  "updatedAt": "timestamp"
+  GuardianUserID: "reference-to-users",
+  Name: "Child Name",
+  Relation: "Son",
+  DateOfBirth: "2020-01-15",
+  IsChild: true,
+  LostChildMode: false,
+  MedicalProfileID: "reference"
 }
 ```
 
-#### `emergency_contacts` Collection
-```json
+#### `UserSessions` - Session tracking
+```javascript
 {
-  "contactID": "auto-generated-id",
-  "userID": "reference-to-users",
-  "name": "Jane besso",
-  "phone": "+20xxxxxxxxxx",
-  "relation": "Spouse",
-  "isPrimary": true,
-  "createdAt": "timestamp"
+  UserID: "reference-to-users",
+  SessionToken: "jwt-token-hash",
+  RefreshToken: "refresh-token-hash",
+  DeviceName: "Chrome on Windows",
+  DeviceType: "browser",
+  IPAddress: "192.168.1.1",
+  IsActive: true,
+  ExpiresAt: Timestamp,
+  LastUsed: Timestamp,
+  CreatedAt: Timestamp
 }
 ```
 
-#### `wristbands` Collection
-```json
+#### `SecurityLogs` - Security events
+```javascript
 {
-  "wristbandID": "unique-band-uid",
-  "userID": "reference-to-users",
-  "activationCode": "hashed-code",
-  "status": "active | revoked | pending",
-  "registeredAt": "timestamp",
-  "activatedAt": "timestamp",
-  "revokedAt": "timestamp | null"
+  UserID: "reference-to-users",
+  EventType: "LOGIN | LOGOUT | PASSWORD_CHANGED | SUSPICIOUS_LOGIN",
+  IPAddress: "192.168.1.1",
+  DeviceInfo: "Chrome on Windows",
+  Timestamp: Timestamp
 }
 ```
 
-#### `family_members` Collection
-```json
+#### `ScanLogs` - Scan tracking
+```javascript
 {
-  "memberID": "auto-generated-id",
-  "guardianUserID": "reference-to-users",
-  "relationship": "child | parent | spouse | other",
-  "profileData": {
-    "name": "Child Name",
-    "dateOfBirth": "2015-05-15",
-    "medicalProfileID": "reference-to-medical_profiles"
-  },
-  "createdAt": "timestamp"
+  UserID: "scanned-user-id",
+  ScannerUserID: "scanner-user-id",
+  QRCode: "QR123456",
+  Latitude: 30.0444,
+  Longitude: 31.2357,
+  Location: "Cairo, Egypt",
+  ScannerType: "emergency",
+  ScannedAt: Timestamp
 }
 ```
 
 ---
 
-## 🤖 AI Features
+## 🔒 Security
 
-### 1. Smart OCR — Medical Document Digitization
+### Authentication
+- **JWT Tokens**: Stateless authentication with 15-day expiration
+- **Refresh Tokens**: Long-lived tokens for session renewal
+- **Firebase Auth**: Industry-standard authentication backend
+- **Multi-Factor**: Support for email verification and device trust
 
-Users photograph physical medical documents (prescriptions, lab results). The AI pipeline automatically extracts and structures the data into their LifeCode profile.
+### Authorization
+- **Bearer Token**: All protected endpoints require `Authorization: Bearer <token>`
+- **Ownership Verification**: Users can only access their own data
+- **Privacy Controls**: Users choose what data appears on public scans
 
+### Data Protection
+- **TLS 1.3**: All API traffic encrypted in transit
+- **Firebase Security Rules**: Database-level access control
+- **AES-256**: Data encrypted at rest in Firestore
+- **Helmet.js**: Security headers (XSS, CSRF protection)
+- **Rate Limiting**: DDoS protection with request throttling
+
+### Input Validation
+- **express-validator**: Strict input validation on all endpoints
+- **Sanitization**: SQL/NoSQL injection prevention
+- **File Upload**: Image type validation, 5MB size limit
+
+### Security Headers
+```javascript
+// Helmet.js provides:
+- Strict-Transport-Security
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Content-Security-Policy
+- X-DNS-Prefetch-Control
+- X-Powered-By: hidden
 ```
-[Photo Upload]
-      │
-      ▼
-[Image Preprocessing]  ← Contrast enhance, deskew, denoise
-      │
-      ▼
-[OCR Engine]           ← Tesseract / Cloud Vision API
-      │
-      ▼
-[NLP Parser]           ← Extract: drug names, dosages, diagnoses, dates
-      │
-      ▼
-[Profile Updater]      ← Writes structured data to MongoDB document
-```
 
-### 2. Predictive Medical Term Normalization (NLP)
-
-Free-text medical terms entered by users are automatically mapped to standardized ICD-10 codes for universal medical compatibility.
-
-| User Input | Normalized Output |
-|---|---|
-| `"high blood pressure"` | `Hypertension (ICD-10: I10)` |
-| `"sugar disease"` | `Type 2 Diabetes Mellitus (ICD-10: E11)` |
-| `"chest pain"` | `Angina Pectoris (ICD-10: I20)` |
-| `"penicillin allergy"` | `Allergy to penicillin (ICD-10: Z88.0)` |
-
-**NLP Stack:** Python · spaCy / Transformers · Medical NER models · ICD-10 lookup dictionary
+### Rate Limiting
+- **Window**: 15 minutes
+- **Max Requests**: 100 per IP per window
+- **Authenticated**: 1000 per user per window
 
 ---
 
-## 🔐 Security Model
+## 🧪 Testing
 
-LifeCode uses a **zero-trust security architecture** — every layer is independently verified.
+### Run Tests
+```bash
+# Run all tests
+npm test
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                   ZERO-TRUST LAYERS                      │
-│                                                          │
-│  Layer 1: Hardware        NFC read-only lock (tamper)    │
-│  Layer 2: Transport       TLS 1.3 on all API endpoints   │
-│  Layer 3: Auth            JWT + biometric (FaceID/Touch) │
-│  Layer 4: Data Access     Granular field-level permissions│
-│  Layer 5: Storage         AES-256 encrypted at rest      │
-│  Layer 6: Gateway         Rate limiting + DDoS protection│
-└──────────────────────────────────────────────────────────┘
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- auth.test.js
 ```
 
-### Data Privacy Model
+### Test Structure
+```
+📁 tests/
+├── 📁 unit/              # Unit tests for services
+│   ├── authService.test.js
+│   ├── medicalService.test.js
+│   └── ...
+├── 📁 integration/       # API endpoint tests
+│   ├── authRoutes.test.js
+│   └── ...
+└── 📁 fixtures/          # Test data
+    └── users.json
+```
 
-| Data Type | Access Level | Protection |
-|---|---|---|
-| Blood type, Allergies | Public on scan | Encrypted at rest |
-| Emergency contacts | Public on scan | Encrypted at rest |
-| Medications, History | PIN-gated | AES-256 + PIN required |
-| Identity / PII | Private | Obfuscated — not readable even in breach |
+### Manual Testing with Postman
+1. Import `LifeCode_API_Collection.postman_collection.json`
+2. Create environment with `baseUrl` variable
+3. Use "Register" request to create test user
+4. Save returned token to environment
+5. Test protected endpoints
 
-### Penetration Testing Scope
-
-Continuous red-team testing covers:
-- NFC chip cloning & UID spoofing
-- QR code hijacking / URL substitution
-- Man-in-the-Middle (MitM) attacks on the API
-- SQL / NoSQL injection vulnerabilities
-- Automated UID scraping via brute force
+### Testing Checklist
+- [ ] User registration (email, Google, Apple)
+- [ ] Login and token refresh
+- [ ] Profile CRUD operations
+- [ ] Emergency contacts management
+- [ ] Medical profile updates
+- [ ] Wristband registration
+- [ ] QR/NFC scanning (public endpoints)
+- [ ] File upload (profile photo)
+- [ ] Session management
+- [ ] Account deletion
 
 ---
 
-## 🔄 Data Flow
+## 🚀 Deployment
 
+### Option 1: Replit (Current)
+The project is currently hosted on Replit:
+- **URL**: https://life-code--yossfabdla311.replit.app
+- **Status**: Live development environment
+
+### Option 2: Traditional VPS/Cloud
+
+#### Deploy to Heroku
+```bash
+# Install Heroku CLI
+npm install -g heroku
+
+# Login
+heroku login
+
+# Create app
+heroku create lifecode-api
+
+# Set environment variables
+heroku config:set JWT_SECRET=your-secret
+heroku config:set FIREBASE_PROJECT_ID=your-project
+# ... (set all env vars)
+
+# Deploy
+git push heroku main
 ```
-┌─────────┐    NFC tap /     ┌──────────┐   HTTPS    ┌─────────────┐
-│LifeBand │───QR scan──────▶│ Scanner  │ ──────────▶│ API Gateway │
-│(passive)│                  │(any phone)│           │  (Express)  │
-└─────────┘                  └──────────┘            └──────┬──────┘
-                                                           │
-                                              ┌────────────▼──────────┐
-                                              │  Auth: Verify JWT     │
-                                              │  (Firebase Auth)      │
-                                              └────────────┬──────────┘
-                                                           │
-                              ┌────────────────────────────▼─────────┐
-                              │          Public scan?                │
-                              │   YES → Firestore → return payload   │
-                              │   NO  → Request PIN → Firestore      │
-                              └──────────────────────────────────────┘
+
+#### Deploy to AWS/VPS
+```bash
+# Build for production
+npm ci --only=production
+
+# Use PM2 for process management
+npm install -g pm2
+
+# Start with PM2
+pm2 start src/index.js --name lifecode-api
+
+# Save PM2 config
+pm2 save
+pm2 startup
 ```
 
----
+#### Docker Deployment
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
 
-## 🔮 Future Integrations
+WORKDIR /app
 
-### EHR Interoperability (HL7 FHIR)
+COPY package*.json ./
+RUN npm ci --only=production
 
-Planned backend support for the **HL7 FHIR** (Fast Healthcare Interoperability Resources) standard — enabling LifeCode patient data to be pushed directly into hospital systems like **Epic** and **Cerner** on patient arrival, eliminating manual intake forms.
+COPY . .
 
-### Compliance Roadmap
+EXPOSE 3000
 
-| Standard | Market | Status |
-|---|---|---|
-| **HIPAA** | United States | Architecture mapped |
-| **GDPR** | European Union | Data deletion pipeline designed |
-| **HL7 FHIR R4** | Global EHR systems | Planned v4.0 |
-
----
-
-## ⚙️ Environment Setup
+CMD ["node", "src/index.js"]
+```
 
 ```bash
-# Clone the repository
-git clone https://github.com/youssef-113/Life-code.git
-cd Life-code
-
-# Install dependencies
-npm install
-
-# Environment variables
-cp .env.example .env
-# Configure Firebase credentials in .env or use firebase-service-account.json
-
-# Run development server
-npm run dev
+# Build and run
+docker build -t lifecode-api .
+docker run -p 3000:3000 --env-file .env lifecode-api
 ```
 
+### Production Checklist
+- [ ] Set `NODE_ENV=production`
+- [ ] Use strong JWT_SECRET (min 32 chars)
+- [ ] Configure CORS for specific domains only
+- [ ] Enable Firebase App Check
+- [ ] Set up monitoring (PM2, New Relic, etc.)
+- [ ] Configure log rotation
+- [ ] Set up SSL certificate
+- [ ] Configure backup strategy
+- [ ] Set up error tracking (Sentry)
+- [ ] Performance testing
 
+---
+
+## 🚧 Future Improvements
+
+### Planned Features
+- **HL7 FHIR Integration**: Hospital system interoperability (Epic, Cerner)
+- **AI Medical OCR**: Upload documents, auto-extract medical data
+- **Emergency Alerts**: Real-time notifications to emergency contacts
+- **Medication Reminders**: Push notifications for medication schedules
+- **Health Insights**: AI-powered health trend analysis
+- **Multi-Language Support**: i18n for Arabic, French, Spanish
+
+### Compliance Roadmap
+| Standard | Market | Status |
+|----------|--------|--------|
+| **HIPAA** | United States | Architecture mapped |
+| **GDPR** | European Union | Data deletion pipeline ready |
+| **HL7 FHIR R4** | Global | Planned v4.0 |
+
+### Performance Enhancements
+- Redis caching for frequent queries
+- GraphQL API for flexible data fetching
+- WebSocket support for real-time updates
+- CDN optimization for photo delivery
+
+---
+
+## 👨‍💻 Author
+
+**Youssef Besso**
+
+- GitHub: [@youssef-113](https://github.com/youssef-113)
+- Project: [Life-code](https://github.com/youssef-113/Life-code)
+
+### Contributors
+Team LifeCode - Building to save lives
 
 ---
 
 <div align="center">
 
-**LifeCode** · Scan For Life · FEB/2026
+**LifeCode** · Scan For Life · 2026
 
 [![Live](https://img.shields.io/badge/🌐%20Visit%20Live%20App-00b4d8?style=for-the-badge)](https://life-code--yossfabdla311.replit.app)
 
-*Built with me and team life-code to save lives.*
+*Built with ❤️ to save lives*
 
 </div>

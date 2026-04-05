@@ -65,6 +65,7 @@ Content-Type: application/json
     "userID": "firebase-uid",
     "username": "yousseff besso",
     "email": "yousseff@example.com",
+    "photoURL": null,
     "providers": [
       {
         "provider": "email",
@@ -75,12 +76,22 @@ Content-Type: application/json
     "primaryProvider": "email",
     "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-    "expiresAt": "2026-04-01T20:15:00.000Z",
+    "expiresAt": "2026-04-16T20:00:00.000Z",
+    "sessionID": "session-uuid",
     "deviceName": "PostmanRuntime/7.x.x",
+    "suspiciousLogin": false,
     "createdAt": "2026-04-01T20:00:00.000Z"
   }
 }
 ```
+
+**Response Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| photoURL | string | User's profile photo (null if not uploaded) |
+| sessionID | string | Unique session identifier |
+| suspiciousLogin | boolean | True if signup from unusual location/device |
+| expiresAt | string | Token expiration (15 days from creation) |
 
 **Flutter Integration:**
 ```dart
@@ -137,13 +148,25 @@ Content-Type: application/json
     "userID": "firebase-uid",
     "username": "yousseff besso",
     "email": "yousseff@example.com",
+    "photoURL": "https://storage.googleapis.com/...",
     "providers": [...],
+    "primaryProvider": "email",
     "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-    "expiresAt": "2026-04-01T20:15:00.000Z"
+    "expiresAt": "2026-04-16T20:00:00.000Z",
+    "sessionID": "session-uuid",
+    "suspiciousLogin": false
   }
 }
 ```
+
+**Response Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| photoURL | string | User's profile photo URL |
+| sessionID | string | Unique session identifier |
+| suspiciousLogin | boolean | True if login from unusual location/device |
+| expiresAt | string | Token expiration (15 days from login) |
 
 **Flutter Integration:**
 ```dart
@@ -200,6 +223,7 @@ Content-Type: application/json
     "userID": "uuid",
     "username": "yousseff besso",
     "email": "yousseff@gmail.com",
+    "photoURL": "https://lh3.googleusercontent.com/...",
     "providers": [
       {
         "provider": "google",
@@ -210,12 +234,21 @@ Content-Type: application/json
     "primaryProvider": "google",
     "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-    "expiresAt": "2026-04-01T20:15:00.000Z",
+    "expiresAt": "2026-04-16T20:00:00.000Z",
+    "sessionID": "session-uuid",
     "isNewUser": false,
-    "accountLinked": false
+    "accountLinked": false,
+    "suspiciousLogin": false
   }
 }
 ```
+
+**Response Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| photoURL | string | User's profile photo URL from Google |
+| sessionID | string | Unique session identifier |
+| suspiciousLogin | boolean | True if login from unusual location/device |
 
 **Account Linked Response:**
 ```json
@@ -301,6 +334,7 @@ Content-Type: application/json
     "userID": "uuid",
     "username": "yousseff",
     "email": "yousseff@privaterelay.appleid.com",
+    "photoURL": null,
     "providers": [
       {
         "provider": "apple",
@@ -310,10 +344,21 @@ Content-Type: application/json
     ],
     "primaryProvider": "apple",
     "sessionToken": "eyJhbGciOiJIUzI1NiIs...",
-    "isNewUser": false
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
+    "expiresAt": "2026-04-16T20:00:00.000Z",
+    "sessionID": "session-uuid",
+    "isNewUser": false,
+    "suspiciousLogin": false
   }
 }
 ```
+
+**Response Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| photoURL | string | User's profile photo (null for Apple) |
+| sessionID | string | Unique session identifier |
+| suspiciousLogin | boolean | True if login from unusual location/device |
 
 **Flutter Integration:**
 ```dart
@@ -784,25 +829,40 @@ Authorization: Bearer <sessionToken>
   "success": true,
   "data": {
     "userID": "uuid",
-    "primaryContact": {
-      "fullName": "Jane besso",
-      "phoneNumber": "+201234567890",
-      "relationship": "Spouse"
-    },
-    "secondaryContact": {
-      "fullName": "Bob Smith",
-      "phoneNumber": "+201234567891",
-      "relationship": "Friend"
-    }
+    "contacts": [
+      {
+        "ContactName": "Jane besso",
+        "phoneNumbers": ["+201234567890", "+201234567891"],
+        "relationship": "Spouse",
+        "isPrimary": true,
+        "notes": "Primary emergency contact"
+      },
+      {
+        "ContactName": "Bob Smith",
+        "phoneNumbers": ["+201234567892"],
+        "relationship": "Friend",
+        "isPrimary": false,
+        "notes": ""
+      }
+    ]
   }
 }
 ```
+
+**Field Details:**
+| Field | Type | Description |
+|-------|------|-------------|
+| ContactName | string | Contact's full name |
+| phoneNumbers | array | Array of phone numbers (1-5 per contact) |
+| relationship | string | Relationship type |
+| isPrimary | boolean | Whether this is the primary contact |
+| notes | string | Optional notes about the contact |
 
 ---
 
 ### Update Emergency Contacts (Profile)
 
-Update emergency contacts in profile.
+Update emergency contacts in profile. Supports multiple contacts with multiple phone numbers per contact.
 
 **Endpoint:** `PUT /profile/emergency-contacts`
 
@@ -815,26 +875,66 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "primaryContact": {
-    "fullName": "Jane besso",
-    "phoneNumber": "+201234567890",
-    "relationship": "Spouse"
-  },
-  "secondaryContact": {
-    "fullName": "Bob Smith",
-    "phoneNumber": "+201234567891",
-    "relationship": "Friend"
-  }
+  "contacts": [
+    {
+      "ContactName": "Jane besso",
+      "phoneNumbers": ["+201234567890", "+201234567891"],
+      "relationship": "Spouse",
+      "isPrimary": true,
+      "notes": "Primary emergency contact"
+    },
+    {
+      "ContactName": "Bob Smith",
+      "phoneNumbers": ["+201234567892"],
+      "relationship": "Friend",
+      "isPrimary": false
+    }
+  ]
 }
 ```
 
+**Field Requirements:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| contacts | array | Yes | 1-10 contacts |
+| contacts[].ContactName | string | Yes | 2-100 characters |
+| contacts[].phoneNumbers | array | Yes | 1-5 phone numbers per contact |
+| contacts[].phoneNumbers[] | string | Yes | E.164 format (10-15 digits) |
+| contacts[].relationship | string | No | `Father`, `Mother`, `Friend`, `Sister`, `Brother`, `Spouse`, `Other` |
+| contacts[].isPrimary | boolean | No | Only one contact can be primary |
+| contacts[].notes | string | No | Max 255 characters |
+
 **Relationship Values:** `Father`, `Mother`, `Friend`, `Sister`, `Brother`, `Spouse`, `Other`
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Emergency contacts updated successfully",
+  "data": {
+    "userID": "uuid",
+    "contacts": [
+      {
+        "ContactName": "Jane besso",
+        "phoneNumbers": ["+201234567890", "+201234567891"],
+        "relationship": "Spouse",
+        "isPrimary": true,
+        "notes": "Primary emergency contact"
+      }
+    ]
+  },
+  "profileCompletion": 75,
+  "completionLevel": "medium",
+  "nextRecommendedStep": "Add your blood type"
+}
+```
+
+**Backward Compatibility:** The API also accepts the old format with `primaryContact` and `secondaryContact` fields for existing integrations.
 
 **Flutter Integration:**
 ```dart
 Future<void> updateEmergencyContacts(
-  EmergencyContact primary,
-  EmergencyContact? secondary,
+  List<EmergencyContact> contacts,
 ) async {
   final token = await getToken();
   final response = await http.put(
@@ -844,14 +944,37 @@ Future<void> updateEmergencyContacts(
       'Content-Type': 'application/json',
     },
     body: jsonEncode({
-      'primaryContact': primary.toJson(),
-      'secondaryContact': secondary?.toJson(),
+      'contacts': contacts.map((c) => c.toJson()).toList(),
     }),
   );
   
   if (response.statusCode != 200) {
     throw Exception('Failed to update emergency contacts');
   }
+}
+
+class EmergencyContact {
+  final String ContactName;
+  final List<String> phoneNumbers;
+  final String relationship;
+  final bool isPrimary;
+  final String? notes;
+  
+  EmergencyContact({
+    required this.ContactName,
+    required this.phoneNumbers,
+    required this.relationship,
+    this.isPrimary = false,
+    this.notes,
+  });
+  
+  Map<String, dynamic> toJson() => {
+    'ContactName': ContactName,
+    'phoneNumbers': phoneNumbers,
+    'relationship': relationship,
+    'isPrimary': isPrimary,
+    'notes': notes,
+  };
 }
 ```
 
@@ -1492,7 +1615,7 @@ Content-Type: application/json
 
 ### Add Emergency Contact
 
-Add a new emergency contact.
+Add a new emergency contact with support for multiple phone numbers.
 
 **Endpoint:** `POST /emergency/contact`
 
@@ -1506,23 +1629,22 @@ Content-Type: application/json
 ```json
 {
   "ContactName": "Jane besso",
-  "Relation": "Spouse",
-  "PhoneNumber": "+201234567890",
-  "SecondaryPhone": "+201234567891",
-  "Email": "jane@example.com",
-  "IsPrimary": true,
-  "Priority": 1,
-  "Notes": "Emergency contact"
+  "relationship": "Spouse",
+  "phoneNumbers": ["+201234567890", "+201234567891"],
+  "isPrimary": true,
+  "notes": "Primary emergency contact"
 }
 ```
 
 **Field Requirements:**
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
-| ContactName | string | Yes | 2-100 chars |
-| PhoneNumber | string | Yes | E.164 format (10-15 digits) |
-| Relation | string | No | Max 50 chars |
-| IsPrimary | boolean | No | true/false |
+| ContactName | string | Yes | 2-100 characters |
+| phoneNumbers | array | Yes | 1-5 phone numbers |
+| phoneNumbers[] | string | Yes | E.164 format (10-15 digits) |
+| relationship | string | No | `Father`, `Mother`, `Friend`, `Sister`, `Brother`, `Spouse`, `Other` |
+| isPrimary | boolean | No | true/false |
+| notes | string | No | Max 255 characters |
 
 **Success Response (201):**
 ```json
@@ -1532,9 +1654,10 @@ Content-Type: application/json
   "data": {
     "id": "contact-id",
     "ContactName": "Jane besso",
-    "Relation": "Spouse",
-    "PhoneNumber": "+201234567890",
-    "IsPrimary": true,
+    "relationship": "Spouse",
+    "phoneNumbers": ["+201234567890", "+201234567891"],
+    "isPrimary": true,
+    "notes": "Primary emergency contact",
     "CreatedAt": "2026-04-01T20:00:00.000Z"
   },
   "profileCompletion": 75,
@@ -1547,7 +1670,7 @@ Content-Type: application/json
 
 ### Add Multiple Emergency Contacts (Bulk)
 
-Add multiple emergency contacts at once.
+Add multiple emergency contacts at once. Supports up to 10 contacts.
 
 **Endpoint:** `POST /emergency/contacts/bulk`
 
@@ -1563,19 +1686,30 @@ Content-Type: application/json
   "contacts": [
     {
       "ContactName": "Jane besso",
-      "Relation": "Spouse",
-      "PhoneNumber": "+201234567890",
-      "IsPrimary": true
+      "relationship": "Spouse",
+      "phoneNumbers": ["+201234567890"],
+      "isPrimary": true
     },
     {
       "ContactName": "Bob Smith",
-      "Relation": "Friend",
-      "PhoneNumber": "+201234567891",
-      "IsPrimary": false
+      "relationship": "Friend",
+      "phoneNumbers": ["+201234567891", "+201234567892"],
+      "isPrimary": false
     }
   ]
 }
 ```
+
+**Field Requirements:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| contacts | array | Yes | 1-10 contacts |
+| contacts[].ContactName | string | Yes | 2-100 characters |
+| contacts[].phoneNumbers | array | Yes | 1-5 phone numbers per contact |
+| contacts[].phoneNumbers[] | string | Yes | E.164 format (10-15 digits) |
+| contacts[].relationship | string | No | `Father`, `Mother`, `Friend`, `Sister`, `Brother`, `Spouse`, `Other` |
+| contacts[].isPrimary | boolean | No | Only one contact can be primary |
+| contacts[].notes | string | No | Max 255 characters |
 
 **Success Response (201):**
 ```json
@@ -1583,7 +1717,22 @@ Content-Type: application/json
   "success": true,
   "message": "2 emergency contact(s) added successfully",
   "data": {
-    "contacts": [...],
+    "contacts": [
+      {
+        "id": "contact-id-1",
+        "ContactName": "Jane besso",
+        "relationship": "Spouse",
+        "phoneNumbers": ["+201234567890"],
+        "isPrimary": true
+      },
+      {
+        "id": "contact-id-2",
+        "ContactName": "Bob Smith",
+        "relationship": "Friend",
+        "phoneNumbers": ["+201234567891", "+201234567892"],
+        "isPrimary": false
+      }
+    ],
     "count": 2
   },
   "profileCompletion": 80,
@@ -1613,18 +1762,18 @@ Authorization: Bearer <sessionToken>
     {
       "id": "contact-id-1",
       "ContactName": "Jane besso",
-      "Relation": "Spouse",
-      "PhoneNumber": "+201234567890",
-      "IsPrimary": true,
-      "Priority": 1
+      "relationship": "Spouse",
+      "phoneNumbers": ["+201234567890", "+201234567891"],
+      "isPrimary": true,
+      "notes": "Primary emergency contact"
     },
     {
       "id": "contact-id-2",
       "ContactName": "Bob Smith",
-      "Relation": "Friend",
-      "PhoneNumber": "+201234567891",
-      "IsPrimary": false,
-      "Priority": 2
+      "relationship": "Friend",
+      "phoneNumbers": ["+201234567892"],
+      "isPrimary": false,
+      "notes": ""
     }
   ],
   "count": 2,
@@ -1649,6 +1798,8 @@ Authorization: Bearer <sessionToken>
 
 ### Update Emergency Contact
 
+Update an existing emergency contact.
+
 **Endpoint:** `PUT /emergency/contact/:id`
 
 **Headers:**
@@ -1657,15 +1808,46 @@ Authorization: Bearer <sessionToken>
 Content-Type: application/json
 ```
 
+**Request Body:**
+```json
+{
+  "ContactName": "Jane besso Updated",
+  "phoneNumbers": ["+201234567890", "+201234567893"],
+  "relationship": "Spouse",
+  "isPrimary": true,
+  "notes": "Updated contact information"
+}
+```
+
+**Field Requirements:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| ContactName | string | No | 2-100 characters |
+| phoneNumbers | array | No | 1-5 phone numbers |
+| phoneNumbers[] | string | Yes* | E.164 format (10-15 digits) |
+| relationship | string | No | `Father`, `Mother`, `Friend`, `Sister`, `Brother`, `Spouse`, `Other` |
+| isPrimary | boolean | No | true/false |
+| notes | string | No | Max 255 characters |
+
+*Required if phoneNumbers array is provided
+
 **Success Response (200):**
 ```json
 {
   "success": true,
   "message": "Contact updated successfully",
-  "data": {...},
+  "data": {
+    "id": "contact-id",
+    "ContactName": "Jane besso Updated",
+    "phoneNumbers": ["+201234567890", "+201234567893"],
+    "relationship": "Spouse",
+    "isPrimary": true,
+    "notes": "Updated contact information",
+    "UpdatedAt": "2026-04-01T20:00:00.000Z"
+  },
   "profileCompletion": 75,
   "completionLevel": "medium",
-  "nextRecommendedStep": "..."
+  "nextRecommendedStep": "Add your blood type"
 }
 ```
 
@@ -1741,29 +1923,48 @@ Content-Type: application/json
 
 ### Upload Profile Photo
 
-Upload or update user profile photo.
+Upload or update user profile photo. Photos are stored in Firebase Storage and served via CDN URL.
 
 **Endpoint:** `POST /user/photo`
 
 **Headers:**
 ```
 Authorization: Bearer <sessionToken>
-Content-Type: application/json
+Content-Type: multipart/form-data
 ```
 
-**Request Body (Base64):**
+**Option 1: Direct File Upload (Mobile/PC)**
+
+Send as `multipart/form-data` with file field named `photo`:
+
+```
+POST /user/photo
+Authorization: Bearer <token>
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="photo"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+<binary image data>
+------WebKitFormBoundary--
+```
+
+**Option 2: Pre-uploaded URL**
+
+If you've already uploaded to Firebase Storage, send the URL:
+
 ```json
 {
-  "photoData": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+  "photoURL": "https://storage.googleapis.com/bucket/users/userId/profile.jpg"
 }
 ```
 
-**Request Body (URL):**
-```json
-{
-  "photoData": "https://example.com/photo.jpg"
-}
-```
+**File Requirements:**
+| Property | Limit |
+|----------|-------|
+| Max file size | 5MB |
+| Allowed types | image/jpeg, image/png, image/webp |
 
 **Success Response (200):**
 ```json
@@ -1772,13 +1973,44 @@ Content-Type: application/json
   "message": "Photo uploaded successfully",
   "data": {
     "userID": "user-id",
-    "photoURL": "data:image/jpeg;base64,...",
-    "photoType": "base64",
+    "photoURL": "https://storage.googleapis.com/bucket/users/userId/profile_123.jpg",
+    "photoType": "storage",
     "uploadedAt": "2026-04-01T20:00:00.000Z"
   },
   "profileCompletion": 85,
   "completionLevel": "medium",
   "nextRecommendedStep": "Add your allergies"
+}
+```
+
+**Flutter Integration:**
+```dart
+Future<void> uploadPhoto(File imageFile) async {
+  final token = await getToken();
+  
+  // Create multipart request
+  final request = http.MultipartRequest(
+    'POST',
+    Uri.parse('$baseUrl/user/photo'),
+  );
+  
+  // Add authorization header
+  request.headers['Authorization'] = 'Bearer $token';
+  
+  // Add file
+  request.files.add(await http.MultipartFile.fromPath(
+    'photo',
+    imageFile.path,
+    contentType: MediaType('image', 'jpeg'),
+  ));
+  
+  final response = await request.send();
+  
+  if (response.statusCode == 200) {
+    final responseData = await response.stream.bytesToString();
+    final data = jsonDecode(responseData);
+    print('Photo uploaded: ${data['data']['photoURL']}');
+  }
 }
 ```
 
@@ -1801,12 +2033,18 @@ Authorization: Bearer <sessionToken>
   "success": true,
   "data": {
     "userID": "user-id",
-    "photoURL": "data:image/jpeg;base64,...",
-    "photoType": "base64",
+    "photoURL": "https://storage.googleapis.com/...",
+    "photoType": "storage",
     "uploadedAt": "2026-04-01T20:00:00.000Z"
   }
 }
 ```
+
+**Photo Types:**
+| Type | Description |
+|------|-------------|
+| `storage` | Photo stored in Firebase Storage (CDN URL) |
+| `url` | External URL provided by user |
 
 ---
 
@@ -1827,8 +2065,8 @@ Authorization: Bearer <sessionToken>
   "success": true,
   "data": {
     "userID": "target-user-id",
-    "photoURL": "...",
-    "photoType": "url",
+    "photoURL": "https://storage.googleapis.com/...",
+    "photoType": "storage",
     "uploadedAt": "2026-04-01T20:00:00.000Z"
   }
 }
@@ -2388,9 +2626,9 @@ Content-Type: application/json
     "emergencyContacts": [
       {
         "ContactName": "Jane besso",
-        "Relation": "Spouse",
-        "PhoneNumber": "+201234567890",
-        "IsPrimary": true
+        "relationship": "Spouse",
+        "phoneNumbers": ["+201234567890"],
+        "isPrimary": true
       }
     ]
   }
@@ -2712,30 +2950,47 @@ class Provider {
 
 ```dart
 class EmergencyContact {
-  final String fullName;
-  final String phoneNumber;
+  final String ContactName;
+  final List<String> phoneNumbers;
   final String relationship;
+  final bool isPrimary;
+  final String? notes;
   
   EmergencyContact({
-    required this.fullName,
-    required this.phoneNumber,
+    required this.ContactName,
+    required this.phoneNumbers,
     required this.relationship,
+    this.isPrimary = false,
+    this.notes,
   });
   
   Map<String, dynamic> toJson() => {
-    'fullName': fullName,
-    'phoneNumber': phoneNumber,
+    'ContactName': ContactName,
+    'phoneNumbers': phoneNumbers,
     'relationship': relationship,
+    'isPrimary': isPrimary,
+    'notes': notes,
   };
   
   factory EmergencyContact.fromJson(Map<String, dynamic> json) =>
     EmergencyContact(
-      fullName: json['fullName'],
-      phoneNumber: json['phoneNumber'],
+      ContactName: json['ContactName'],
+      phoneNumbers: List<String>.from(json['phoneNumbers'] ?? []),
       relationship: json['relationship'],
+      isPrimary: json['isPrimary'] ?? false,
+      notes: json['notes'],
     );
 }
 ```
+
+**Field Details:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| ContactName | string | Yes | Contact's full name (2-100 chars) |
+| phoneNumbers | List<String> | Yes | Array of phone numbers (1-5) |
+| relationship | string | Yes | `Father`, `Mother`, `Friend`, `Sister`, `Brother`, `Spouse`, `Other` |
+| isPrimary | bool | No | Whether this is the primary contact |
+| notes | string | No | Optional notes (max 255 chars) |
 
 ### Session Model
 
