@@ -37,8 +37,9 @@ router.post('/emergency/contact', [
     .withMessage('Each phone number must be valid (10-15 digits)'),
   body('relationship')
     .optional()
-    .isIn(['Father', 'Mother', 'Friend', 'Sister', 'Brother', 'Spouse', 'Other'])
-    .withMessage('Invalid relationship type'),
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Relationship must be between 1 and 50 characters'),
   body('isPrimary')
     .optional()
     .isBoolean()
@@ -73,8 +74,9 @@ router.post('/emergency/contacts/bulk', [
     .withMessage('Each phone number must be valid (10-15 digits)'),
   body('contacts.*.relationship')
     .optional()
-    .isIn(['Father', 'Mother', 'Friend', 'Sister', 'Brother', 'Spouse', 'Other'])
-    .withMessage('Invalid relationship type'),
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Relationship must be between 1 and 50 characters'),
   body('contacts.*.isPrimary')
     .optional()
     .isBoolean()
@@ -123,8 +125,9 @@ router.put('/emergency/contact/:id', [
     .withMessage('Each phone number must be valid (10-15 digits)'),
   body('relationship')
     .optional()
-    .isIn(['Father', 'Mother', 'Friend', 'Sister', 'Brother', 'Spouse', 'Other'])
-    .withMessage('Invalid relationship type'),
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Relationship must be between 1 and 50 characters'),
   body('isPrimary')
     .optional()
     .isBoolean()

@@ -33,9 +33,17 @@ class EmergencyContactService {
         ContactName,
         phoneNumbers,
         relationship,
+        Relation,
         isPrimary,
-        notes
+        IsPrimary,
+        notes,
+        Notes
       } = contactData;
+
+      // Handle both lowercase and PascalCase field names
+      const finalRelationship = relationship || Relation || 'Other';
+      const finalIsPrimary = isPrimary !== undefined ? isPrimary : (IsPrimary !== undefined ? IsPrimary : false);
+      const finalNotes = notes || Notes || '';
 
       // Validate required fields
       if (!ContactName || !phoneNumbers || !Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
@@ -48,7 +56,7 @@ class EmergencyContactService {
       }
 
       // If this contact is set as primary, unset all other primary contacts
-      if (isPrimary === true) {
+      if (finalIsPrimary === true) {
         const existingPrimary = await db.collection('EmergencyContacts')
           .where('UserID', '==', userID)
           .where('IsPrimary', '==', true)
@@ -73,11 +81,11 @@ class EmergencyContactService {
       const contactDoc = {
         UserID: userID,
         ContactName: ContactName,
-        PhoneNumbers: phoneNumbers, // Array of phone numbers
-        Relationship: relationship || 'Other',
-        IsPrimary: isPrimary || false,
+        PhoneNumbers: phoneNumbers,
+        Relationship: finalRelationship,
+        IsPrimary: finalIsPrimary,
         Priority: contactPriority,
-        Notes: notes || '',
+        Notes: finalNotes,
         CreatedAt: new Date(),
         UpdatedAt: new Date()
       };
@@ -162,12 +170,20 @@ class EmergencyContactService {
         ContactName,
         phoneNumbers,
         relationship,
+        Relation,
         isPrimary,
-        notes
+        IsPrimary,
+        notes,
+        Notes
       } = contactData;
 
+      // Handle both lowercase and PascalCase field names
+      const finalRelationship = relationship !== undefined ? relationship : Relation;
+      const finalIsPrimary = isPrimary !== undefined ? isPrimary : IsPrimary;
+      const finalNotes = notes !== undefined ? notes : Notes;
+
       // If setting as primary, unset all others
-      if (isPrimary === true) {
+      if (finalIsPrimary === true) {
         const existingPrimary = await db.collection('EmergencyContacts')
           .where('UserID', '==', userID)
           .where('IsPrimary', '==', true)
@@ -188,9 +204,9 @@ class EmergencyContactService {
       const updateData = { UpdatedAt: new Date() };
       if (ContactName !== undefined) updateData.ContactName = ContactName;
       if (phoneNumbers !== undefined) updateData.PhoneNumbers = phoneNumbers;
-      if (relationship !== undefined) updateData.Relationship = relationship;
-      if (isPrimary !== undefined) updateData.IsPrimary = isPrimary;
-      if (notes !== undefined) updateData.Notes = notes;
+      if (finalRelationship !== undefined) updateData.Relationship = finalRelationship;
+      if (finalIsPrimary !== undefined) updateData.IsPrimary = finalIsPrimary;
+      if (finalNotes !== undefined) updateData.Notes = finalNotes;
 
       await db.collection('EmergencyContacts').doc(contactId).update(updateData);
 
@@ -447,7 +463,21 @@ class EmergencyContactService {
 
       for (let i = 0; i < contacts.length; i++) {
         const contact = contacts[i];
-        const { ContactName, phoneNumbers, relationship, isPrimary, notes } = contact;
+        const { 
+          ContactName, 
+          phoneNumbers, 
+          relationship, 
+          Relation,
+          isPrimary, 
+          IsPrimary,
+          notes,
+          Notes
+        } = contact;
+
+        // Handle both lowercase and PascalCase field names
+        const finalRelationship = relationship || Relation || 'Other';
+        const finalIsPrimary = isPrimary !== undefined ? isPrimary : (IsPrimary !== undefined ? IsPrimary : false);
+        const finalNotes = notes || Notes || '';
 
         // Validate required fields
         if (!ContactName || !phoneNumbers || !Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
@@ -460,8 +490,8 @@ class EmergencyContactService {
 
         // Determine if this should be primary
         // First contact is primary if no existing primary, unless explicitly set
-        let shouldBePrimary = isPrimary === true;
-        if (!hasExistingPrimary && i === 0 && isPrimary !== false) {
+        let shouldBePrimary = finalIsPrimary === true;
+        if (!hasExistingPrimary && i === 0 && finalIsPrimary !== false) {
           shouldBePrimary = true;
         }
 
@@ -470,10 +500,10 @@ class EmergencyContactService {
           UserID: userID,
           ContactName: ContactName,
           PhoneNumbers: phoneNumbers,
-          Relationship: relationship || 'Other',
+          Relationship: finalRelationship,
           IsPrimary: shouldBePrimary,
           Priority: basePriority + i,
-          Notes: notes || '',
+          Notes: finalNotes,
           CreatedAt: new Date(),
           UpdatedAt: new Date()
         };
