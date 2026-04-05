@@ -2610,29 +2610,75 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "message": "Scan successful",
+  "message": "Scan successful - Complete User Report",
   "data": {
+    "reportType": "complete_user_report",
+    "userID": "abc123",
+    "scannedAt": "2026-04-05T12:00:00.000Z",
+    "wristband": {
+      "id": "band_123",
+      "BandID": "BAND-2026-00001",
+      "SerialNumber": "SN-ABC-12345",
+      "QRCode": "QR123456789",
+      "NFCTag": "NFC-ABC-123",
+      "Status": "active",
+      "IsPrimary": true,
+      "ActivatedAt": "2026-01-15T10:30:00.000Z"
+    },
     "user": {
+      "id": "abc123",
       "Username": "yousseff besso",
+      "Email": "user@example.com",
       "Gender": "male",
-      "PhotoURL": "https://..."
+      "NationalID": "12345678901234",
+      "PhotoURL": "https://storage.googleapis.com/...",
+      "PhoneNumber": "+201234567890",
+      "Address": "123 Main St, Cairo, Egypt",
+      "DateOfBirth": "1990-05-15",
+      "IsActive": true,
+      "CreatedAt": "2026-01-01T00:00:00.000Z",
+      "UpdatedAt": "2026-04-05T08:00:00.000Z"
     },
     "medical": {
       "BloodType": "A+",
-      "Allergies": "Peanuts, Shellfish",
-      "Medications": "Insulin",
-      "EmergencyInstructions": "Check blood sugar immediately"
+      "Height": "180cm",
+      "Weight": "75kg",
+      "MedicalConditions": ["Diabetes", "Hypertension"],
+      "HasAllergies": true,
+      "Allergies": [
+        { "AllergyType": "Peanuts", "Severity": "Severe", "Notes": "Anaphylaxis risk" }
+      ],
+      "HasMedications": true,
+      "Medications": [
+        { "MedicationName": "Insulin", "Dosage": "10 units", "Schedule": "Daily", "Notes": "" }
+      ],
+      "HasSurgeries": true,
+      "Surgeries": [
+        { "SurgeryName": "Appendectomy", "SurgeryDate": "2020-01-15", "Notes": "" }
+      ],
+      "EmergencyInstructions": "Check blood sugar immediately",
+      "Notes": "Patient is insulin dependent"
     },
     "emergencyContacts": [
       {
+        "id": "contact_123",
         "ContactName": "Jane besso",
+        "phoneNumbers": ["+201234567890", "+201987654321"],
         "relationship": "Spouse",
-        "phoneNumbers": ["+201234567890"],
-        "isPrimary": true
+        "isPrimary": true,
+        "notes": "Primary emergency contact",
+        "CreatedAt": "2026-01-15T10:00:00.000Z"
       }
-    ]
+    ],
+    "scanLog": {
+      "id": "scan_123",
+      "timestamp": "2026-04-05T12:00:00.000Z",
+      "location": "Cairo, Egypt",
+      "scannerType": "emergency"
+    }
   }
 }
+```
 ```
 
 **Flutter Integration:**
@@ -2676,6 +2722,34 @@ Future<ScanResult> scanQRCode(String qrCode, {
   "scannerType": "hospital"
 }
 ```
+
+**Success Response (200):**
+Same as Scan QR Code — returns Complete User Report with:
+- `reportType`: "complete_user_report"
+- `userID`, `scannedAt`, `wristband`, `user`, `medical`, `emergencyContacts`, `scanLog`
+
+---
+
+### Scan by Band ID (Public)
+
+Scan using the Firestore document ID (stored directly on NFC chip).
+
+**Endpoint:** `POST /scan/band`
+
+**Request Body:**
+```json
+{
+  "bandId": "abc123def456",
+  "latitude": 30.0444,
+  "longitude": 31.2357,
+  "scannerType": "emergency"
+}
+```
+
+**Success Response (200):**
+Same as Scan QR Code — returns Complete User Report with:
+- `reportType`: "complete_user_report"
+- `userID`, `scannedAt`, `wristband`, `user`, `medical`, `emergencyContacts`, `scanLog`
 
 ---
 
