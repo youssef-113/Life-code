@@ -88,7 +88,7 @@ app.use((req, res, next) => {
   if (req.headers['content-type']?.includes('multipart/form-data')) {
     return next();
   }
-  express.json({ limit: '10mb' })(req, res, next);
+  express.json({ limit: '50mb' })(req, res, next);
 });
 app.use(express.urlencoded({ extended: true }));
 
