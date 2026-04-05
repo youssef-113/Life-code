@@ -8,11 +8,96 @@ const wristbandService = require('./wristbandService');
 class ScanService {
 
   /**
+   * Build complete user report from fetched data
+   * @private
+   */
+  _buildCompleteReport(userID, userData, medicalData, contactsQuery, wristbandData, scanLogRef, scanLogData, metadata) {
+    // Build complete user profile
+    const user = {
+      id: userID,
+      Username: userData.Username || 'Unknown',
+      Email: userData.Email || null,
+      Gender: userData.Gender || null,
+      NationalID: userData.NationalID || null,
+      PhotoURL: userData.PhotoURL || null,
+      PhoneNumber: userData.PhoneNumber || null,
+      Address: userData.Address || null,
+      DateOfBirth: userData.DateOfBirth || null,
+      IsActive: userData.IsActive ?? true,
+      CreatedAt: userData.CreatedAt || null,
+      UpdatedAt: userData.UpdatedAt || null
+    };
+
+    // Build complete medical info
+    const medical = medicalData ? {
+      BloodType: medicalData.BloodType || null,
+      Height: medicalData.Height || null,
+      Weight: medicalData.Weight || null,
+      MedicalConditions: medicalData.MedicalConditions || medicalData.ChronicDiseases || null,
+      HasAllergies: medicalData.HasAllergies || false,
+      Allergies: medicalData.Allergies || null,
+      HasMedications: medicalData.HasMedications || false,
+      Medications: medicalData.Medications || null,
+      HasSurgeries: medicalData.HasSurgeries || false,
+      Surgeries: medicalData.Surgeries || null,
+      EmergencyInstructions: medicalData.EmergencyInstructions || null,
+      Notes: medicalData.Notes || null
+    } : null;
+
+    // Build emergency contacts with new format (phoneNumbers array)
+    const emergencyContacts = contactsQuery.docs
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ContactName: data.ContactName || data.fullName || 'Unknown',
+          phoneNumbers: data.PhoneNumbers || data.phoneNumbers || 
+                       (data.PhoneNumber ? [data.PhoneNumber] : []) || 
+                       (data.Phone ? [data.Phone] : []),
+          relationship: data.Relationship || data.relationship || data.Relation || null,
+          isPrimary: data.IsPrimary || data.isPrimary || false,
+          notes: data.Notes || data.notes || null,
+          CreatedAt: data.CreatedAt || null
+        };
+      })
+      .sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0)); // Primary first
+
+    return {
+      success: true,
+      message: 'Scan successful - Complete User Report',
+      data: {
+        reportType: 'complete_user_report',
+        userID: userID,
+        scannedAt: new Date().toISOString(),
+        wristband: {
+          id: wristbandData.id || wristbandData.BandID,
+          BandID: wristbandData.BandID,
+          SerialNumber: wristbandData.SerialNumber,
+          QRCode: wristbandData.QRCode,
+          NFCTag: wristbandData.NFCTag,
+          Status: wristbandData.Status || 'active',
+          IsPrimary: wristbandData.IsPrimary || false,
+          ActivatedAt: wristbandData.ActivatedAt || null
+        },
+        user,
+        medical,
+        emergencyContacts,
+        scanLog: {
+          id: scanLogRef.id,
+          timestamp: scanLogData.Timestamp,
+          location: metadata.location || null,
+          scannerType: metadata.scannerType || 'public'
+        }
+      }
+    };
+  }
+
+  /**
    * Scan a QR code (public — no auth required)
    * Looks up wristband → user → medical info → emergency contacts
    * @param {string} qrCode - QR code from wristband
    * @param {Object} metadata - Scan metadata (location, coordinates, scannerType)
-   * @returns {Object} - User medical & emergency data
+   * @returns {Object} - Complete user report
    */
   async scanQR(qrCode, metadata = {}) {
     const db = getFirestore();
@@ -37,39 +122,6 @@ class ScanService {
           .get()
       ]);
 
-      // Build user profile (limited info for public scan)
-      const userData = userDoc.exists ? userDoc.data() : {};
-      const user = {
-        Username: userData.Username || 'Unknown',
-        Gender: userData.Gender || null,
-        PhotoURL: userData.PhotoURL || null
-      };
-
-      // Build medical info
-      const medicalData = medicalQuery.exists ? medicalQuery.data() : null;
-      const medical = medicalData ? {
-        BloodType: medicalData.BloodType || null,
-        Height: medicalData.Height || null,
-        Weight: medicalData.Weight || null,
-        ChronicDiseases: medicalData.ChronicDiseases || null,
-        Allergies: medicalData.Allergies || null,
-        Medications: medicalData.Medications || null,
-        EmergencyInstructions: medicalData.EmergencyInstructions || null
-      } : null;
-
-      // Build emergency contacts
-      const emergencyContacts = contactsQuery.docs
-        .map(doc => doc.data())
-        .sort((a, b) => (a.Priority || 999) - (b.Priority || 999))
-        .map(data => {
-          return {
-            ContactName: data.ContactName,
-            Relation: data.Relation,
-            PhoneNumber: data.PhoneNumber,
-            IsPrimary: data.IsPrimary || false
-          };
-        });
-
       // Log the scan
       const scanLogData = {
         WristbandID: wristbandData.BandID,
@@ -86,25 +138,17 @@ class ScanService {
 
       const scanLogRef = await db.collection('ScanLogs').add(scanLogData);
 
-      return {
-        success: true,
-        message: 'Scan successful',
-        data: {
-          userID: userID,
-          wristband: {
-            BandID:       wristbandData.BandID,
-            SerialNumber: wristbandData.SerialNumber,
-            IsPrimary:    wristbandData.IsPrimary || false
-          },
-          user,
-          medical,
-          emergencyContacts,
-          scanLog: {
-            id:        scanLogRef.id,
-            timestamp: scanLogData.Timestamp
-          }
-        }
-      };
+      // Build and return complete report
+      return this._buildCompleteReport(
+        userID,
+        userDoc.exists ? userDoc.data() : {},
+        medicalQuery.exists ? medicalQuery.data() : null,
+        contactsQuery,
+        wristbandData,
+        scanLogRef,
+        scanLogData,
+        metadata
+      );
     } catch (error) {
       console.error('Scan QR error:', error);
       return {
@@ -146,37 +190,6 @@ class ScanService {
           .get()   // no orderBy — sort in memory below
       ]);
 
-      // Build user profile
-      const userData = userDoc.exists ? userDoc.data() : {};
-      const user = {
-        Username: userData.Username || 'Unknown',
-        Gender: userData.Gender || null,
-        PhotoURL: userData.PhotoURL || null
-      };
-
-      // Build medical info
-      const medicalData = medicalQuery.exists ? medicalQuery.data() : null;
-      const medical = medicalData ? {
-        BloodType: medicalData.BloodType || null,
-        Height: medicalData.Height || null,
-        Weight: medicalData.Weight || null,
-        ChronicDiseases: medicalData.ChronicDiseases || null,
-        Allergies: medicalData.Allergies || null,
-        Medications: medicalData.Medications || null,
-        EmergencyInstructions: medicalData.EmergencyInstructions || null
-      } : null;
-
-      // Build emergency contacts — sorted in memory by Priority
-      const emergencyContacts = contactsQuery.docs
-        .map(doc => doc.data())
-        .sort((a, b) => (a.Priority || 999) - (b.Priority || 999))
-        .map(data => ({
-          ContactName: data.ContactName,
-          Relation: data.Relation,
-          PhoneNumber: data.PhoneNumber,
-          IsPrimary: data.IsPrimary || false
-        }));
-
       // Log the scan
       const scanLogData = {
         WristbandID: wristbandData.BandID,
@@ -193,25 +206,17 @@ class ScanService {
 
       const scanLogRef = await db.collection('ScanLogs').add(scanLogData);
 
-      return {
-        success: true,
-        message: 'Scan successful',
-        data: {
-          userID: userID,
-          wristband: {
-            BandID:       wristbandData.BandID,
-            SerialNumber: wristbandData.SerialNumber,
-            IsPrimary:    wristbandData.IsPrimary || false
-          },
-          user,
-          medical,
-          emergencyContacts,
-          scanLog: {
-            id:        scanLogRef.id,
-            timestamp: scanLogData.Timestamp
-          }
-        }
-      };
+      // Build and return complete report
+      return this._buildCompleteReport(
+        userID,
+        userDoc.exists ? userDoc.data() : {},
+        medicalQuery.exists ? medicalQuery.data() : null,
+        contactsQuery,
+        wristbandData,
+        scanLogRef,
+        scanLogData,
+        metadata
+      );
     } catch (error) {
       console.error('Scan NFC error:', error);
       return {
@@ -333,34 +338,6 @@ class ScanService {
         db.collection('EmergencyContacts').where('UserID', '==', userID).get()
       ]);
 
-      const userData = userDoc.exists ? userDoc.data() : {};
-      const user = {
-        Username:  userData.Username  || 'Unknown',
-        Gender:    userData.Gender    || null,
-        PhotoURL:  userData.PhotoURL  || null
-      };
-
-      const medicalData = medicalQuery.exists ? medicalQuery.data() : null;
-      const medical = medicalData ? {
-        BloodType:             medicalData.BloodType             || null,
-        Height:                medicalData.Height                || null,
-        Weight:                medicalData.Weight                || null,
-        ChronicDiseases:       medicalData.ChronicDiseases       || null,
-        Allergies:             medicalData.Allergies             || null,
-        Medications:           medicalData.Medications           || null,
-        EmergencyInstructions: medicalData.EmergencyInstructions || null
-      } : null;
-
-      const emergencyContacts = contactsQuery.docs
-        .map(doc => doc.data())
-        .sort((a, b) => (a.Priority || 999) - (b.Priority || 999))
-        .map(data => ({
-          ContactName: data.ContactName,
-          Relation:    data.Relation,
-          PhoneNumber: data.PhoneNumber,
-          IsPrimary:   data.IsPrimary || false
-        }));
-
       // Log the scan
       const scanLogData = {
         WristbandID:  wristbandData.BandID,
@@ -377,25 +354,17 @@ class ScanService {
 
       const scanLogRef = await db.collection('ScanLogs').add(scanLogData);
 
-      return {
-        success: true,
-        message: 'Scan successful',
-        data: {
-          userID,
-          wristband: {
-            BandID:       wristbandData.BandID,
-            SerialNumber: wristbandData.SerialNumber,
-            IsPrimary:    wristbandData.IsPrimary || false
-          },
-          user,
-          medical,
-          emergencyContacts,
-          scanLog: {
-            id:        scanLogRef.id,
-            timestamp: scanLogData.Timestamp
-          }
-        }
-      };
+      // Build and return complete report
+      return this._buildCompleteReport(
+        userID,
+        userDoc.exists ? userDoc.data() : {},
+        medicalQuery.exists ? medicalQuery.data() : null,
+        contactsQuery,
+        wristbandData,
+        scanLogRef,
+        scanLogData,
+        metadata
+      );
     } catch (error) {
       console.error('Scan by band ID error:', error);
       return {
