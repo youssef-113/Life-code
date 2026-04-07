@@ -33,7 +33,7 @@ This document describes the NFC read/write operations and web-based data retriev
 
 4. Web Request Formation
    User ID appended to base URL
-   Example: https://api.yourdomain.com/api/app/public/user/abc123xyz456
+   Example: https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456
 
 5. Online Data Access
    Browser requests data via HTTPS
@@ -159,7 +159,7 @@ abc123xyz456
 ### Option 2: Full URL
 The barcode/QR code contains the complete URL:
 ```
-https://api.yourdomain.com/api/app/public/user/abc123xyz456
+https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456
 ```
 
 ## Scan Endpoints (Alternative Methods)
@@ -231,7 +231,7 @@ All public accesses are logged in the `ScanLogs` collection with:
 1. **Generate QR Code**:
    ```javascript
    const userID = "abc123xyz456";
-   const qrCodeURL = `https://api.yourdomain.com/api/app/public/user/${userID}`;
+   const qrCodeURL = `https://life-code--yossfabdla311.replit.app/api/app/public/user/${userID}`;
    // Generate QR code containing qrCodeURL
    ```
 
@@ -254,7 +254,7 @@ All public accesses are logged in the `ScanLogs` collection with:
 
 2. **Make API Request**:
    ```javascript
-   const response = await fetch(`https://api.yourdomain.com/api/app/public/user/${scannedData}`);
+   const response = await fetch(`https://life-code--yossfabdla311.replit.app/api/app/public/user/${scannedData}`);
    const data = await response.json();
    ```
 
@@ -300,13 +300,13 @@ All public accesses are logged in the `ScanLogs` collection with:
 
 ### Test with cURL
 ```bash
-curl -X GET "https://api.yourdomain.com/api/app/public/user/abc123xyz456?latitude=40.7128&longitude=-74.0060&location=New%20York%20City"
+curl -X GET "https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456?latitude=40.7128&longitude=-74.0060&location=New%20York%20City"
 ```
 
 ### Test with Browser
 Simply open the URL in any web browser:
 ```
-https://api.yourdomain.com/api/app/public/user/abc123xyz456
+https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456
 ```
 
 ## Rate Limiting

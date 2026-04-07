@@ -179,7 +179,7 @@ http://localhost:3000/api/app/wristband/qr-url/abc123xyz456
 
 **URL with custom base URL:**
 ```
-http://localhost:3000/api/app/wristband/qr-url/abc123xyz456?baseURL=https://api.yourdomain.com
+http://localhost:3000/api/app/wristband/qr-url/abc123xyz456?baseURL=https://life-code--yossfabdla311.replit.app
 ```
 
 **Response:**
@@ -188,7 +188,7 @@ http://localhost:3000/api/app/wristband/qr-url/abc123xyz456?baseURL=https://api.
   "success": true,
   "data": {
     "userID": "abc123xyz456",
-    "qrCodeURL": "https://api.yourdomain.com/api/app/public/user/abc123xyz456",
+    "qrCodeURL": "https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456",
     "qrCodeContent": "abc123xyz456",
     "format": "url"
   }

@@ -785,10 +785,10 @@ class WristbandService {
   /**
    * Generate QR code URL for web-based access
    * @param {string} userID - User ID
-   * @param {string} baseURL - Base URL for the API (e.g., https://api.yourdomain.com)
+   * @param {string} baseURL - Base URL for the API (e.g., https://life-code--yossfabdla311.replit.app)
    * @returns {Object} - QR code URL and user ID
    */
-  generateQRCodeURL(userID, baseURL = process.env.API_BASE_URL || 'https://api.yourdomain.com') {
+  generateQRCodeURL(userID, baseURL = process.env.API_BASE_URL || 'https://life-code--yossfabdla311.replit.app') {
     const endpoint = '/api/app/public/user/';
     const fullURL = `${baseURL}${endpoint}${userID}`;
     

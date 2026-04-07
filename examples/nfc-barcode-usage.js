@@ -8,7 +8,7 @@
 // ============================================
 // Example 1: Generate QR Code URL for User
 // ============================================
-async function generateQRCodeForUser(userID, baseURL = 'https://api.yourdomain.com') {
+async function generateQRCodeForUser(userID, baseURL = 'https://life-code--yossfabdla311.replit.app') {
   const response = await fetch(`${baseURL}/api/app/wristband/qr-url/${userID}`, {
     method: 'GET',
     headers: {
@@ -95,9 +95,9 @@ async function readFromNFCTag() {
 // ============================================
 // Example 4: Scan QR Code and Fetch User Profile
 // ============================================
-async function scanQRCodeAndFetchProfile(qrCodeContent, baseURL = 'https://api.yourdomain.com') {
+async function scanQRCodeAndFetchProfile(qrCodeContent, baseURL = 'https://life-code--yossfabdla311.replit.app') {
   // qrCodeContent can be either:
-  // 1. Full URL: https://api.yourdomain.com/api/app/public/user/abc123xyz456
+  // 1. Full URL: https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456
   // 2. Just user ID: abc123xyz456
   
   let userID;

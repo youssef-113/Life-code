@@ -83,14 +83,14 @@ This implementation adds a public web-based endpoint for retrieving user emergen
 // Mobile app generates QR code URL
 GET /api/app/wristband/qr-url/:userID
 Response: {
-  "qrCodeURL": "https://api.yourdomain.com/api/app/public/user/abc123xyz456",
+  "qrCodeURL": "https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456",
   "qrCodeContent": "abc123xyz456"
 }
 ```
 
 ### Step 2: Barcode/QR Code Encoding
 - QR code can contain either:
-  - Full URL: `https://api.yourdomain.com/api/app/public/user/abc123xyz456`
+  - Full URL: `https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456`
   - Just user ID: `abc123xyz456`
 
 ### Step 3: NFC Tag Read/Write (Local)
@@ -135,12 +135,12 @@ The public endpoint returns:
 
 ### Test Public Endpoint
 ```bash
-curl -X GET "https://api.yourdomain.com/api/app/public/user/abc123xyz456"
+curl -X GET "https://life-code--yossfabdla311.replit.app/api/app/public/user/abc123xyz456"
 ```
 
 ### Test QR Code URL Generation
 ```bash
-curl -X GET "https://api.yourdomain.com/api/app/wristband/qr-url/abc123xyz456" \
+curl -X GET "https://life-code--yossfabdla311.replit.app/api/app/wristband/qr-url/abc123xyz456" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -162,7 +162,7 @@ curl -X GET "https://api.yourdomain.com/api/app/wristband/qr-url/abc123xyz456" \
 
 Add to `.env`:
 ```env
-API_BASE_URL=https://api.yourdomain.com
+API_BASE_URL=https://life-code--yossfabdla311.replit.app
 ```
 
 ## Next Steps
