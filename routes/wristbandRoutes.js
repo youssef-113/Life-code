@@ -129,4 +129,23 @@ router.get('/wristband/my-band', authenticateToken, getBandIdentity);
  */
 router.get('/wristband/:bandId/info', authenticateToken, getWristbandByBandId);
 
+/**
+ * @route GET /api/app/wristband/qr-url/:userID
+ * @description Generate QR code URL for web-based access
+ *              Returns the URL that should be encoded in the QR code
+ * @access Private
+ */
+router.get('/wristband/qr-url/:userID', authenticateToken, (req, res) => {
+  const { userID } = req.params;
+  const { baseURL } = req.query;
+  
+  const result = require('../services/wristbandService').generateQRCodeURL(userID, baseURL);
+  
+  if (result.success) {
+    return res.status(200).json(result);
+  } else {
+    return res.status(500).json(result);
+  }
+});
+
 module.exports = router;

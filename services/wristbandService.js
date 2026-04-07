@@ -781,6 +781,28 @@ class WristbandService {
       return { success: false, error: 'Server Error', message: error.message, code: 500 };
     }
   }
+
+  /**
+   * Generate QR code URL for web-based access
+   * @param {string} userID - User ID
+   * @param {string} baseURL - Base URL for the API (e.g., https://api.yourdomain.com)
+   * @returns {Object} - QR code URL and user ID
+   */
+  generateQRCodeURL(userID, baseURL = process.env.API_BASE_URL || 'https://api.yourdomain.com') {
+    const endpoint = '/api/app/public/user/';
+    const fullURL = `${baseURL}${endpoint}${userID}`;
+    
+    return {
+      success: true,
+      data: {
+        userID,
+        qrCodeURL: fullURL,
+        qrCodeContent: userID,
+        format: 'url',
+        description: 'QR code can contain either the full URL or just the user ID'
+      }
+    };
+  }
 }
 
 module.exports = new WristbandService();

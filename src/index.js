@@ -18,6 +18,7 @@ const scanRoutes = require('../routes/scanRoutes');
 const userAccountRoutes = require('../routes/userAccountRoutes');
 const familyRoutes = require('../routes/familyRoutes');
 const medicalProfileRoutes = require('../routes/medicalProfileRoutes');
+const publicRoutes = require('../routes/publicRoutes');
 
 // Initialize Express app
 const app = express();
@@ -124,6 +125,7 @@ app.use('/api/app', scanRoutes);
 app.use('/api/app', userAccountRoutes);
 app.use('/api/app', familyRoutes);
 app.use('/api/app', medicalProfileRoutes);
+app.use('/api/app', publicRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
