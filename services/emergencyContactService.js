@@ -289,7 +289,8 @@ class EmergencyContactService {
         success: true,
         message: 'Contact deleted successfully',
         data: {
-          deletedId: contactId
+          deletedId: contactId,
+          deletedName: contactDoc.data().ContactName
         },
         profileCompletion: completionResult.completionPercentage,
         completionLevel: completionResult.completionLevel,
