@@ -6,7 +6,7 @@
 
 ### *Your Vital Information, Always Within Reach*
 
-[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-life--code--yossfabdla311.replit.app-00b4d8?style=flat-square)](https://life-code--yossfabdla311.replit.app)
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-life--code--yossfabdla311.replit.app-00b4d8?style=flat-square)](https://life-code-delta.vercel.app/)
 [![GitHub](https://img.shields.io/badge/GitHub-youssef--113%2FLife--code-181717?style=flat-square&logo=github)](https://github.com/youssef-113/Life-code)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=nodedotjs)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express)](https://expressjs.com/)
@@ -922,7 +922,7 @@ Team LifeCode - Building to save lives
 
 **LifeCode** · Scan For Life · 2026
 
-[![Live](https://img.shields.io/badge/🌐%20Visit%20Live%20App-00b4d8?style=for-the-badge)](https://life-code--yossfabdla311.replit.app)
+[![Live](https://img.shields.io/badge/🌐%20Visit%20Live%20App-00b4d8?style=for-the-badge)](https://life-code-delta.vercel.app/)
 
 *Built with my and my team to save lives*
 
